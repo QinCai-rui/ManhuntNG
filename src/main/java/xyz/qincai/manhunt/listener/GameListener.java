@@ -22,7 +22,7 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
-import io.papermc.paper.event.player.PlayerAdvancementCriterionGrantEvent;
+import org.bukkit.event.player.PlayerAdvancementDoneEvent;
 import org.bukkit.event.inventory.FurnaceSmeltEvent;
 import org.bukkit.event.inventory.FurnaceBurnEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
@@ -364,7 +364,7 @@ public class GameListener implements Listener {
     }
 
     @EventHandler
-    public void onAdvancementGrant(PlayerAdvancementCriterionGrantEvent event) {
+    public void onAdvancementGrant(PlayerAdvancementDoneEvent event) {
         if (!plugin.getGameManager().isGameActive()) return;
 
         Player player = event.getPlayer();
