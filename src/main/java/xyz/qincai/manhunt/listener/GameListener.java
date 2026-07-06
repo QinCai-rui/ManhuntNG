@@ -43,9 +43,12 @@ public class GameListener implements Listener {
 
     private void sendPauseBlockedMessage(Player player) {
         long now = System.currentTimeMillis();
+        // Best-effort cleanup to avoid unbounded growth over time
+        pauseMessageCooldowns.entrySet().removeIf(e -> now - e.getValue() > 60_000);
+
         UUID uuid = player.getUniqueId();
         if (now - pauseMessageCooldowns.getOrDefault(uuid, 0L) > 5000) {
-            player.sendMessage(Component.text("\u00a77The game is paused \u2014 action blocked", NamedTextColor.GRAY));
+            player.sendMessage(Component.text("The game is paused — action blocked", NamedTextColor.GRAY));
             pauseMessageCooldowns.put(uuid, now);
         }
     }
