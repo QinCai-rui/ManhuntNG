@@ -71,7 +71,9 @@ public class TrackerManager {
             meta.setLodestone(runner.getLocation());
             meta.setLodestoneTracked(false);
             compass.setItemMeta(meta);
-            Location linked = getLinkedLocation(hunter.getLocation(), runner.getLocation(), hunter.getWorld());
+        } else if (isLinkedDimension(hunter.getWorld(), runnerWorld)) {
+            Location linked = getLinkedLocation(hunter.getLocation(), runner.getLocation(), runnerWorld);
+            if (linked != null) {
                 CompassMeta meta = (CompassMeta) compass.getItemMeta();
                 meta.setLodestone(linked);
                 meta.setLodestoneTracked(false);
