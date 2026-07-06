@@ -223,15 +223,14 @@ public class UIManager {
 
     public void hidePauseTitle() {
         Match match = plugin.getGameManager().getMatch();
-        Component empty = Component.empty();
 
         for (UUID uuid : match.getHunterUuids()) {
             Player player = Bukkit.getPlayer(uuid);
-            if (player != null) player.sendTitle(empty, empty, 0, 1, 500);
+            if (player != null) player.resetTitle();
         }
         if (match.getRunnerUuid() != null) {
             Player runner = Bukkit.getPlayer(match.getRunnerUuid());
-            if (runner != null) runner.sendTitle(empty, empty, 0, 1, 500);
+            if (runner != null) runner.resetTitle();
         }
     }
 
