@@ -26,6 +26,7 @@ public class Match {
     private boolean strongholdDiscovered;
     private boolean fortressDiscovered;
     private boolean blazeRodObtained;
+    private Long seed;
 
     public GameState getState() {
         return state;
@@ -219,5 +220,13 @@ public class Match {
 
     public boolean isParticipant(UUID uuid) {
         return isPlayer(uuid) || spectatorUuids.contains(uuid);
+    }
+
+    public Long getSeed() {
+        return seed;
+    }
+
+    public void setSeed(Long seed) {
+        this.seed = seed;
     }
 }

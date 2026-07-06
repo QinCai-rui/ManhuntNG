@@ -198,17 +198,14 @@ public class GameListener implements Listener {
 
         if (match.getState() == GameState.PRE_HUNT) {
             if (event.getTo() == null) return;
-            if (plugin.getPlayerManager().isRunner(uuid)) {
-                event.setTo(event.getFrom());
-                return;
+            if (plugin.getPlayerManager().isRunner(uuid) || plugin.getPlayerManager().isHunter(uuid)) {
+                org.bukkit.Location to = event.getTo();
+                org.bukkit.Location from = event.getFrom();
+                to.setX(from.getX());
+                to.setY(from.getY());
+                to.setZ(from.getZ());
             }
-            if (plugin.getPlayerManager().isHunter(uuid)) {
-                if (event.getFrom().getBlockX() != event.getTo().getBlockX() ||
-                        event.getFrom().getBlockZ() != event.getTo().getBlockZ()) {
-                    event.setTo(event.getFrom());
-                }
-                return;
-            }
+            return;
         }
 
         if (match.getState() == GameState.COUNTDOWN) {

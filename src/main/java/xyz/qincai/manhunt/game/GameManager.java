@@ -18,6 +18,7 @@ public class GameManager {
     private final ManhuntNG plugin;
     private final Match match;
     private int countdownTaskId = -1;
+    private boolean forceStart;
 
     public GameManager(ManhuntNG plugin) {
         this.plugin = plugin;
@@ -51,6 +52,7 @@ public class GameManager {
     public void startGameForce(UUID ownerUuid) {
         if (match.getState() != GameState.WAITING) return;
         match.setOwnerUuid(ownerUuid);
+        forceStart = true;
         match.setState(GameState.COUNTDOWN);
         startCountdown();
     }
@@ -107,14 +109,38 @@ public class GameManager {
         clearPlayerState();
         plugin.getFormationManager().teleportToFormation();
 
-        match.setState(GameState.PRE_HUNT);
         match.setStrongholdDiscovered(false);
         match.setFortressDiscovered(false);
         match.setBlazeRodObtained(false);
-        unfreezeHorizontalAllPlayers();
 
-        plugin.getUiManager().sendTitle("\u00a76Pre-Hunt", "\u00a77Damage a hunter to start the hunt");
-        plugin.getUiManager().sendToAll("\u00a7ePre-Hunt phase! Runner must damage a hunter to start the hunt.");
+        if (forceStart) {
+            forceStart = false;
+            match.setState(GameState.RUNNING);
+            match.setStartTime(System.currentTimeMillis());
+
+            unfreezeAllPlayers();
+
+            if (match.getRunnerUuid() != null) {
+                Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+                if (runner != null) {
+                    runner.setInvulnerable(false);
+                }
+            }
+
+            plugin.getTrackerManager().giveCompassToAll();
+            plugin.getTrackerManager().startTracking();
+            plugin.getUiManager().startUIUpdates();
+            plugin.getPotionEffectManager().applyEffects();
+
+            plugin.getUiManager().sendTitle("\u00a7cThe Hunt Has Begun!", "\u00a77Runner is on the loose!");
+            plugin.getUiManager().sendToAll("\u00a7aThe hunt has started! (Force started)");
+        } else {
+            match.setState(GameState.PRE_HUNT);
+            unfreezeHorizontalAllPlayers();
+
+            plugin.getUiManager().sendTitle("\u00a76Pre-Hunt", "\u00a77Damage a hunter to start the hunt");
+            plugin.getUiManager().sendToAll("\u00a7ePre-Hunt phase! Runner must damage a hunter to start the hunt.");
+        }
     }
 
     private void teleportPlayersToWorlds() {
@@ -181,6 +207,7 @@ public class GameManager {
         unfreezeAllPlayers();
 
         match.setState(GameState.WAITING);
+        match.setSeed(null);
         plugin.getPlayerManager().reset();
         plugin.getStatsManager().reset();
     }
@@ -202,6 +229,7 @@ public class GameManager {
 
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             match.setState(GameState.WAITING);
+            match.setSeed(null);
             plugin.getPlayerManager().reset();
         }, 200L);
     }
@@ -223,6 +251,7 @@ public class GameManager {
 
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             match.setState(GameState.WAITING);
+            match.setSeed(null);
             plugin.getPlayerManager().reset();
         }, 200L);
     }

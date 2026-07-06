@@ -48,6 +48,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             case "pause" -> handlePause(sender, args);
             case "resume" -> handleResume(sender, args);
             case "owner" -> handleOwner(sender, args);
+            case "seed" -> handleSeed(sender, args);
             default -> {
                 sendHelp(sender);
                 yield true;
@@ -323,6 +324,48 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    private boolean handleSeed(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("manhunt.admin")) {
+            sender.sendMessage(Component.text("You don't have permission!", NamedTextColor.RED));
+            return true;
+        }
+
+        if (plugin.getGameManager().isGameActive()) {
+            sender.sendMessage(Component.text("Cannot change seed during an active game!", NamedTextColor.RED));
+            return true;
+        }
+
+        if (args.length < 2) {
+            Long currentSeed = plugin.getGameManager().getMatch().getSeed();
+            if (currentSeed != null) {
+                sender.sendMessage(Component.text("Current seed: ", NamedTextColor.GRAY)
+                        .append(Component.text(String.valueOf(currentSeed), NamedTextColor.AQUA)));
+            } else {
+                sender.sendMessage(Component.text("No seed set (will use random).", NamedTextColor.GRAY));
+            }
+            return true;
+        }
+
+        String seedArg = args[1];
+        try {
+            long seed;
+            if (seedArg.matches("-?\\d+")) {
+                seed = Long.parseLong(seedArg);
+            } else {
+                seed = seedArg.hashCode();
+            }
+
+            plugin.getGameManager().getMatch().setSeed(seed);
+            sender.sendMessage(Component.text("World seed set to ", NamedTextColor.GREEN)
+                    .append(Component.text(String.valueOf(seed), NamedTextColor.AQUA))
+                    .append(Component.text(" (\"") .append(Component.text(seedArg, NamedTextColor.YELLOW))
+                    .append(Component.text("\")", NamedTextColor.GREEN)));
+        } catch (NumberFormatException e) {
+            sender.sendMessage(Component.text("Invalid seed value!", NamedTextColor.RED));
+        }
+        return true;
+    }
+
     private void sendHelp(CommandSender sender) {
         GameState state = plugin.getGameManager().getMatch().getState();
         String stateName = switch (state) {
@@ -368,6 +411,8 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
                     "Click to remove player", "manhunt.admin");
             helpEntry(sender, "/manhunt owner [player]", "View/set game owner",
                     "Click to set owner", "manhunt.admin");
+            helpEntry(sender, "/manhunt seed [value]", "View/set world seed",
+                    "Click to set seed", "manhunt.admin");
             helpEntry(sender, "/manhunt forcestart", "Skip validation & start",
                     "Click to force start", "manhunt.admin");
             helpEntry(sender, "/manhunt reload", "Reload configuration",
@@ -418,6 +463,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
                 completions.add("remove");
                 completions.add("forcestart");
                 completions.add("owner");
+                completions.add("seed");
             }
             completions.add("pause");
             completions.add("resume");
