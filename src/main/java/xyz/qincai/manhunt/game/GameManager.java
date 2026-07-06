@@ -3,6 +3,8 @@ package xyz.qincai.manhunt.game;
 import org.bukkit.Bukkit;
 import org.bukkit.GameRule;
 import org.bukkit.World;
+import org.bukkit.advancement.Advancement;
+import org.bukkit.advancement.AdvancementProgress;
 import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.Player;
 import xyz.qincai.manhunt.ManhuntNG;
@@ -101,9 +103,13 @@ public class GameManager {
         }
 
         teleportPlayersToWorlds();
+        clearPlayerState();
         plugin.getFormationManager().teleportToFormation();
 
         match.setState(GameState.PRE_HUNT);
+        match.setStrongholdDiscovered(false);
+        match.setFortressDiscovered(false);
+        match.setBlazeRodObtained(false);
         unfreezeHorizontalAllPlayers();
 
         plugin.getUiManager().sendTitle("\u00a76Pre-Hunt", "\u00a77Damage a hunter to start the hunt");
@@ -136,6 +142,9 @@ public class GameManager {
 
         match.setState(GameState.RUNNING);
         match.setStartTime(System.currentTimeMillis());
+        match.setStrongholdDiscovered(false);
+        match.setFortressDiscovered(false);
+        match.setBlazeRodObtained(false);
 
         unfreezeAllPlayers();
 
@@ -239,6 +248,32 @@ public class GameManager {
             if (player != null) {
                 player.setWalkSpeed(0f);
                 player.setFlySpeed(0f);
+            }
+        }
+    }
+
+    private void clearPlayerState() {
+        if (match.getRunnerUuid() != null) {
+            Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+            if (runner != null) clearPlayerState(runner);
+        }
+
+        for (UUID uuid : match.getHunterUuids()) {
+            Player player = Bukkit.getPlayer(uuid);
+            if (player != null) clearPlayerState(player);
+        }
+    }
+
+    private void clearPlayerState(Player player) {
+        player.getInventory().clear();
+        player.getInventory().setArmorContents(null);
+        player.getInventory().setItemInMainHand(null);
+        player.getInventory().setItemInOffHand(null);
+
+        for (Advancement advancement : Bukkit.advancementIterator()) {
+            AdvancementProgress progress = player.getAdvancementProgress(advancement);
+            for (var criterion : progress.getAwardedCriteria()) {
+                progress.revoke(criterion);
             }
         }
     }

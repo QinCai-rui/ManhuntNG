@@ -52,10 +52,6 @@ public class UIManager {
         if (runner == null) return;
 
         World.Environment env = runner.getWorld().getEnvironment();
-        boolean hasBlazeRod = runner.getInventory().contains(org.bukkit.Material.BLAZE_ROD);
-        boolean hasEnderPearl = runner.getInventory().contains(org.bukkit.Material.ENDER_PEARL);
-        boolean hasEndPortalFrame = runner.getInventory().contains(org.bukkit.Material.END_PORTAL_FRAME);
-        boolean hasEyeOfEnder = runner.getInventory().contains(org.bukkit.Material.EYE_OF_ENDER);
 
         if (env == World.Environment.THE_END) {
             if (plugin.getGameManager().isDragonAlive()) {
@@ -63,6 +59,22 @@ public class UIManager {
             } else {
                 currentPhase = GamePhase.FINALE;
             }
+        } else if (env == World.Environment.NETHER) {
+            if (match.isBlazeRodObtained()) {
+                currentPhase = GamePhase.FORTRESS_RUN;
+            } else {
+                currentPhase = GamePhase.NETHER_RUSH;
+            }
+        } else {
+            if (match.isStrongholdDiscovered()) {
+                currentPhase = GamePhase.STRONGHOLD_DIVE;
+            } else if (match.isBlazeRodObtained()) {
+                currentPhase = GamePhase.RETURN_EYES;
+            } else {
+                currentPhase = GamePhase.OVERWORLD_PREP;
+            }
+        }
+    }
         } else if (env == World.Environment.NETHER) {
             if (hasBlazeRod && hasEnderPearl) {
                 currentPhase = GamePhase.BASTION_ROUTE;
@@ -72,7 +84,7 @@ public class UIManager {
                 currentPhase = GamePhase.NETHER_RUSH;
             }
         } else {
-            if (hasEndPortalFrame || hasEyeOfEnder) {
+            if (match.isStrongholdDiscovered()) {
                 currentPhase = GamePhase.STRONGHOLD_DIVE;
             } else if (hasBlazeRod || hasEnderPearl) {
                 currentPhase = GamePhase.RETURN_EYES;

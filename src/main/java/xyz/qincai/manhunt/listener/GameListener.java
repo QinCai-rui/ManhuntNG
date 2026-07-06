@@ -3,6 +3,8 @@ package xyz.qincai.manhunt.listener;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.World;
 import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -20,9 +22,7 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
-import org.bukkit.event.inventory.FurnaceSmeltEvent;
-import org.bukkit.event.inventory.FurnaceBurnEvent;
-import org.bukkit.event.inventory.CraftItemEvent;
+import org.bukkit.event.player.PlayerAdvancementDoneEvent;
 import org.bukkit.inventory.ItemStack;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -362,5 +362,23 @@ public class GameListener implements Listener {
         if (match.getState() != GameState.RUNNING) return;
 
         plugin.getGameManager().runnerWins();
+    }
+
+    @EventHandler
+    public void onAdvancementDone(PlayerAdvancementDoneEvent event) {
+        Match match = plugin.getGameManager().getMatch();
+        if (match.getState() != GameState.RUNNING) return;
+
+        if (!plugin.getPlayerManager().isRunner(event.getPlayer().getUniqueId())) return;
+
+        NamespacedKey key = event.getAdvancement().getKey();
+        if (!key.getNamespace().equals("minecraft")) return;
+
+        switch (key.getKey()) {
+            case "story/find_stronghold" -> match.setStrongholdDiscovered(true);
+            case "nether/find_fortress" -> match.setFortressDiscovered(true);
+            case "nether/obtain_blaze_rod" -> match.setBlazeRodObtained(true);
+            default -> {}
+        }
     }
 }

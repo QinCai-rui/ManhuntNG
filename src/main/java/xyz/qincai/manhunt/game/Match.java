@@ -23,6 +23,9 @@ public class Match {
     private World endWorld;
     private UUID winnerUuid;
     private boolean runnerWins;
+    private boolean strongholdDiscovered;
+    private boolean fortressDiscovered;
+    private boolean blazeRodObtained;
 
     public GameState getState() {
         return state;
@@ -184,6 +187,30 @@ public class Match {
 
     public void setRunnerWins(boolean runnerWins) {
         this.runnerWins = runnerWins;
+    }
+
+    public boolean isStrongholdDiscovered() {
+        return strongholdDiscovered;
+    }
+
+    public void setStrongholdDiscovered(boolean strongholdDiscovered) {
+        this.strongholdDiscovered = strongholdDiscovered;
+    }
+
+    public boolean isFortressDiscovered() {
+        return fortressDiscovered;
+    }
+
+    public void setFortressDiscovered(boolean fortressDiscovered) {
+        this.fortressDiscovered = fortressDiscovered;
+    }
+
+    public boolean isBlazeRodObtained() {
+        return blazeRodObtained;
+    }
+
+    public void setBlazeRodObtained(boolean blazeRodObtained) {
+        this.blazeRodObtained = blazeRodObtained;
     }
 
     public boolean isPlayer(UUID uuid) {
