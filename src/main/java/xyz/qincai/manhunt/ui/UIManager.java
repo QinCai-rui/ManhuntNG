@@ -152,15 +152,12 @@ public class UIManager {
         obj.getScore("   ").setScore(line--);
 
         String dragonStatus = "Alive";
-        if (match.getGameWorld() != null) {
-            for (org.bukkit.entity.Entity entity : match.getGameWorld().getEntities()) {
-                if (entity instanceof org.bukkit.entity.EnderDragon dragon) {
-                    if (dragon.getHealth() <= 0) {
-                        dragonStatus = "Dead";
-                    }
-                    break;
-                }
-            }
+        World endWorld = match.getEndWorld();
+        if (endWorld != null) {
+            boolean alive = endWorld.getEntitiesByClass(org.bukkit.entity.EnderDragon.class)
+                    .stream()
+                    .anyMatch(dragon -> dragon.getHealth() > 0);
+            dragonStatus = alive ? "Alive" : "Dead";
         }
         obj.getScore("Dragon: " + dragonStatus).setScore(line);
 
