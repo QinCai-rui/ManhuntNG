@@ -273,7 +273,14 @@ public class GameListener implements Listener {
 
     @EventHandler
     public void onEntityTarget(EntityTargetEvent event) {
-        if (plugin.getGameManager().isGamePaused() && event.getTarget() instanceof Player) {
+        if (!plugin.getGameManager().isGamePaused()) return;
+        if (!(event.getTarget() instanceof Player target)) return;
+
+        Match match = plugin.getGameManager().getMatch();
+        org.bukkit.World world = event.getEntity().getWorld();
+        if (!(world.equals(match.getGameWorld()) || world.equals(match.getNetherWorld()) || world.equals(match.getEndWorld()))) return;
+
+        if (plugin.getPlayerManager().isRunner(target.getUniqueId()) || plugin.getPlayerManager().isHunter(target.getUniqueId())) {
             event.setCancelled(true);
         }
     }
