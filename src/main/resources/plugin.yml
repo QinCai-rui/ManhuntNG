@@ -6,12 +6,6 @@ description: A feature complete Minecraft Manhunt server plugin
 author: QinCai
 license: GPL-3.0
 
-commands:
-  manhunt:
-    description: ManhuntNG main command
-    usage: /
-    aliases: [mh]
-
 permissions:
   manhunt.admin:
     description: Admin commands for ManhuntNG
