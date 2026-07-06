@@ -105,6 +105,7 @@ public class GameListener implements Listener {
                 event.setRespawnLocation(match.getGameWorld().getSpawnLocation());
                 Bukkit.getScheduler().runTaskLater(plugin, () -> {
                     player.setGameMode(GameMode.SURVIVAL);
+                    plugin.getPotionEffectManager().applyHunterEffects(uuid);
                     plugin.getUiManager().sendToAll("\u00a7e" + player.getName() + " has respawned!");
                 }, 1L);
             }

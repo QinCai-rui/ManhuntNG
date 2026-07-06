@@ -8,6 +8,7 @@ import xyz.qincai.manhunt.formation.FormationManager;
 import xyz.qincai.manhunt.game.GameManager;
 import xyz.qincai.manhunt.listener.GameListener;
 import xyz.qincai.manhunt.player.PlayerManager;
+import xyz.qincai.manhunt.player.PotionEffectManager;
 import xyz.qincai.manhunt.stats.StatisticsManager;
 import xyz.qincai.manhunt.tracker.TrackerManager;
 import xyz.qincai.manhunt.ui.UIManager;
@@ -18,6 +19,7 @@ public class ManhuntNG extends JavaPlugin {
     private ConfigManager configManager;
     private GameManager gameManager;
     private PlayerManager playerManager;
+    private PotionEffectManager potionEffectManager;
     private FormationManager formationManager;
     private TrackerManager trackerManager;
     private WorldManager worldManager;
@@ -34,6 +36,7 @@ public class ManhuntNG extends JavaPlugin {
 
         gameManager = new GameManager(this);
         playerManager = new PlayerManager(this);
+        potionEffectManager = new PotionEffectManager(this);
         formationManager = new FormationManager(this);
         trackerManager = new TrackerManager(this);
         worldManager = new WorldManager(this);
@@ -77,6 +80,10 @@ public class ManhuntNG extends JavaPlugin {
 
     public PlayerManager getPlayerManager() {
         return playerManager;
+    }
+
+    public PotionEffectManager getPotionEffectManager() {
+        return potionEffectManager;
     }
 
     public FormationManager getFormationManager() {

@@ -2,6 +2,8 @@ package xyz.qincai.manhunt.config;
 
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import xyz.qincai.manhunt.ManhuntNG;
 
 import java.io.File;
@@ -9,6 +11,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 
 public class ConfigManager {
@@ -118,5 +123,37 @@ public class ConfigManager {
 
     public boolean isRunnerKeepInventory() {
         return config.getBoolean("runner.keepInventory", false);
+    }
+
+    public List<PotionEffect> getRunnerPotionEffects() {
+        return getPotionEffects("potionEffects.runner");
+    }
+
+    public List<PotionEffect> getHunterPotionEffects() {
+        return getPotionEffects("potionEffects.hunters");
+    }
+
+    private List<PotionEffect> getPotionEffects(String path) {
+        List<PotionEffect> effects = new ArrayList<>();
+        List<?> list = config.getList(path);
+        if (list == null) return effects;
+
+        for (Object entry : list) {
+            if (!(entry instanceof Map<?, ?> map)) continue;
+
+            String typeName = String.valueOf(map.get("type"));
+            PotionEffectType type = PotionEffectType.getByName(typeName);
+            if (type == null) {
+                plugin.getLogger().warning("Unknown potion effect type: " + typeName);
+                continue;
+            }
+
+            int level = map.containsKey("level") ? ((Number) map.get("level")).intValue() : 1;
+            int duration = map.containsKey("duration") ? ((Number) map.get("duration")).intValue() : -1;
+            boolean ambient = !map.containsKey("ambient") || (boolean) map.get("ambient");
+
+            effects.add(new PotionEffect(type, duration, level - 1, ambient, true));
+        }
+        return effects;
     }
 }

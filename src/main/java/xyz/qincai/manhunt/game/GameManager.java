@@ -138,6 +138,7 @@ public class GameManager {
         plugin.getTrackerManager().giveCompassToAll();
         plugin.getTrackerManager().startTracking();
         plugin.getUiManager().startUIUpdates();
+        plugin.getPotionEffectManager().applyEffects();
 
         plugin.getUiManager().sendTitle("\u00a7cThe Hunt Has Begun!", "\u00a77Runner is on the loose!");
         plugin.getUiManager().sendToAll("\u00a7aThe hunt has started!");
@@ -155,6 +156,7 @@ public void stopGame() {
 
         plugin.getTrackerManager().stopTracking();
         plugin.getUiManager().stopUIUpdates();
+        plugin.getPotionEffectManager().clearEffects();
         unfreezeAllPlayers();
 
         if (plugin.getConfigManager().isWorldResetAfterMatch()) {
@@ -174,6 +176,7 @@ public void stopGame() {
 
         plugin.getTrackerManager().stopTracking();
         plugin.getUiManager().stopUIUpdates();
+        plugin.getPotionEffectManager().clearEffects();
 
         plugin.getUiManager().sendTitle("\u00a76Runner Wins!", "\u00a77The Ender Dragon has been defeated!");
         plugin.getUiManager().broadcastMessage("\u00a76\u00a7lRunner has won the game!");
@@ -190,6 +193,7 @@ public void stopGame() {
 
         plugin.getTrackerManager().stopTracking();
         plugin.getUiManager().stopUIUpdates();
+        plugin.getPotionEffectManager().clearEffects();
 
         plugin.getUiManager().sendTitle("\u00a7cHunters Win!", "\u00a77The Runner has been eliminated!");
         plugin.getUiManager().broadcastMessage("\u00a7c\u00a7lHunters have won the game!");
