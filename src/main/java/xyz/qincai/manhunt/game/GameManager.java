@@ -27,6 +27,10 @@ public class GameManager {
     }
 
     public void startGame() {
+        startGame(null);
+    }
+
+    public void startGame(UUID ownerUuid) {
         if (match.getState() != GameState.WAITING) return;
         if (match.getRunnerUuid() == null) {
             plugin.getUiManager().broadcastMessage("\u00a7cNo runner selected!");
@@ -37,6 +41,7 @@ public class GameManager {
             return;
         }
 
+        match.setOwnerUuid(ownerUuid);
         match.setState(GameState.COUNTDOWN);
         startCountdown();
     }
@@ -237,6 +242,42 @@ public void stopGame() {
     }
 
     public boolean isGameActive() {
-        return match.getState() == GameState.RUNNING || match.getState() == GameState.PRE_HUNT;
+        return match.getState() == GameState.RUNNING || match.getState() == GameState.PRE_HUNT || match.getState() == GameState.PAUSED;
+    }
+
+    public boolean pauseGame(UUID ownerUuid) {
+        if (match.getState() != GameState.RUNNING && match.getState() != GameState.PRE_HUNT) return false;
+        if (!match.isOwner(ownerUuid)) return false;
+
+        match.setState(GameState.PAUSED);
+        match.setPausedAt(System.currentTimeMillis());
+
+        freezeAllPlayers();
+        plugin.getTrackerManager().stopTracking();
+        plugin.getUiManager().stopUIUpdates();
+
+        plugin.getUiManager().sendTitle("\u00a7eGame Paused", "\u00a77The game has been paused by the owner");
+        plugin.getUiManager().sendToAll("\u00a7eGame has been paused!");
+        return true;
+    }
+
+    public boolean resumeGame(UUID ownerUuid) {
+        if (match.getState() != GameState.PAUSED) return false;
+        if (!match.isOwner(ownerUuid)) return false;
+
+        match.accumulatePausedTime();
+        match.setState(GameState.RUNNING);
+
+        unfreezeAllPlayers();
+        plugin.getTrackerManager().startTracking();
+        plugin.getUiManager().startUIUpdates();
+
+        plugin.getUiManager().sendTitle("\u00a7aGame Resumed", "\u00a77The game has been resumed");
+        plugin.getUiManager().sendToAll("\u00a7aGame has been resumed!");
+        return true;
+    }
+
+    public boolean isGamePaused() {
+        return match.getState() == GameState.PAUSED;
     }
 }

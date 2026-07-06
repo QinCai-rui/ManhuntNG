@@ -98,6 +98,11 @@ public class GameListener implements Listener {
 
         Match match = plugin.getGameManager().getMatch();
 
+        if (match.getState() == GameState.PAUSED) {
+            event.setCancelled(true);
+            return;
+        }
+
         if (match.getState() == GameState.PRE_HUNT) {
             event.setCancelled(true);
 
@@ -120,7 +125,7 @@ public class GameListener implements Listener {
         UUID uuid = player.getUniqueId();
         Match match = plugin.getGameManager().getMatch();
 
-        if (match.getState() == GameState.COUNTDOWN || match.getState() == GameState.PRE_HUNT) {
+        if (match.getState() == GameState.COUNTDOWN || match.getState() == GameState.PRE_HUNT || match.getState() == GameState.PAUSED) {
             if (event.getTo() == null) return;
             if (plugin.getPlayerManager().isRunner(uuid) || plugin.getPlayerManager().isHunter(uuid)) {
                 if (event.getFrom().getBlockX() != event.getTo().getBlockX() ||
@@ -136,7 +141,7 @@ public class GameListener implements Listener {
         Player player = event.getPlayer();
         Match match = plugin.getGameManager().getMatch();
 
-        if (match.getState() == GameState.PRE_HUNT || match.getState() == GameState.COUNTDOWN) {
+        if (match.getState() == GameState.PRE_HUNT || match.getState() == GameState.COUNTDOWN || match.getState() == GameState.PAUSED) {
             if (plugin.getPlayerManager().isRunner(player.getUniqueId()) ||
                     plugin.getPlayerManager().isHunter(player.getUniqueId())) {
                 event.setCancelled(true);
@@ -149,7 +154,7 @@ public class GameListener implements Listener {
         Player player = event.getPlayer();
         Match match = plugin.getGameManager().getMatch();
 
-        if (match.getState() == GameState.PRE_HUNT || match.getState() == GameState.COUNTDOWN) {
+        if (match.getState() == GameState.PRE_HUNT || match.getState() == GameState.COUNTDOWN || match.getState() == GameState.PAUSED) {
             if (plugin.getPlayerManager().isRunner(player.getUniqueId()) ||
                     plugin.getPlayerManager().isHunter(player.getUniqueId())) {
                 event.setCancelled(true);
@@ -162,7 +167,7 @@ public class GameListener implements Listener {
         Player player = event.getPlayer();
         Match match = plugin.getGameManager().getMatch();
 
-        if (match.getState() == GameState.PRE_HUNT || match.getState() == GameState.COUNTDOWN) {
+        if (match.getState() == GameState.PRE_HUNT || match.getState() == GameState.COUNTDOWN || match.getState() == GameState.PAUSED) {
             if (plugin.getPlayerManager().isRunner(player.getUniqueId()) ||
                     plugin.getPlayerManager().isHunter(player.getUniqueId())) {
                 event.setCancelled(true);
@@ -175,7 +180,7 @@ public class GameListener implements Listener {
         Player player = event.getPlayer();
         Match match = plugin.getGameManager().getMatch();
 
-        if (match.getState() == GameState.PRE_HUNT || match.getState() == GameState.COUNTDOWN) {
+        if (match.getState() == GameState.PRE_HUNT || match.getState() == GameState.COUNTDOWN || match.getState() == GameState.PAUSED) {
             if (plugin.getPlayerManager().isRunner(player.getUniqueId()) ||
                     plugin.getPlayerManager().isHunter(player.getUniqueId())) {
                 event.setCancelled(true);

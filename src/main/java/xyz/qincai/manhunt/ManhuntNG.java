@@ -1,7 +1,6 @@
 package xyz.qincai.manhunt;
 
 import org.bukkit.plugin.java.JavaPlugin;
-import xyz.qincai.manhunt.command.CommandRegistrar;
 import xyz.qincai.manhunt.command.ManhuntCommand;
 import xyz.qincai.manhunt.config.ConfigManager;
 import xyz.qincai.manhunt.formation.FormationManager;
@@ -23,7 +22,6 @@ public class ManhuntNG extends JavaPlugin {
     private WorldManager worldManager;
     private UIManager uiManager;
     private StatisticsManager statsManager;
-    private CommandRegistrar commandRegistrar;
 
     @Override
     public void onEnable() {
@@ -43,8 +41,9 @@ public class ManhuntNG extends JavaPlugin {
         trackerManager.init();
         uiManager.init();
 
-        commandRegistrar = new CommandRegistrar(this);
-        registerCommands();
+        ManhuntCommand manhuntCommand = new ManhuntCommand(this);
+        getCommand("manhunt").setExecutor(manhuntCommand);
+        getCommand("manhunt").setTabCompleter(manhuntCommand);
 
         getServer().getPluginManager().registerEvents(new GameListener(this), this);
 
@@ -53,18 +52,10 @@ public class ManhuntNG extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        if (commandRegistrar != null) {
-            commandRegistrar.unregisterAll();
-        }
         if (gameManager != null && gameManager.isGameActive()) {
             gameManager.stopGame();
         }
         getLogger().info("ManhuntNG has been disabled!");
-    }
-
-    private void registerCommands() {
-        ManhuntCommand manhuntCommand = new ManhuntCommand(this);
-        commandRegistrar.register("manhunt", "ManhuntNG main command", manhuntCommand, manhuntCommand);
     }
 
     public static ManhuntNG getInstance() {

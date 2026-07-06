@@ -17,6 +17,7 @@ import xyz.qincai.manhunt.player.PlayerRole;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class ManhuntCommand implements CommandExecutor, TabCompleter {
     private final ManhuntNG plugin;
@@ -42,6 +43,9 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             case "runner" -> handleRunner(sender, args);
             case "hunter" -> handleHunter(sender, args);
             case "forcestart" -> handleForceStart(sender, args);
+            case "pause" -> handlePause(sender, args);
+            case "resume" -> handleResume(sender, args);
+            case "owner" -> handleOwner(sender, args);
             default -> {
                 sendHelp(sender);
                 yield true;
@@ -93,7 +97,8 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        plugin.getGameManager().startGame();
+        UUID ownerUuid = sender instanceof Player player ? player.getUniqueId() : null;
+        plugin.getGameManager().startGame(ownerUuid);
         return true;
     }
 
@@ -194,7 +199,85 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        plugin.getGameManager().startGame();
+        UUID ownerUuid = sender instanceof Player player ? player.getUniqueId() : null;
+        plugin.getGameManager().startGame(ownerUuid);
+        return true;
+    }
+
+    private boolean handlePause(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(Component.text("Only players can use this command!", NamedTextColor.RED));
+            return true;
+        }
+
+        if (plugin.getGameManager().getMatch().getState() != GameState.RUNNING &&
+                plugin.getGameManager().getMatch().getState() != GameState.PRE_HUNT) {
+            player.sendMessage(Component.text("No active game to pause!", NamedTextColor.RED));
+            return true;
+        }
+
+        if (!plugin.getGameManager().getMatch().isOwner(player.getUniqueId())) {
+            player.sendMessage(Component.text("Only the game owner can pause the game!", NamedTextColor.RED));
+            return true;
+        }
+
+        if (!plugin.getGameManager().pauseGame(player.getUniqueId())) {
+            player.sendMessage(Component.text("Failed to pause the game!", NamedTextColor.RED));
+        }
+        return true;
+    }
+
+    private boolean handleResume(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(Component.text("Only players can use this command!", NamedTextColor.RED));
+            return true;
+        }
+
+        if (plugin.getGameManager().getMatch().getState() != GameState.PAUSED) {
+            player.sendMessage(Component.text("No paused game to resume!", NamedTextColor.RED));
+            return true;
+        }
+
+        if (!plugin.getGameManager().getMatch().isOwner(player.getUniqueId())) {
+            player.sendMessage(Component.text("Only the game owner can resume the game!", NamedTextColor.RED));
+            return true;
+        }
+
+        if (!plugin.getGameManager().resumeGame(player.getUniqueId())) {
+            player.sendMessage(Component.text("Failed to resume the game!", NamedTextColor.RED));
+        }
+        return true;
+    }
+
+    private boolean handleOwner(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("manhunt.admin")) {
+            sender.sendMessage(Component.text("You don't have permission!", NamedTextColor.RED));
+            return true;
+        }
+
+        if (args.length < 2) {
+            UUID ownerUuid = plugin.getGameManager().getMatch().getOwnerUuid();
+            if (ownerUuid != null) {
+                Player owner = Bukkit.getPlayer(ownerUuid);
+                String ownerName = owner != null ? owner.getName() : "Unknown";
+                sender.sendMessage(Component.text("Game owner: ", NamedTextColor.GRAY)
+                        .append(Component.text(ownerName, NamedTextColor.AQUA)));
+            } else {
+                sender.sendMessage(Component.text("No game owner set.", NamedTextColor.GRAY));
+            }
+            return true;
+        }
+
+        Player target = Bukkit.getPlayer(args[1]);
+        if (target == null) {
+            sender.sendMessage(Component.text("Player not found!", NamedTextColor.RED));
+            return true;
+        }
+
+        plugin.getGameManager().getMatch().setOwnerUuid(target.getUniqueId());
+        sender.sendMessage(Component.text(target.getName(), NamedTextColor.AQUA)
+                .append(Component.text(" is now the game owner!", NamedTextColor.GREEN)));
+        target.sendMessage(Component.text("You are now the game owner!", NamedTextColor.GREEN));
         return true;
     }
 
@@ -205,6 +288,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             case COUNTDOWN -> "Countdown";
             case PRE_HUNT -> "Pre-Hunt";
             case RUNNING -> "Running";
+            case PAUSED -> "Paused";
             case FINISHED -> "Finished";
         };
 
@@ -221,6 +305,10 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
                 "Click to join", "manhunt.play");
         helpEntry(sender, "/manhunt leave", "Leave the lobby",
                 "Click to leave", "manhunt.play");
+        helpEntry(sender, "/manhunt pause", "Pause the game (owner only)",
+                "Click to pause", "manhunt.play");
+        helpEntry(sender, "/manhunt resume", "Resume the game (owner only)",
+                "Click to resume", "manhunt.play");
 
         if (sender.hasPermission("manhunt.admin")) {
             sender.sendMessage(Component.empty());
@@ -234,6 +322,8 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
                     "Click to set runner", "manhunt.admin");
             helpEntry(sender, "/manhunt hunter <player>", "Add a Hunter",
                     "Click to set hunter", "manhunt.admin");
+            helpEntry(sender, "/manhunt owner [player]", "View/set game owner",
+                    "Click to set owner", "manhunt.admin");
             helpEntry(sender, "/manhunt forcestart", "Skip validation & start",
                     "Click to force start", "manhunt.admin");
             helpEntry(sender, "/manhunt reload", "Reload configuration",
@@ -263,6 +353,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             case COUNTDOWN -> NamedTextColor.YELLOW;
             case PRE_HUNT -> NamedTextColor.GOLD;
             case RUNNING -> NamedTextColor.RED;
+            case PAUSED -> NamedTextColor.AQUA;
             case FINISHED -> NamedTextColor.DARK_GRAY;
         };
     }
@@ -281,13 +372,16 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
                 completions.add("runner");
                 completions.add("hunter");
                 completions.add("forcestart");
+                completions.add("owner");
             }
+            completions.add("pause");
+            completions.add("resume");
             return filterPartial(args[0], completions);
         }
 
         if (args.length == 2) {
             String sub = args[0].toLowerCase();
-            if (sub.equals("runner") || sub.equals("hunter")) {
+            if (sub.equals("runner") || sub.equals("hunter") || sub.equals("owner")) {
                 for (Player player : Bukkit.getOnlinePlayers()) {
                     completions.add(player.getName());
                 }

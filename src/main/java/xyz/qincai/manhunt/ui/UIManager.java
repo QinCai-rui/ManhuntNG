@@ -175,7 +175,20 @@ public class UIManager {
 
     private void updateActionBar() {
         Match match = plugin.getGameManager().getMatch();
-        if (match.getState() != GameState.RUNNING) return;
+        if (match.getState() != GameState.RUNNING && match.getState() != GameState.PAUSED) return;
+
+        if (match.getState() == GameState.PAUSED) {
+            Component pausedBar = Component.text("\u00a7e\u23F8 PAUSED", NamedTextColor.GOLD);
+            for (UUID uuid : match.getHunterUuids()) {
+                Player player = Bukkit.getPlayer(uuid);
+                if (player != null) player.sendActionBar(pausedBar);
+            }
+            if (match.getRunnerUuid() != null) {
+                Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+                if (runner != null) runner.sendActionBar(pausedBar);
+            }
+            return;
+        }
 
         updatePhase();
 
