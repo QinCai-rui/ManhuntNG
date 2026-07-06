@@ -3,6 +3,8 @@ package xyz.qincai.manhunt.game;
 import org.bukkit.Bukkit;
 import org.bukkit.GameRule;
 import org.bukkit.World;
+import org.bukkit.advancement.Advancement;
+import org.bukkit.advancement.AdvancementProgress;
 import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.Player;
 import xyz.qincai.manhunt.ManhuntNG;
@@ -101,9 +103,13 @@ public class GameManager {
         }
 
         teleportPlayersToWorlds();
+        clearPlayerState();
         plugin.getFormationManager().teleportToFormation();
 
         match.setState(GameState.PRE_HUNT);
+        match.setStrongholdDiscovered(false);
+        match.setFortressDiscovered(false);
+        match.setBlazeRodObtained(false);
         unfreezeHorizontalAllPlayers();
 
         plugin.getUiManager().sendTitle("\u00a76Pre-Hunt", "\u00a77Damage a hunter to start the hunt");
@@ -136,6 +142,9 @@ public class GameManager {
 
         match.setState(GameState.RUNNING);
         match.setStartTime(System.currentTimeMillis());
+        match.setStrongholdDiscovered(false);
+        match.setFortressDiscovered(false);
+        match.setBlazeRodObtained(false);
 
         unfreezeAllPlayers();
 
@@ -149,6 +158,7 @@ public class GameManager {
         plugin.getTrackerManager().giveCompassToAll();
         plugin.getTrackerManager().startTracking();
         plugin.getUiManager().startUIUpdates();
+        plugin.getPotionEffectManager().applyEffects();
 
         plugin.getUiManager().sendTitle("\u00a7cThe Hunt Has Begun!", "\u00a77Runner is on the loose!");
         plugin.getUiManager().sendToAll("\u00a7aThe hunt has started!");
@@ -166,6 +176,7 @@ public class GameManager {
 
         plugin.getTrackerManager().stopTracking();
         plugin.getUiManager().stopUIUpdates();
+        plugin.getPotionEffectManager().clearEffects();
         unfreezeAllPlayers();
 
         match.setState(GameState.WAITING);
@@ -181,6 +192,7 @@ public class GameManager {
 
         plugin.getTrackerManager().stopTracking();
         plugin.getUiManager().stopUIUpdates();
+        plugin.getPotionEffectManager().clearEffects();
 
         plugin.getUiManager().sendTitle("\u00a76Runner Wins!", "\u00a77The Ender Dragon has been defeated!");
         plugin.getUiManager().broadcastMessage("\u00a76\u00a7lRunner has won the game!");
@@ -201,6 +213,7 @@ public class GameManager {
 
         plugin.getTrackerManager().stopTracking();
         plugin.getUiManager().stopUIUpdates();
+        plugin.getPotionEffectManager().clearEffects();
 
         plugin.getUiManager().sendTitle("\u00a7cHunters Win!", "\u00a77The Runner has been eliminated!");
         plugin.getUiManager().broadcastMessage("\u00a7c\u00a7lHunters have won the game!");
@@ -236,6 +249,31 @@ public class GameManager {
                 player.setWalkSpeed(0f);
                 player.setFlySpeed(0f);
             }
+        }
+    }
+
+    private void clearPlayerState() {
+        if (match.getRunnerUuid() != null) {
+            Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+            if (runner != null) clearPlayerState(runner);
+        }
+
+        for (UUID uuid : match.getHunterUuids()) {
+            Player player = Bukkit.getPlayer(uuid);
+            if (player != null) clearPlayerState(player);
+        }
+    }
+
+    private void clearPlayerState(Player player) {
+        player.getInventory().clear();
+        player.getInventory().setArmorContents(null);
+        player.getInventory().setItemInMainHand(null);
+        player.getInventory().setItemInOffHand(null);
+
+        Iterator<Advancement> iterator = Bukkit.advancementIterator();
+        while (iterator.hasNext()) {
+            AdvancementProgress progress = player.getAdvancementProgress(iterator.next());
+            progress.getAwardedCriteria().forEach(progress::revokeCriteria);
         }
     }
 

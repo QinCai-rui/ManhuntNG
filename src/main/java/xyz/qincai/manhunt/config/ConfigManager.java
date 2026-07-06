@@ -2,6 +2,8 @@ package xyz.qincai.manhunt.config;
 
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import xyz.qincai.manhunt.ManhuntNG;
 
 import java.io.File;
@@ -9,6 +11,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 
 public class ConfigManager {
@@ -114,5 +119,55 @@ public class ConfigManager {
 
     public boolean isHunterKeepArmor() {
         return config.getBoolean("hunters.keepArmor", false);
+    }
+
+    public List<PotionEffect> getRunnerPotionEffects() {
+        return getPotionEffects("potionEffects.runner");
+    }
+
+    public List<PotionEffect> getHunterPotionEffects() {
+        return getPotionEffects("potionEffects.hunters");
+    }
+
+    private List<PotionEffect> getPotionEffects(String path) {
+        List<PotionEffect> effects = new ArrayList<>();
+        List<?> list = config.getList(path);
+        if (list == null) return effects;
+
+        for (Object entry : list) {
+            if (!(entry instanceof Map<?, ?> map)) continue;
+
+            Object typeObj = map.get("type");
+            if (typeObj == null) continue;
+            PotionEffectType type = PotionEffectType.getByName(typeObj.toString());
+            if (type == null) {
+                plugin.getLogger().warning("Unknown potion effect type: " + typeObj);
+                continue;
+            }
+
+            int level = 1;
+            Object levelObj = map.get("level");
+            if (levelObj instanceof Number num) {
+                level = num.intValue();
+            }
+
+            int duration = -1;
+            Object durationObj = map.get("duration");
+            if (durationObj instanceof Number num) {
+                duration = num.intValue();
+            }
+            if (duration < 0) {
+                duration = Integer.MAX_VALUE;
+            }
+
+            boolean ambient = true;
+            Object ambientObj = map.get("ambient");
+            if (ambientObj instanceof Boolean bool) {
+                ambient = bool;
+            }
+
+            effects.add(new PotionEffect(type, duration, level - 1, ambient, true));
+        }
+        return effects;
     }
 }
