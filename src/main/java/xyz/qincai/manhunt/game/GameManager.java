@@ -284,7 +284,6 @@ public void stopGame() {
 
         freezeAllPlayers();
         plugin.getTrackerManager().stopTracking();
-        plugin.getUiManager().stopUIUpdates();
 
         if (match.getGameWorld() != null) {
             match.getGameWorld().setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
