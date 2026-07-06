@@ -1,0 +1,27 @@
+# ManhuntNG Configuration
+
+world:
+  resetAfterMatch: true
+
+runner:
+  lives: 1
+  keepInventory: false
+
+hunters:
+  infiniteRespawns: true
+  respawnLimit: -1
+  keepInventory: false
+
+tracking:
+  enabled: true
+  updateTicks: 5
+
+preHunt:
+  countdown: 5
+  hunterCircleRadius: 3.0
+
+scoreboard:
+  enabled: true
+
+actionBar:
+  enabled: true

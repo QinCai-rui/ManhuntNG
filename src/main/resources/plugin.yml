@@ -1,0 +1,24 @@
+name: ManhuntNG
+version: '${project.version}'
+main: xyz.qincai.manhunt.ManhuntNG
+api-version: '1.21'
+description: A feature complete Minecraft Manhunt server plugin
+author: QinCai
+license: GPL-3.0
+
+commands:
+  manhunt:
+    description: ManhuntNG main command
+    usage: /manhunt <join|leave|start|stop|reload|runner|hunter|forcestart>
+    aliases: [mh]
+
+permissions:
+  manhunt.admin:
+    description: Admin commands for ManhuntNG
+    default: op
+  manhunt.play:
+    description: Allows playing Manhunt
+    default: true
+  manhunt.spectate:
+    description: Allows spectating Manhunt
+    default: true
