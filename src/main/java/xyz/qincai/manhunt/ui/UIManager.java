@@ -51,18 +51,30 @@ public class UIManager {
         Player runner = Bukkit.getPlayer(match.getRunnerUuid());
         if (runner == null) return;
 
-        if (runner.getWorld().getEnvironment() == World.Environment.THE_END) {
-            currentPhase = GamePhase.END_RUSH;
-        } else if (runner.getWorld().getEnvironment() == World.Environment.NETHER) {
-            if (runner.getInventory().contains(org.bukkit.Material.BLAZE_ROD)) {
+        World.Environment env = runner.getWorld().getEnvironment();
+        boolean hasBlazeRod = runner.getInventory().contains(org.bukkit.Material.BLAZE_ROD);
+        boolean hasEnderPearl = runner.getInventory().contains(org.bukkit.Material.ENDER_PEARL);
+        boolean hasEndPortalFrame = runner.getInventory().contains(org.bukkit.Material.END_PORTAL_FRAME);
+        boolean hasEyeOfEnder = runner.getInventory().contains(org.bukkit.Material.EYE_OF_ENDER);
+
+        if (env == World.Environment.THE_END) {
+            if (plugin.getGameManager().isDragonAlive()) {
+                currentPhase = GamePhase.END_RUSH;
+            } else {
+                currentPhase = GamePhase.FINALE;
+            }
+        } else if (env == World.Environment.NETHER) {
+            if (hasBlazeRod && hasEnderPearl) {
                 currentPhase = GamePhase.BASTION_ROUTE;
+            } else if (hasBlazeRod) {
+                currentPhase = GamePhase.FORTRESS_RUN;
             } else {
                 currentPhase = GamePhase.NETHER_RUSH;
             }
         } else {
-            if (runner.getInventory().contains(org.bukkit.Material.ENDER_PEARL)) {
-                currentPhase = GamePhase.RETURN_EYES;
-            } else if (runner.getInventory().contains(org.bukkit.Material.BLAZE_ROD)) {
+            if (hasEndPortalFrame || hasEyeOfEnder) {
+                currentPhase = GamePhase.STRONGHOLD_DIVE;
+            } else if (hasBlazeRod || hasEnderPearl) {
                 currentPhase = GamePhase.RETURN_EYES;
             } else {
                 currentPhase = GamePhase.OVERWORLD_PREP;
@@ -178,7 +190,7 @@ public class UIManager {
         if (match.getState() != GameState.RUNNING && match.getState() != GameState.PAUSED) return;
 
         if (match.getState() == GameState.PAUSED) {
-            Component pausedBar = Component.text("⏸ PAUSED", NamedTextColor.GOLD);
+            Component pausedBar = Component.text("\u23f8 PAUSED", NamedTextColor.GOLD);
             for (UUID uuid : match.getHunterUuids()) {
                 Player player = Bukkit.getPlayer(uuid);
                 if (player != null) player.sendActionBar(pausedBar);

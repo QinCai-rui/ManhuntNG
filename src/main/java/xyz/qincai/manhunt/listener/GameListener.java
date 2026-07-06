@@ -2,6 +2,7 @@ package xyz.qincai.manhunt.listener;
 
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.Material;
 import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -22,6 +23,7 @@ import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.inventory.FurnaceSmeltEvent;
 import org.bukkit.event.inventory.FurnaceBurnEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
+import org.bukkit.inventory.ItemStack;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import xyz.qincai.manhunt.ManhuntNG;
@@ -43,12 +45,11 @@ public class GameListener implements Listener {
 
     private void sendPauseBlockedMessage(Player player) {
         long now = System.currentTimeMillis();
-        // Best-effort cleanup to avoid unbounded growth over time
         pauseMessageCooldowns.entrySet().removeIf(e -> now - e.getValue() > 60_000);
 
         UUID uuid = player.getUniqueId();
         if (now - pauseMessageCooldowns.getOrDefault(uuid, 0L) > 5000) {
-            player.sendMessage(Component.text("The game is paused — action blocked", NamedTextColor.GRAY));
+            player.sendMessage(Component.text("The game is paused \u2014 action blocked", NamedTextColor.GRAY));
             pauseMessageCooldowns.put(uuid, now);
         }
     }
@@ -56,9 +57,22 @@ public class GameListener implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
+        Match match = plugin.getGameManager().getMatch();
+
         if (!plugin.getGameManager().isGameActive()) {
             plugin.getPlayerManager().setRole(player.getUniqueId(), PlayerRole.SPECTATOR);
-            plugin.getGameManager().getMatch().addSpectator(player.getUniqueId());
+            match.addSpectator(player.getUniqueId());
+            return;
+        }
+
+        if (plugin.getPlayerManager().isHunter(player.getUniqueId())) {
+            if (match.getState() == GameState.RUNNING) {
+                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                    if (player.isOnline()) {
+                        plugin.getTrackerManager().giveCompassToPlayer(player);
+                    }
+                }, 20L);
+            }
         }
     }
 
@@ -76,6 +90,8 @@ public class GameListener implements Listener {
             plugin.getStatsManager().recordDeath(uuid);
             plugin.getGameManager().huntersWin();
         } else if (plugin.getPlayerManager().isHunter(uuid)) {
+            event.setDeathMessage("\u00a7e" + player.getName() + " (Hunter) died! Respawning...");
+
             plugin.getPlayerManager().addHunterRespawn(uuid);
 
             if (!plugin.getConfigManager().isHunterInfiniteRespawns()) {
@@ -83,11 +99,25 @@ public class GameListener implements Listener {
                 if (plugin.getPlayerManager().getHunterRespawnCount(uuid) > limit) {
                     plugin.getPlayerManager().eliminateHunter(uuid);
                     event.setDeathMessage("\u00a7c" + player.getName() + " (Hunter) has been eliminated!");
-                } else {
-                    event.setDeathMessage("\u00a7e" + player.getName() + " (Hunter) died! Respawning...");
+                    return;
                 }
+            }
+
+            if (plugin.getConfigManager().isHunterKeepInventory()) {
+                event.setKeepInventory(true);
             } else {
-                event.setDeathMessage("\u00a7e" + player.getName() + " (Hunter) died! Respawning...");
+                event.setKeepInventory(false);
+                if (!plugin.getConfigManager().isHunterKeepArmor()) {
+                    event.getDrops().clear();
+                } else {
+                    ItemStack[] armor = player.getInventory().getArmorContents();
+                    event.getDrops().clear();
+                    for (ItemStack item : armor) {
+                        if (item != null && item.getType() != Material.AIR) {
+                            event.getDrops().add(item);
+                        }
+                    }
+                }
             }
         }
     }
@@ -104,8 +134,17 @@ public class GameListener implements Listener {
             if (match.getGameWorld() != null) {
                 event.setRespawnLocation(match.getGameWorld().getSpawnLocation());
                 Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                    if (!player.isOnline()) return;
                     player.setGameMode(GameMode.SURVIVAL);
                     plugin.getPotionEffectManager().applyHunterEffects(uuid);
+
+                    if (plugin.getConfigManager().isHunterKeepInventory()) {
+                        // Inventory was kept via event.setKeepInventory(true)
+                    } else if (plugin.getConfigManager().isHunterKeepArmor()) {
+                        // Armor was kept, but inventory was cleared - give compass back
+                    }
+
+                    plugin.getTrackerManager().giveCompassToPlayer(player);
                     plugin.getUiManager().sendToAll("\u00a7e" + player.getName() + " has respawned!");
                 }, 1L);
             }
@@ -157,13 +196,35 @@ public class GameListener implements Listener {
             return;
         }
 
-        if (match.getState() == GameState.COUNTDOWN || match.getState() == GameState.PRE_HUNT) {
+        if (match.getState() == GameState.PRE_HUNT) {
             if (event.getTo() == null) return;
-            if (plugin.getPlayerManager().isRunner(uuid) || plugin.getPlayerManager().isHunter(uuid)) {
+            if (plugin.getPlayerManager().isRunner(uuid)) {
+                event.setTo(event.getFrom());
+                return;
+            }
+            if (plugin.getPlayerManager().isHunter(uuid)) {
                 if (event.getFrom().getBlockX() != event.getTo().getBlockX() ||
                         event.getFrom().getBlockZ() != event.getTo().getBlockZ()) {
                     event.setTo(event.getFrom());
                 }
+                return;
+            }
+        }
+
+        if (match.getState() == GameState.COUNTDOWN) {
+            if (event.getTo() == null) return;
+            if (plugin.getPlayerManager().isRunner(uuid) || plugin.getPlayerManager().isHunter(uuid)) {
+                event.setTo(event.getFrom());
+            }
+            return;
+        }
+
+        if (match.getState() == GameState.RUNNING && plugin.getPlayerManager().isRunner(uuid)) {
+            World fromWorld = event.getFrom().getWorld();
+            World toWorld = event.getTo().getWorld();
+            if (!fromWorld.equals(toWorld)) {
+                plugin.getTrackerManager().updateRunnerLastKnown(
+                        Bukkit.getPlayer(uuid));
             }
         }
     }
@@ -214,6 +275,13 @@ public class GameListener implements Listener {
     public void onPlayerDropItem(PlayerDropItemEvent event) {
         Player player = event.getPlayer();
         Match match = plugin.getGameManager().getMatch();
+
+        if (plugin.getTrackerManager().isTrackerCompass(event.getItemDrop().getItemStack())) {
+            if (match.getState() == GameState.RUNNING && plugin.getPlayerManager().isHunter(player.getUniqueId())) {
+                event.setCancelled(true);
+                return;
+            }
+        }
 
         if (match.getState() == GameState.PRE_HUNT || match.getState() == GameState.COUNTDOWN || match.getState() == GameState.PAUSED) {
             if (plugin.getPlayerManager().isRunner(player.getUniqueId()) ||

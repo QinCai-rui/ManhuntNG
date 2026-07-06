@@ -11,14 +11,18 @@ import org.bukkit.inventory.meta.CompassMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import xyz.qincai.manhunt.ManhuntNG;
+import xyz.qincai.manhunt.game.GameState;
 import xyz.qincai.manhunt.game.Match;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 public class TrackerManager {
     private final ManhuntNG plugin;
     private NamespacedKey trackerKey;
     private int taskId = -1;
+    private final Map<UUID, Location> runnerLastKnownLocations = new HashMap<>();
 
     public TrackerManager(ManhuntNG plugin) {
         this.plugin = plugin;
@@ -34,11 +38,13 @@ public class TrackerManager {
 
         taskId = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             Match match = plugin.getGameManager().getMatch();
-            if (match.getState() != xyz.qincai.manhunt.game.GameState.RUNNING) return;
+            if (match.getState() != GameState.RUNNING) return;
             if (match.getRunnerUuid() == null) return;
 
             Player runner = Bukkit.getPlayer(match.getRunnerUuid());
             if (runner == null) return;
+
+            updateRunnerLastKnown(runner);
 
             for (UUID hunterUuid : match.getHunterUuids()) {
                 Player hunter = Bukkit.getPlayer(hunterUuid);
@@ -55,6 +61,11 @@ public class TrackerManager {
             Bukkit.getScheduler().cancelTask(taskId);
             taskId = -1;
         }
+        runnerLastKnownLocations.clear();
+    }
+
+    public void updateRunnerLastKnown(Player runner) {
+        runnerLastKnownLocations.put(runner.getWorld().getEnvironment(), runner.getLocation().clone());
     }
 
     private void updateCompass(Player hunter, Player runner) {
@@ -66,16 +77,24 @@ public class TrackerManager {
         }
 
         World runnerWorld = runner.getWorld();
-        if (hunter.getWorld().equals(runnerWorld)) {
+        World hunterWorld = hunter.getWorld();
+
+        if (hunterWorld.equals(runnerWorld)) {
             CompassMeta meta = (CompassMeta) compass.getItemMeta();
             meta.setLodestone(runner.getLocation());
             meta.setLodestoneTracked(false);
             compass.setItemMeta(meta);
-        } else if (isLinkedDimension(hunter.getWorld(), runnerWorld)) {
-            Location linked = getLinkedLocation(hunter.getLocation(), runner.getLocation(), runnerWorld);
-            if (linked != null) {
+        } else {
+            World.Environment hunterEnv = hunterWorld.getEnvironment();
+            Location lastKnown = runnerLastKnownLocations.get(hunterEnv);
+            if (lastKnown != null && lastKnown.getWorld() != null) {
                 CompassMeta meta = (CompassMeta) compass.getItemMeta();
-                meta.setLodestone(linked);
+                meta.setLodestone(lastKnown);
+                meta.setLodestoneTracked(false);
+                compass.setItemMeta(meta);
+            } else {
+                CompassMeta meta = (CompassMeta) compass.getItemMeta();
+                meta.setLodestone(hunterWorld.getSpawnLocation());
                 meta.setLodestoneTracked(false);
                 compass.setItemMeta(meta);
             }
@@ -101,19 +120,10 @@ public class TrackerManager {
         return null;
     }
 
-    private boolean isLinkedDimension(World world1, World world2) {
-        return (world1.getEnvironment() == World.Environment.NORMAL && world2.getEnvironment() == World.Environment.NETHER)
-                || (world1.getEnvironment() == World.Environment.NETHER && world2.getEnvironment() == World.Environment.NORMAL);
-    }
-
-    private Location getLinkedLocation(Location from, Location to, World targetWorld) {
-        double scale;
-        if (from.getWorld().getEnvironment() == World.Environment.NETHER) {
-            scale = 8.0;
-        } else {
-            scale = 0.125;
-        }
-        return new Location(targetWorld, to.getX() / scale, to.getY(), to.getZ() / scale);
+    public boolean isTrackerCompass(ItemStack item) {
+        if (item == null || item.getType() != Material.COMPASS) return false;
+        if (!item.hasItemMeta()) return false;
+        return item.getItemMeta().getPersistentDataContainer().has(trackerKey, PersistentDataType.BYTE);
     }
 
     public void giveCompassToAll() {
@@ -125,5 +135,10 @@ public class TrackerManager {
             ItemStack compass = createTrackerCompass();
             hunter.getInventory().addItem(compass);
         }
+    }
+
+    public void giveCompassToPlayer(Player player) {
+        ItemStack compass = createTrackerCompass();
+        player.getInventory().addItem(compass);
     }
 }
