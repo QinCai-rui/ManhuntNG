@@ -112,6 +112,7 @@ public class GameManager {
         match.setStrongholdDiscovered(false);
         match.setFortressDiscovered(false);
         match.setBlazeRodObtained(false);
+        match.setBastionDiscovered(false);
 
         if (forceStart) {
             forceStart = false;
@@ -172,6 +173,7 @@ public class GameManager {
         match.setStrongholdDiscovered(false);
         match.setFortressDiscovered(false);
         match.setBlazeRodObtained(false);
+        match.setBastionDiscovered(false);
 
         unfreezeAllPlayers();
 

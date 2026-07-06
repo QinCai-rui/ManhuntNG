@@ -3,6 +3,7 @@ package xyz.qincai.manhunt.listener;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.Player;
@@ -21,6 +22,7 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.player.PlayerAdvancementCriterionGrantEvent;
 import org.bukkit.event.inventory.FurnaceSmeltEvent;
 import org.bukkit.event.inventory.FurnaceBurnEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
@@ -359,5 +361,24 @@ public class GameListener implements Listener {
         if (match.getState() != GameState.RUNNING) return;
 
         plugin.getGameManager().runnerWins();
+    }
+
+    @EventHandler
+    public void onAdvancementGrant(PlayerAdvancementCriterionGrantEvent event) {
+        if (!plugin.getGameManager().isGameActive()) return;
+
+        Player player = event.getPlayer();
+        Match match = plugin.getGameManager().getMatch();
+
+        if (!match.isParticipant(player.getUniqueId())) return;
+
+        NamespacedKey key = event.getAdvancement().getKey();
+
+        switch (key.toString()) {
+            case "minecraft:nether/find_fortress" -> match.setFortressDiscovered(true);
+            case "minecraft:nether/find_bastion" -> match.setBastionDiscovered(true);
+            case "minecraft:nether/obtain_blaze_rod" -> match.setBlazeRodObtained(true);
+            case "minecraft:story/follow_ender_eye" -> match.setStrongholdDiscovered(true);
+        }
     }
 }

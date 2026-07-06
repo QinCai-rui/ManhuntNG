@@ -5,6 +5,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
+import org.bukkit.entity.EnderCrystal;
+import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Criteria;
 import org.bukkit.scoreboard.DisplaySlot;
@@ -26,7 +28,7 @@ public class UIManager {
     private int scoreboardTaskId = -1;
     private GamePhase currentPhase = GamePhase.OVERWORLD_PREP;
 
-    private String[] currentEntries = new String[8];
+    private String[] currentEntries = new String[7];
 
     public UIManager(ManhuntNG plugin) {
         this.plugin = plugin;
@@ -54,14 +56,25 @@ public class UIManager {
         World.Environment env = runner.getWorld().getEnvironment();
 
         if (env == World.Environment.THE_END) {
-            if (plugin.getGameManager().isDragonAlive()) {
-                currentPhase = GamePhase.END_RUSH;
-            } else {
+            World endWorld = match.getEndWorld();
+            EnderDragon dragon = endWorld != null ? endWorld.getEntitiesByClass(EnderDragon.class)
+                    .stream().findFirst().orElse(null) : null;
+            boolean dragonDamaged = dragon != null && dragon.getHealth() < dragon.getMaxHealth();
+            boolean allCrystalsDestroyed = endWorld != null && endWorld.getEntitiesByClass(EnderCrystal.class).isEmpty();
+            if (dragonDamaged || allCrystalsDestroyed) {
                 currentPhase = GamePhase.FINALE;
+            } else {
+                currentPhase = GamePhase.END_RUSH;
             }
         } else if (env == World.Environment.NETHER) {
-            if (match.isBlazeRodObtained()) {
-                currentPhase = GamePhase.FORTRESS_RUN;
+            if (match.isFortressDiscovered()) {
+                if (match.isBlazeRodObtained()) {
+                    currentPhase = GamePhase.BLAZE_ROD_RUN;
+                } else {
+                    currentPhase = GamePhase.FORTRESS_RUN;
+                }
+            } else if (match.isBastionDiscovered()) {
+                currentPhase = GamePhase.BASTION_ROUTE;
             } else {
                 currentPhase = GamePhase.NETHER_RUSH;
             }
@@ -124,7 +137,6 @@ public class UIManager {
         updateLine(4, "Time: " + formatTime(match.getElapsedSeconds()));
         updateLine(5, "  ");
         updateLine(6, "Dimension: " + getDimension(match));
-        updateLine(7, "Dragon: " + getDragonStatus(match));
 
         for (UUID uuid : match.getHunterUuids()) {
             Player player = Bukkit.getPlayer(uuid);
@@ -153,10 +165,13 @@ public class UIManager {
     }
 
     private String formatTime(long elapsedSeconds) {
-        return String.format("%02d:%02d:%02d",
-                elapsedSeconds / 3600,
-                (elapsedSeconds % 3600) / 60,
-                elapsedSeconds % 60);
+        long hours = elapsedSeconds / 3600;
+        long minutes = (elapsedSeconds % 3600) / 60;
+        long seconds = elapsedSeconds % 60;
+        if (hours > 0) {
+            return String.format("%d:%02d:%02d", hours, minutes, seconds);
+        }
+        return String.format("%02d:%02d", minutes, seconds);
     }
 
     private String getDimension(Match match) {
@@ -168,15 +183,6 @@ public class UIManager {
             case THE_END -> "End";
             default -> "Overworld";
         };
-    }
-
-    private String getDragonStatus(Match match) {
-        World endWorld = match.getEndWorld();
-        if (endWorld == null) return "Unknown";
-        boolean alive = endWorld.getEntitiesByClass(org.bukkit.entity.EnderDragon.class)
-                .stream()
-                .anyMatch(dragon -> dragon.getHealth() > 0);
-        return alive ? "Alive" : "Dead";
     }
 
     private void updateActionBar() {

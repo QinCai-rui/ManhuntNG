@@ -26,6 +26,7 @@ public class Match {
     private boolean strongholdDiscovered;
     private boolean fortressDiscovered;
     private boolean blazeRodObtained;
+    private boolean bastionDiscovered;
     private Long seed;
     private String worldName;
 
@@ -213,6 +214,14 @@ public class Match {
 
     public void setBlazeRodObtained(boolean blazeRodObtained) {
         this.blazeRodObtained = blazeRodObtained;
+    }
+
+    public boolean isBastionDiscovered() {
+        return bastionDiscovered;
+    }
+
+    public void setBastionDiscovered(boolean bastionDiscovered) {
+        this.bastionDiscovered = bastionDiscovered;
     }
 
     public boolean isPlayer(UUID uuid) {
