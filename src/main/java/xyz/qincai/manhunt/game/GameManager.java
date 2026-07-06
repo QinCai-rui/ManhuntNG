@@ -50,6 +50,11 @@ public class GameManager {
         AtomicInteger countdown = new AtomicInteger(initialCountdown);
 
         countdownTaskId = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            if (match.getState() != GameState.COUNTDOWN) {
+                Bukkit.getScheduler().cancelTask(countdownTaskId);
+                return;
+            }
+
             int current = countdown.get();
             if (current <= 0) {
                 Bukkit.getScheduler().cancelTask(countdownTaskId);

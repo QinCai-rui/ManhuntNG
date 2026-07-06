@@ -10,6 +10,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -183,14 +184,12 @@ public class GameListener implements Listener {
     }
 
     @EventHandler
-    public void onEnderDragonDeath(EntityDamageByEntityEvent event) {
-        if (!(event.getEntity() instanceof EnderDragon dragon)) return;
-        if (dragon.getHealth() - event.getFinalDamage() > 0) return;
+    public void onEnderDragonDeath(EntityDeathEvent event) {
+        if (!(event.getEntity() instanceof EnderDragon)) return;
 
         Match match = plugin.getGameManager().getMatch();
         if (match.getState() != GameState.RUNNING) return;
 
-        event.setCancelled(true);
         plugin.getGameManager().runnerWins();
     }
 }
