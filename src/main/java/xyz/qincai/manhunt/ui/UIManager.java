@@ -206,8 +206,8 @@ public class UIManager {
 
     public void showPauseTitle() {
         Match match = plugin.getGameManager().getMatch();
-        Component titleComp = Component.text("\u00a7e\u00a7lGAME PAUSED", NamedTextColor.GOLD);
-        Component subtitleComp = Component.text("\u00a77Use /manhunt resume to continue", NamedTextColor.GRAY);
+        Component titleComp = Component.text("GAME PAUSED", NamedTextColor.GOLD, net.kyori.adventure.text.format.TextDecoration.BOLD);
+        Component subtitleComp = Component.text("Use /manhunt resume to continue", NamedTextColor.GRAY);
         Title titleObj = Title.title(titleComp, subtitleComp, Title.Times.times(
                 Duration.ofMillis(500), Duration.ofHours(24), Duration.ofMillis(500)));
 
