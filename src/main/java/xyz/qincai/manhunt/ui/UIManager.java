@@ -178,7 +178,7 @@ public class UIManager {
         if (match.getState() != GameState.RUNNING && match.getState() != GameState.PAUSED) return;
 
         if (match.getState() == GameState.PAUSED) {
-            Component pausedBar = Component.text("\u00a7e\u23F8 PAUSED", NamedTextColor.GOLD);
+            Component pausedBar = Component.text("⏸ PAUSED", NamedTextColor.GOLD);
             for (UUID uuid : match.getHunterUuids()) {
                 Player player = Bukkit.getPlayer(uuid);
                 if (player != null) player.sendActionBar(pausedBar);
