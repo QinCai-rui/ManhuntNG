@@ -239,7 +239,12 @@ public class GameListener implements Listener {
 
     @EventHandler
     public void onFurnaceSmelt(FurnaceSmeltEvent event) {
-        if (plugin.getGameManager().isGamePaused()) {
+        if (!plugin.getGameManager().isGamePaused()) return;
+
+        Match match = plugin.getGameManager().getMatch();
+        if (event.getBlock().getWorld().equals(match.getGameWorld()) ||
+                event.getBlock().getWorld().equals(match.getNetherWorld()) ||
+                event.getBlock().getWorld().equals(match.getEndWorld())) {
             event.setCancelled(true);
         }
     }
