@@ -10,6 +10,7 @@ import xyz.qincai.manhunt.ui.GamePhase;
 import xyz.qincai.manhunt.player.PlayerRole;
 
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class GameManager {
     private final ManhuntNG plugin;
@@ -41,13 +42,16 @@ public class GameManager {
     }
 
     private void startCountdown() {
-        int countdown = plugin.getConfigManager().getPreHuntCountdown();
+        int initialCountdown = plugin.getConfigManager().getPreHuntCountdown();
         match.setState(GameState.COUNTDOWN);
 
         freezeAllPlayers();
 
+        AtomicInteger countdown = new AtomicInteger(initialCountdown);
+
         countdownTaskId = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-            if (countdown <= 0) {
+            int current = countdown.get();
+            if (current <= 0) {
                 Bukkit.getScheduler().cancelTask(countdownTaskId);
                 finishCountdown();
                 return;
@@ -56,17 +60,17 @@ public class GameManager {
             for (UUID uuid : match.getHunterUuids()) {
                 Player player = Bukkit.getPlayer(uuid);
                 if (player != null) {
-                    player.sendTitle("\u00a7e" + countdown, "\u00a77Game starting in...", 0, 25, 0);
+                    player.sendTitle("\u00a7e" + current, "\u00a77Game starting in...", 0, 25, 0);
                 }
             }
             if (match.getRunnerUuid() != null) {
                 Player runner = Bukkit.getPlayer(match.getRunnerUuid());
                 if (runner != null) {
-                    runner.sendTitle("\u00a7e" + countdown, "\u00a77Game starting in...", 0, 25, 0);
+                    runner.sendTitle("\u00a7e" + current, "\u00a77Game starting in...", 0, 25, 0);
                 }
             }
 
-            countdown--;
+            countdown.decrementAndGet();
         }, 0L, 20L).getTaskId();
     }
 

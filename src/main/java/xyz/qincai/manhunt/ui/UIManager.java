@@ -10,6 +10,7 @@ import org.bukkit.scoreboard.Criteria;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Score;
+import org.bukkit.scoreboard.Scoreboard;
 import xyz.qincai.manhunt.ManhuntNG;
 import xyz.qincai.manhunt.game.GameState;
 import xyz.qincai.manhunt.game.Match;
@@ -19,9 +20,9 @@ import java.util.UUID;
 
 public class UIManager {
     private final ManhuntNG plugin;
-    private org.bukkit.scoreboard.Scoreboard scoreboard;
-    private long actionBarTaskId = -1;
-    private long scoreboardTaskId = -1;
+    private Scoreboard scoreboard;
+    private int actionBarTaskId = -1;
+    private int scoreboardTaskId = -1;
     private GamePhase currentPhase = GamePhase.OVERWORLD_PREP;
 
     public UIManager(ManhuntNG plugin) {
@@ -119,24 +120,21 @@ public class UIManager {
         if (match.getRunnerUuid() != null) {
             Player runner = Bukkit.getPlayer(match.getRunnerUuid());
             String runnerName = runner != null ? runner.getName() : "Unknown";
-            Score runnerScore = obj.getScore(Component.text("Runner: " + runnerName, NamedTextColor.RED));
-            runnerScore.setScore(line--);
+            obj.getScore("Runner: " + runnerName).setScore(line--);
         }
 
-        obj.getScore(Component.empty()).setScore(line--);
+        obj.getScore("").setScore(line--);
 
         int aliveHunters = plugin.getPlayerManager().getAliveHunterCount();
-        Score huntersScore = obj.getScore(Component.text("Hunters: " + aliveHunters, NamedTextColor.AQUA));
-        huntersScore.setScore(line--);
+        obj.getScore("Hunters: " + aliveHunters).setScore(line--);
 
-        obj.getScore(Component.empty()).setScore(line--);
+        obj.getScore(" ").setScore(line--);
 
         long elapsed = match.getElapsedSeconds();
         String timeStr = String.format("%02d:%02d:%02d", elapsed / 3600, (elapsed % 3600) / 60, elapsed % 60);
-        Score timeScore = obj.getScore(Component.text("Time: " + timeStr, NamedTextColor.YELLOW));
-        timeScore.setScore(line--);
+        obj.getScore("Time: " + timeStr).setScore(line--);
 
-        obj.getScore(Component.empty()).setScore(line--);
+        obj.getScore("  ").setScore(line--);
 
         String dimension = "Overworld";
         if (match.getRunnerUuid() != null) {
@@ -149,10 +147,9 @@ public class UIManager {
                 };
             }
         }
-        Score dimScore = obj.getScore(Component.text("Dimension: " + dimension, NamedTextColor.GREEN));
-        dimScore.setScore(line--);
+        obj.getScore("Dimension: " + dimension).setScore(line--);
 
-        obj.getScore(Component.empty()).setScore(line--);
+        obj.getScore("   ").setScore(line--);
 
         String dragonStatus = "Alive";
         if (match.getGameWorld() != null) {
@@ -165,8 +162,7 @@ public class UIManager {
                 }
             }
         }
-        Score dragonScore = obj.getScore(Component.text("Dragon: " + dragonStatus, NamedTextColor.LIGHT_PURPLE));
-        dragonScore.setScore(line);
+        obj.getScore("Dragon: " + dragonStatus).setScore(line);
 
         for (UUID uuid : match.getHunterUuids()) {
             Player player = Bukkit.getPlayer(uuid);

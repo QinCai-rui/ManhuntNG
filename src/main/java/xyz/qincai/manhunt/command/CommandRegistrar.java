@@ -9,7 +9,9 @@ import org.bukkit.command.TabCompleter;
 import xyz.qincai.manhunt.ManhuntNG;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class CommandRegistrar {
@@ -21,7 +23,7 @@ public class CommandRegistrar {
     }
 
     public void register(String name, String description, CommandExecutor executor, TabCompleter tabCompleter) {
-        Command command = new Command(name, description, "", new String[]{}) {
+        Command command = new Command(name) {
             @Override
             public boolean execute(CommandSender sender, String commandLabel, String[] args) {
                 if (executor != null) {
@@ -29,9 +31,23 @@ public class CommandRegistrar {
                 }
                 return false;
             }
+
+            @Override
+            public List<String> tabComplete(CommandSender sender, String commandLabel, String[] args) {
+                if (tabCompleter != null) {
+                    return tabCompleter.onTabComplete(sender, this, commandLabel, args);
+                }
+                return super.tabComplete(sender, commandLabel, args);
+            }
+
+            @Override
+            public boolean testPermission(CommandSender target) {
+                String perm = executor instanceof xyz.qincai.manhunt.command.ManhuntCommand ? "manhunt.admin" : "";
+                if (perm.isEmpty()) return true;
+                return target.hasPermission(perm);
+            }
         };
-        command.setTabCompleter(tabCompleter);
-        command.setPermissionExecutor((sender, command1, label, args) -> true);
+        command.setDescription(description);
 
         CommandMap commandMap = getCommandMap();
         if (commandMap != null) {

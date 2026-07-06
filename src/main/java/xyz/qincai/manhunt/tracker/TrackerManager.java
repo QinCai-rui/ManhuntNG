@@ -18,7 +18,7 @@ import java.util.UUID;
 public class TrackerManager {
     private final ManhuntNG plugin;
     private NamespacedKey trackerKey;
-    private long taskId = -1;
+    private int taskId = -1;
 
     public TrackerManager(ManhuntNG plugin) {
         this.plugin = plugin;
