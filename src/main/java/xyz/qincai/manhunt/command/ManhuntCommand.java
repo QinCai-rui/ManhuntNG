@@ -1,5 +1,10 @@
 package xyz.qincai.manhunt.command;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -46,45 +51,45 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
 
     private boolean handleJoin(CommandSender sender, String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage("\u00a7cOnly players can use this command!");
+            sender.sendMessage(Component.text("Only players can use this command!", NamedTextColor.RED));
             return true;
         }
 
         if (!player.hasPermission("manhunt.play")) {
-            player.sendMessage("\u00a7cYou don't have permission!");
+            player.sendMessage(Component.text("You don't have permission!", NamedTextColor.RED));
             return true;
         }
 
         if (plugin.getGameManager().isGameActive()) {
-            player.sendMessage("\u00a7cA game is already in progress!");
+            player.sendMessage(Component.text("A game is already in progress!", NamedTextColor.RED));
             return true;
         }
 
         plugin.getPlayerManager().setRole(player.getUniqueId(), PlayerRole.SPECTATOR);
         plugin.getGameManager().getMatch().addSpectator(player.getUniqueId());
-        player.sendMessage("\u00a7aYou joined the manhunt lobby!");
+        player.sendMessage(Component.text("You joined the manhunt lobby!", NamedTextColor.GREEN));
         return true;
     }
 
     private boolean handleLeave(CommandSender sender, String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage("\u00a7cOnly players can use this command!");
+            sender.sendMessage(Component.text("Only players can use this command!", NamedTextColor.RED));
             return true;
         }
 
         if (plugin.getGameManager().isGameActive()) {
-            player.sendMessage("\u00a7cCannot leave during an active game!");
+            player.sendMessage(Component.text("Cannot leave during an active game!", NamedTextColor.RED));
             return true;
         }
 
         plugin.getPlayerManager().removePlayerFromGame(player.getUniqueId());
-        player.sendMessage("\u00a7eYou left the manhunt lobby.");
+        player.sendMessage(Component.text("You left the manhunt lobby.", NamedTextColor.YELLOW));
         return true;
     }
 
     private boolean handleStart(CommandSender sender, String[] args) {
         if (!sender.hasPermission("manhunt.admin")) {
-            sender.sendMessage("\u00a7cYou don't have permission!");
+            sender.sendMessage(Component.text("You don't have permission!", NamedTextColor.RED));
             return true;
         }
 
@@ -94,94 +99,98 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
 
     private boolean handleStop(CommandSender sender, String[] args) {
         if (!sender.hasPermission("manhunt.admin")) {
-            sender.sendMessage("\u00a7cYou don't have permission!");
+            sender.sendMessage(Component.text("You don't have permission!", NamedTextColor.RED));
             return true;
         }
 
         plugin.getGameManager().stopGame();
-        sender.sendMessage("\u00a7eGame stopped.");
+        sender.sendMessage(Component.text("Game stopped.", NamedTextColor.YELLOW));
         return true;
     }
 
     private boolean handleReload(CommandSender sender, String[] args) {
         if (!sender.hasPermission("manhunt.admin")) {
-            sender.sendMessage("\u00a7cYou don't have permission!");
+            sender.sendMessage(Component.text("You don't have permission!", NamedTextColor.RED));
             return true;
         }
 
         plugin.getConfigManager().reloadConfigs();
-        sender.sendMessage("\u00a7aConfiguration reloaded!");
+        sender.sendMessage(Component.text("Configuration reloaded!", NamedTextColor.GREEN));
         return true;
     }
 
     private boolean handleRunner(CommandSender sender, String[] args) {
         if (!sender.hasPermission("manhunt.admin")) {
-            sender.sendMessage("\u00a7cYou don't have permission!");
+            sender.sendMessage(Component.text("You don't have permission!", NamedTextColor.RED));
             return true;
         }
 
         if (args.length < 2) {
-            sender.sendMessage("\u00a7cUsage: /manhunt runner <player>");
+            sender.sendMessage(Component.text("Usage: ", NamedTextColor.RED)
+                    .append(Component.text("/manhunt runner <player>", NamedTextColor.WHITE)));
             return true;
         }
 
         Player target = Bukkit.getPlayer(args[1]);
         if (target == null) {
-            sender.sendMessage("\u00a7cPlayer not found!");
+            sender.sendMessage(Component.text("Player not found!", NamedTextColor.RED));
             return true;
         }
 
         if (plugin.getGameManager().isGameActive()) {
-            sender.sendMessage("\u00a7cCannot change roles during an active game!");
+            sender.sendMessage(Component.text("Cannot change roles during an active game!", NamedTextColor.RED));
             return true;
         }
 
         plugin.getPlayerManager().removePlayerFromGame(target.getUniqueId());
         plugin.getPlayerManager().setRole(target.getUniqueId(), PlayerRole.RUNNER);
         plugin.getGameManager().getMatch().setRunnerUuid(target.getUniqueId());
-        sender.sendMessage("\u00a7a" + target.getName() + " is now the Runner!");
-        target.sendMessage("\u00a7aYou are now the Runner!");
+        sender.sendMessage(Component.text(target.getName(), NamedTextColor.AQUA)
+                .append(Component.text(" is now the Runner!", NamedTextColor.GREEN)));
+        target.sendMessage(Component.text("You are now the Runner!", NamedTextColor.GREEN));
         return true;
     }
 
     private boolean handleHunter(CommandSender sender, String[] args) {
         if (!sender.hasPermission("manhunt.admin")) {
-            sender.sendMessage("\u00a7cYou don't have permission!");
+            sender.sendMessage(Component.text("You don't have permission!", NamedTextColor.RED));
             return true;
         }
 
         if (args.length < 2) {
-            sender.sendMessage("\u00a7cUsage: /manhunt hunter <player>");
+            sender.sendMessage(Component.text("Usage: ", NamedTextColor.RED)
+                    .append(Component.text("/manhunt hunter <player>", NamedTextColor.WHITE)));
             return true;
         }
 
         Player target = Bukkit.getPlayer(args[1]);
         if (target == null) {
-            sender.sendMessage("\u00a7cPlayer not found!");
+            sender.sendMessage(Component.text("Player not found!", NamedTextColor.RED));
             return true;
         }
 
         if (plugin.getGameManager().isGameActive()) {
-            sender.sendMessage("\u00a7cCannot change roles during an active game!");
+            sender.sendMessage(Component.text("Cannot change roles during an active game!", NamedTextColor.RED));
             return true;
         }
 
         plugin.getPlayerManager().removePlayerFromGame(target.getUniqueId());
         plugin.getPlayerManager().setRole(target.getUniqueId(), PlayerRole.HUNTER);
         plugin.getGameManager().getMatch().addHunter(target.getUniqueId());
-        sender.sendMessage("\u00a7a" + target.getName() + " is now a Hunter!");
-        target.sendMessage("\u00a7aYou are now a Hunter!");
+        sender.sendMessage(Component.text(target.getName(), NamedTextColor.AQUA)
+                .append(Component.text(" is now a Hunter!", NamedTextColor.GREEN)));
+        target.sendMessage(Component.text("You are now a Hunter!", NamedTextColor.GREEN));
         return true;
     }
 
     private boolean handleForceStart(CommandSender sender, String[] args) {
         if (!sender.hasPermission("manhunt.admin")) {
-            sender.sendMessage("\u00a7cYou don't have permission!");
+            sender.sendMessage(Component.text("You don't have permission!", NamedTextColor.RED));
             return true;
         }
 
         if (plugin.getGameManager().getMatch().getState() != GameState.WAITING) {
-            sender.sendMessage("\u00a7cGame is not in waiting state!");
+            sender.sendMessage(Component.text("Game is not in waiting state!", NamedTextColor.RED));
             return true;
         }
 
@@ -190,17 +199,72 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
     }
 
     private void sendHelp(CommandSender sender) {
-        sender.sendMessage("\u00a76\u00a7l=== ManhuntNG ===");
-        sender.sendMessage("\u00a7e/manhunt join \u00a77- Join the lobby");
-        sender.sendMessage("\u00a7e/manhunt leave \u00a77- Leave the lobby");
+        GameState state = plugin.getGameManager().getMatch().getState();
+        String stateName = switch (state) {
+            case WAITING -> "Waiting";
+            case COUNTDOWN -> "Countdown";
+            case PRE_HUNT -> "Pre-Hunt";
+            case RUNNING -> "Running";
+            case FINISHED -> "Finished";
+        };
+
+        sender.sendMessage(Component.empty());
+        sender.sendMessage(Component.text("ManhuntNG", NamedTextColor.GOLD, TextDecoration.BOLD)
+                .append(Component.text(" \u2014 ", NamedTextColor.DARK_GRAY))
+                .append(Component.text(stateName, getTextColor(state), TextDecoration.BOLD)));
+        sender.sendMessage(Component.text("  \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500", NamedTextColor.DARK_GRAY));
+
+        Component playerHeader = Component.text("  Player", NamedTextColor.YELLOW, TextDecoration.BOLD);
+        sender.sendMessage(playerHeader);
+
+        helpEntry(sender, "/manhunt join", "Join the lobby",
+                "Click to join", "manhunt.play");
+        helpEntry(sender, "/manhunt leave", "Leave the lobby",
+                "Click to leave", "manhunt.play");
+
         if (sender.hasPermission("manhunt.admin")) {
-            sender.sendMessage("\u00a7e/manhunt start \u00a77- Start the game");
-            sender.sendMessage("\u00a7e/manhunt stop \u00a77- Stop the game");
-            sender.sendMessage("\u00a7e/manhunt reload \u00a77- Reload config");
-            sender.sendMessage("\u00a7e/manhunt runner <player> \u00a77- Set runner");
-            sender.sendMessage("\u00a7e/manhunt hunter <player> \u00a77- Set hunter");
-            sender.sendMessage("\u00a7e/manhunt forcestart \u00a77- Force start");
+            sender.sendMessage(Component.empty());
+            sender.sendMessage(Component.text("  Admin", NamedTextColor.RED, TextDecoration.BOLD));
+
+            helpEntry(sender, "/manhunt start", "Start the match",
+                    "Click to start", "manhunt.admin");
+            helpEntry(sender, "/manhunt stop", "Force stop the match",
+                    "Click to stop", "manhunt.admin");
+            helpEntry(sender, "/manhunt runner <player>", "Set the Runner",
+                    "Click to set runner", "manhunt.admin");
+            helpEntry(sender, "/manhunt hunter <player>", "Add a Hunter",
+                    "Click to set hunter", "manhunt.admin");
+            helpEntry(sender, "/manhunt forcestart", "Skip validation & start",
+                    "Click to force start", "manhunt.admin");
+            helpEntry(sender, "/manhunt reload", "Reload configuration",
+                    "Click to reload", "manhunt.admin");
         }
+
+        sender.sendMessage(Component.empty());
+    }
+
+    private void helpEntry(CommandSender sender, String command, String description,
+                           String hoverText, String permission) {
+        Component cmd = Component.text("  /" + command, NamedTextColor.AQUA)
+                .hoverEvent(HoverEvent.showText(
+                        Component.text(hoverText + "\n", NamedTextColor.GRAY)
+                                .append(Component.text("Permission: ", NamedTextColor.DARK_GRAY))
+                                .append(Component.text(permission, NamedTextColor.YELLOW))
+                ))
+                .clickEvent(ClickEvent.runCommand(command));
+        Component desc = Component.text(" \u2014 ", NamedTextColor.DARK_GRAY)
+                .append(Component.text(description, NamedTextColor.GRAY));
+        sender.sendMessage(cmd.append(desc));
+    }
+
+    private NamedTextColor getTextColor(GameState state) {
+        return switch (state) {
+            case WAITING -> NamedTextColor.GREEN;
+            case COUNTDOWN -> NamedTextColor.YELLOW;
+            case PRE_HUNT -> NamedTextColor.GOLD;
+            case RUNNING -> NamedTextColor.RED;
+            case FINISHED -> NamedTextColor.DARK_GRAY;
+        };
     }
 
     @Override

@@ -39,13 +39,6 @@ public class CommandRegistrar {
                 }
                 return super.tabComplete(sender, commandLabel, args);
             }
-
-            @Override
-            public boolean testPermission(CommandSender target) {
-                String perm = executor instanceof xyz.qincai.manhunt.command.ManhuntCommand ? "manhunt.admin" : "";
-                if (perm.isEmpty()) return true;
-                return target.hasPermission(perm);
-            }
         };
         command.setDescription(description);
 
