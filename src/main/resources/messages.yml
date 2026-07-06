@@ -1,0 +1,47 @@
+# ManhuntNG Messages
+
+# General
+prefix: '&6[Manhunt] &r'
+
+# Game States
+game.starting: '&eGame is starting...'
+game.started: '&aThe hunt has begun!'
+game.stopped: '&cGame has been stopped.'
+game.runner-wins: '&6&lRunner Wins! The Ender Dragon has been defeated!'
+game.hunters-win: '&c&lHunters Win! The Runner has been eliminated!'
+
+# Player Messages
+player.joined: '&aYou joined the manhunt lobby!'
+player.left: '&eYou left the manhunt lobby.'
+player.is-runner: '&aYou are now the Runner!'
+player.is-hunter: '&aYou are now a Hunter!'
+player.not-found: '&cPlayer not found!'
+player.no-permission: '&cYou don''t have permission!'
+player.game-in-progress: '&cA game is already in progress!'
+player.cannot-leave: '&cCannot leave during an active game!'
+player.cannot-change: '&cCannot change roles during an active game!'
+player.no-runner: '&cNo runner selected!'
+player.no-hunters: '&cNo hunters selected!'
+player.respawned: '&e{player} has respawned!'
+player.eliminated: '&c{player} has been eliminated!'
+
+# Countdown
+countdown.title: '&e{seconds}'
+countdown.subtitle: '&7Game starting in...'
+
+# Pre-Hunt
+prehunt.title: '&6The Hunt Begins!'
+prehunt.subtitle: '&7Damage a hunter to start'
+
+# Scoreboard
+scoreboard.title: '&6Manhunt'
+scoreboard.runner: '&cRunner: '
+scoreboard.hunters: '&aHunters: '
+scoreboard.time: '&eTime: '
+scoreboard.dimension: '&bDimension: '
+scoreboard.dragon: '&5Dragon: '
+scoreboard.dragon-alive: 'Alive'
+scoreboard.dragon-dead: 'Dead'
+
+# Action Bar
+actionbar.format: '&6{phase}'
