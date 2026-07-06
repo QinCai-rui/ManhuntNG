@@ -5,5 +5,6 @@ public enum GameState {
     COUNTDOWN,
     PRE_HUNT,
     RUNNING,
+    PAUSED,
     FINISHED
 }

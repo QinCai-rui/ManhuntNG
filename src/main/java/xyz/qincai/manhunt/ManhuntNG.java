@@ -44,7 +44,8 @@ public class ManhuntNG extends JavaPlugin {
         uiManager.init();
 
         commandRegistrar = new CommandRegistrar(this);
-        registerCommands();
+        ManhuntCommand manhuntCommand = new ManhuntCommand(this);
+        commandRegistrar.register("manhunt", "ManhuntNG main command", manhuntCommand, manhuntCommand);
 
         getServer().getPluginManager().registerEvents(new GameListener(this), this);
 
@@ -60,11 +61,6 @@ public class ManhuntNG extends JavaPlugin {
             gameManager.stopGame();
         }
         getLogger().info("ManhuntNG has been disabled!");
-    }
-
-    private void registerCommands() {
-        ManhuntCommand manhuntCommand = new ManhuntCommand(this);
-        commandRegistrar.register("manhunt", "ManhuntNG main command", manhuntCommand, manhuntCommand);
     }
 
     public static ManhuntNG getInstance() {

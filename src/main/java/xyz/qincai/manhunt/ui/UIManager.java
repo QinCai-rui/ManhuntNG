@@ -175,7 +175,20 @@ public class UIManager {
 
     private void updateActionBar() {
         Match match = plugin.getGameManager().getMatch();
-        if (match.getState() != GameState.RUNNING) return;
+        if (match.getState() != GameState.RUNNING && match.getState() != GameState.PAUSED) return;
+
+        if (match.getState() == GameState.PAUSED) {
+            Component pausedBar = Component.text("⏸ PAUSED", NamedTextColor.GOLD);
+            for (UUID uuid : match.getHunterUuids()) {
+                Player player = Bukkit.getPlayer(uuid);
+                if (player != null) player.sendActionBar(pausedBar);
+            }
+            if (match.getRunnerUuid() != null) {
+                Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+                if (runner != null) runner.sendActionBar(pausedBar);
+            }
+            return;
+        }
 
         updatePhase();
 
@@ -188,6 +201,36 @@ public class UIManager {
         if (match.getRunnerUuid() != null) {
             Player runner = Bukkit.getPlayer(match.getRunnerUuid());
             if (runner != null) runner.sendActionBar(actionBar);
+        }
+    }
+
+    public void showPauseTitle() {
+        Match match = plugin.getGameManager().getMatch();
+        Component titleComp = Component.text("GAME PAUSED", NamedTextColor.GOLD, net.kyori.adventure.text.format.TextDecoration.BOLD);
+        Component subtitleComp = Component.text("Use /manhunt resume to continue", NamedTextColor.GRAY);
+        Title titleObj = Title.title(titleComp, subtitleComp, Title.Times.times(
+                Duration.ofMillis(500), Duration.ofHours(24), Duration.ofMillis(500)));
+
+        for (UUID uuid : match.getHunterUuids()) {
+            Player player = Bukkit.getPlayer(uuid);
+            if (player != null) player.showTitle(titleObj);
+        }
+        if (match.getRunnerUuid() != null) {
+            Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+            if (runner != null) runner.showTitle(titleObj);
+        }
+    }
+
+    public void hidePauseTitle() {
+        Match match = plugin.getGameManager().getMatch();
+
+        for (UUID uuid : match.getHunterUuids()) {
+            Player player = Bukkit.getPlayer(uuid);
+            if (player != null) player.resetTitle();
+        }
+        if (match.getRunnerUuid() != null) {
+            Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+            if (runner != null) runner.resetTitle();
         }
     }
 

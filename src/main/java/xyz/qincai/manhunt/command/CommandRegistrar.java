@@ -54,8 +54,7 @@ public class CommandRegistrar {
         if (commandMap == null) return;
 
         for (Map.Entry<String, Command> entry : registeredCommands.entrySet()) {
-            Command command = entry.getValue();
-            command.unregister(commandMap);
+            entry.getValue().unregister(commandMap);
         }
         registeredCommands.clear();
     }

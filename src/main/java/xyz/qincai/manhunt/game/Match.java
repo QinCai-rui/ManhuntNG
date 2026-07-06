@@ -12,8 +12,12 @@ public class Match {
     private final java.util.Set<UUID> hunterUuids = new java.util.concurrent.ConcurrentHashMap<UUID, Boolean>().newKeySet();
     private final java.util.Set<UUID> spectatorUuids = new java.util.concurrent.ConcurrentHashMap<UUID, Boolean>().newKeySet();
     private final java.util.Map<UUID, PlayerRole> previousRoles = new java.util.concurrent.ConcurrentHashMap<>();
+    private UUID ownerUuid;
     private long startTime;
     private long endTime;
+    private long pausedAt;
+    private long totalPausedDuration;
+    private GameState prePauseState;
     private World gameWorld;
     private World netherWorld;
     private World endWorld;
@@ -95,7 +99,51 @@ public class Match {
     public long getElapsedSeconds() {
         if (startTime == 0) return 0;
         long end = endTime != 0 ? endTime : System.currentTimeMillis();
-        return (end - startTime) / 1000;
+        long paused = pausedAt != 0 ? System.currentTimeMillis() - pausedAt : 0;
+        return (end - startTime - totalPausedDuration - paused) / 1000;
+    }
+
+    public UUID getOwnerUuid() {
+        return ownerUuid;
+    }
+
+    public void setOwnerUuid(UUID ownerUuid) {
+        this.ownerUuid = ownerUuid;
+    }
+
+    public long getPausedAt() {
+        return pausedAt;
+    }
+
+    public void setPausedAt(long pausedAt) {
+        this.pausedAt = pausedAt;
+    }
+
+    public long getTotalPausedDuration() {
+        return totalPausedDuration;
+    }
+
+    public void setTotalPausedDuration(long totalPausedDuration) {
+        this.totalPausedDuration = totalPausedDuration;
+    }
+
+    public GameState getPrePauseState() {
+        return prePauseState;
+    }
+
+    public void setPrePauseState(GameState prePauseState) {
+        this.prePauseState = prePauseState;
+    }
+
+    public void accumulatePausedTime() {
+        if (pausedAt != 0) {
+            totalPausedDuration += System.currentTimeMillis() - pausedAt;
+            pausedAt = 0;
+        }
+    }
+
+    public boolean isOwner(UUID uuid) {
+        return ownerUuid != null && ownerUuid.equals(uuid);
     }
 
     public World getGameWorld() {
