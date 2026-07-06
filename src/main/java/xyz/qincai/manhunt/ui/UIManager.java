@@ -75,24 +75,6 @@ public class UIManager {
             }
         }
     }
-        } else if (env == World.Environment.NETHER) {
-            if (hasBlazeRod && hasEnderPearl) {
-                currentPhase = GamePhase.BASTION_ROUTE;
-            } else if (hasBlazeRod) {
-                currentPhase = GamePhase.FORTRESS_RUN;
-            } else {
-                currentPhase = GamePhase.NETHER_RUSH;
-            }
-        } else {
-            if (match.isStrongholdDiscovered()) {
-                currentPhase = GamePhase.STRONGHOLD_DIVE;
-            } else if (hasBlazeRod || hasEnderPearl) {
-                currentPhase = GamePhase.RETURN_EYES;
-            } else {
-                currentPhase = GamePhase.OVERWORLD_PREP;
-            }
-        }
-    }
 
     public void startUIUpdates() {
         stopUIUpdates();
