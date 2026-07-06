@@ -208,6 +208,7 @@ public class GameManager {
 
         match.setState(GameState.WAITING);
         match.setSeed(null);
+        match.setWorldName(null);
         plugin.getPlayerManager().reset();
         plugin.getStatsManager().reset();
     }
@@ -230,6 +231,7 @@ public class GameManager {
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             match.setState(GameState.WAITING);
             match.setSeed(null);
+            match.setWorldName(null);
             plugin.getPlayerManager().reset();
         }, 200L);
     }
@@ -252,6 +254,7 @@ public class GameManager {
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             match.setState(GameState.WAITING);
             match.setSeed(null);
+            match.setWorldName(null);
             plugin.getPlayerManager().reset();
         }, 200L);
     }

@@ -6,6 +6,7 @@ import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -49,6 +50,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             case "resume" -> handleResume(sender, args);
             case "owner" -> handleOwner(sender, args);
             case "seed" -> handleSeed(sender, args);
+            case "world" -> handleWorld(sender, args);
             default -> {
                 sendHelp(sender);
                 yield true;
@@ -367,6 +369,43 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    private boolean handleWorld(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("manhunt.admin")) {
+            sender.sendMessage(Component.text("You don't have permission!", NamedTextColor.RED));
+            return true;
+        }
+
+        if (plugin.getGameManager().isGameActive()) {
+            sender.sendMessage(Component.text("Cannot change world during an active game!", NamedTextColor.RED));
+            return true;
+        }
+
+        if (args.length < 2) {
+            String currentWorld = plugin.getGameManager().getMatch().getWorldName();
+            if (currentWorld != null) {
+                sender.sendMessage(Component.text("Current world: ", NamedTextColor.GRAY)
+                        .append(Component.text(currentWorld, NamedTextColor.AQUA)));
+            } else {
+                sender.sendMessage(Component.text("No world set (will generate a new world).", NamedTextColor.GRAY));
+            }
+            return true;
+        }
+
+        String worldName = args[1];
+
+        if (worldName.equalsIgnoreCase("clear") || worldName.equalsIgnoreCase("reset")) {
+            plugin.getGameManager().getMatch().setWorldName(null);
+            sender.sendMessage(Component.text("World cleared. Will generate a new world on start.", NamedTextColor.GREEN));
+            return true;
+        }
+
+        plugin.getGameManager().getMatch().setWorldName(worldName);
+        sender.sendMessage(Component.text("World set to ", NamedTextColor.GREEN)
+                .append(Component.text(worldName, NamedTextColor.AQUA))
+                .append(Component.text(". Will use this world on start.")));
+        return true;
+    }
+
     private void sendHelp(CommandSender sender) {
         GameState state = plugin.getGameManager().getMatch().getState();
         String stateName = switch (state) {
@@ -414,6 +453,8 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
                     "Click to set owner", "manhunt.admin");
             helpEntry(sender, "/manhunt seed [value]", "View/set world seed",
                     "Click to set seed", "manhunt.admin");
+            helpEntry(sender, "/manhunt world [name]", "View/set existing world to use",
+                    "Click to set world", "manhunt.admin");
             helpEntry(sender, "/manhunt forcestart", "Skip validation & start",
                     "Click to force start", "manhunt.admin");
             helpEntry(sender, "/manhunt reload", "Reload configuration",
@@ -465,6 +506,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
                 completions.add("forcestart");
                 completions.add("owner");
                 completions.add("seed");
+                completions.add("world");
             }
             completions.add("pause");
             completions.add("resume");
@@ -477,6 +519,13 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
                 for (Player player : Bukkit.getOnlinePlayers()) {
                     completions.add(player.getName());
                 }
+                return filterPartial(args[1], completions);
+            }
+            if (sub.equals("world")) {
+                for (World world : Bukkit.getWorlds()) {
+                    completions.add(world.getName());
+                }
+                completions.add("clear");
                 return filterPartial(args[1], completions);
             }
         }

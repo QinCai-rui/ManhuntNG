@@ -18,11 +18,66 @@ public class WorldManager {
     }
 
     public void createGameWorlds() {
+        Match match = plugin.getGameManager().getMatch();
+
+        if (match.isUsingExistingWorld()) {
+            loadExistingWorlds(match);
+        } else {
+            createGeneratedWorlds(match);
+        }
+    }
+
+    private void loadExistingWorlds(Match match) {
+        String worldName = match.getWorldName();
+
+        World overworld = Bukkit.getWorld(worldName);
+        if (overworld == null) {
+            overworld = loadWorld(worldName);
+            if (overworld == null) {
+                plugin.getLogger().severe("Failed to load existing world: " + worldName);
+                plugin.getUiManager().broadcastMessage("\u00a7cFailed to load world: " + worldName);
+                match.setState(xyz.qincai.manhunt.game.GameState.WAITING);
+                return;
+            }
+        }
+
+        overworld.setGameRule(org.bukkit.GameRule.DO_DAYLIGHT_CYCLE, true);
+        overworld.setGameRule(org.bukkit.GameRule.DO_WEATHER_CYCLE, true);
+        overworld.setGameRule(org.bukkit.GameRule.DO_FIRE_TICK, true);
+
+        World nether = Bukkit.getWorld(worldName + "_nether");
+        if (nether == null) {
+            nether = loadWorld(worldName + "_nether");
+        }
+
+        World end = Bukkit.getWorld(worldName + "_the_end");
+        if (end == null) {
+            end = loadWorld(worldName + "_the_end");
+        }
+
+        match.setGameWorld(overworld);
+        match.setNetherWorld(nether);
+        match.setEndWorld(end);
+
+        plugin.getLogger().info("Loaded existing world: " + worldName);
+    }
+
+    private World loadWorld(String worldName) {
+        File worldFolder = new File(Bukkit.getWorldContainer(), worldName);
+        if (!worldFolder.exists() || !worldFolder.isDirectory()) {
+            plugin.getLogger().warning("World folder does not exist: " + worldName);
+            return null;
+        }
+
+        WorldCreator creator = new WorldCreator(worldName);
+        return creator.createWorld();
+    }
+
+    private void createGeneratedWorlds(Match match) {
         cleanupOldWorlds();
 
         String worldName = "manhunt_" + System.currentTimeMillis();
-
-        Long seed = plugin.getGameManager().getMatch().getSeed();
+        Long seed = match.getSeed();
 
         WorldCreator creator = new WorldCreator(worldName);
         creator.environment(World.Environment.NORMAL);
@@ -61,7 +116,6 @@ public class WorldManager {
             return;
         }
 
-        Match match = plugin.getGameManager().getMatch();
         match.setGameWorld(overworld);
         match.setNetherWorld(nether);
         match.setEndWorld(end);
@@ -70,9 +124,15 @@ public class WorldManager {
     }
 
     private void cleanupOldWorlds() {
+        Match match = plugin.getGameManager().getMatch();
+        String currentWorldName = match.getWorldName();
+
         List<World> toRemove = new ArrayList<>();
         for (World world : Bukkit.getWorlds()) {
             if (world.getName().startsWith("manhunt_")) {
+                if (currentWorldName != null && world.getName().equals(currentWorldName)) {
+                    continue;
+                }
                 toRemove.add(world);
             }
         }

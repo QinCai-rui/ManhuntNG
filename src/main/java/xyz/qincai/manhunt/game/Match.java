@@ -27,6 +27,7 @@ public class Match {
     private boolean fortressDiscovered;
     private boolean blazeRodObtained;
     private Long seed;
+    private String worldName;
 
     public GameState getState() {
         return state;
@@ -228,5 +229,17 @@ public class Match {
 
     public void setSeed(Long seed) {
         this.seed = seed;
+    }
+
+    public String getWorldName() {
+        return worldName;
+    }
+
+    public void setWorldName(String worldName) {
+        this.worldName = worldName;
+    }
+
+    public boolean isUsingExistingWorld() {
+        return worldName != null && !worldName.isEmpty();
     }
 }
