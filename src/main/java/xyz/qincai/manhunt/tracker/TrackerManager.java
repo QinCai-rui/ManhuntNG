@@ -22,7 +22,7 @@ public class TrackerManager {
     private final ManhuntNG plugin;
     private NamespacedKey trackerKey;
     private int taskId = -1;
-    private final Map<UUID, Location> runnerLastKnownLocations = new HashMap<>();
+    private final Map<World.Environment, Location> runnerLastKnownLocations = new HashMap<>();
 
     public TrackerManager(ManhuntNG plugin) {
         this.plugin = plugin;
