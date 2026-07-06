@@ -360,7 +360,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
                     .append(Component.text(String.valueOf(seed), NamedTextColor.AQUA))
                     .append(Component.text(" (\""))
                     .append(Component.text(seedArg, NamedTextColor.YELLOW))
-                    .append(Component.text("\")", NamedTextColor.GREEN));
+                    .append(Component.text("\")", NamedTextColor.GREEN)));
         } catch (NumberFormatException e) {
             sender.sendMessage(Component.text("Invalid seed value!", NamedTextColor.RED));
         }
