@@ -270,11 +270,10 @@ public class GameManager {
         player.getInventory().setItemInMainHand(null);
         player.getInventory().setItemInOffHand(null);
 
-        for (Advancement advancement : Bukkit.advancementIterator()) {
-            AdvancementProgress progress = player.getAdvancementProgress(advancement);
-            for (var criterion : progress.getAwardedCriteria()) {
-                progress.revoke(criterion);
-            }
+        Iterator<Advancement> iterator = Bukkit.advancementIterator();
+        while (iterator.hasNext()) {
+            AdvancementProgress progress = player.getAdvancementProgress(iterator.next());
+            progress.getAwardedCriteria().forEach(progress::revokeCriteria);
         }
     }
 
