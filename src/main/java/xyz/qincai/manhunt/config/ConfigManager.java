@@ -141,16 +141,34 @@ public class ConfigManager {
         for (Object entry : list) {
             if (!(entry instanceof Map<?, ?> map)) continue;
 
-            String typeName = String.valueOf(map.get("type"));
-            PotionEffectType type = PotionEffectType.getByName(typeName);
+            Object typeObj = map.get("type");
+            if (typeObj == null) continue;
+            PotionEffectType type = PotionEffectType.getByName(typeObj.toString());
             if (type == null) {
-                plugin.getLogger().warning("Unknown potion effect type: " + typeName);
+                plugin.getLogger().warning("Unknown potion effect type: " + typeObj);
                 continue;
             }
 
-            int level = map.containsKey("level") ? ((Number) map.get("level")).intValue() : 1;
-            int duration = map.containsKey("duration") ? ((Number) map.get("duration")).intValue() : -1;
-            boolean ambient = !map.containsKey("ambient") || (boolean) map.get("ambient");
+            int level = 1;
+            Object levelObj = map.get("level");
+            if (levelObj instanceof Number num) {
+                level = num.intValue();
+            }
+
+            int duration = -1;
+            Object durationObj = map.get("duration");
+            if (durationObj instanceof Number num) {
+                duration = num.intValue();
+            }
+            if (duration < 0) {
+                duration = Integer.MAX_VALUE;
+            }
+
+            boolean ambient = true;
+            Object ambientObj = map.get("ambient");
+            if (ambientObj instanceof Boolean bool) {
+                ambient = bool;
+            }
 
             effects.add(new PotionEffect(type, duration, level - 1, ambient, true));
         }
