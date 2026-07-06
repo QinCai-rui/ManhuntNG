@@ -120,6 +120,7 @@ public class GameListener implements Listener {
         Match match = plugin.getGameManager().getMatch();
 
         if (match.getState() == GameState.COUNTDOWN || match.getState() == GameState.PRE_HUNT) {
+            if (event.getTo() == null) return;
             if (plugin.getPlayerManager().isRunner(uuid) || plugin.getPlayerManager().isHunter(uuid)) {
                 if (event.getFrom().getBlockX() != event.getTo().getBlockX() ||
                         event.getFrom().getBlockZ() != event.getTo().getBlockZ()) {
