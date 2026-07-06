@@ -1,14 +1,11 @@
 package xyz.qincai.manhunt.game;
 
 import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
 import org.bukkit.GameRule;
-import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.entity.Mob;
+import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.Player;
 import xyz.qincai.manhunt.ManhuntNG;
-import xyz.qincai.manhunt.ui.GamePhase;
 import xyz.qincai.manhunt.player.PlayerRole;
 
 import java.util.UUID;
@@ -43,6 +40,13 @@ public class GameManager {
             return;
         }
 
+        match.setOwnerUuid(ownerUuid);
+        match.setState(GameState.COUNTDOWN);
+        startCountdown();
+    }
+
+    public void startGameForce(UUID ownerUuid) {
+        if (match.getState() != GameState.WAITING) return;
         match.setOwnerUuid(ownerUuid);
         match.setState(GameState.COUNTDOWN);
         startCountdown();
@@ -100,9 +104,9 @@ public class GameManager {
         plugin.getFormationManager().teleportToFormation();
 
         match.setState(GameState.PRE_HUNT);
-        freezeAllPlayers();
+        unfreezeHorizontalAllPlayers();
 
-        plugin.getUiManager().sendTitle("\u00a76The Hunt Begins!", "\u00a77Damage a hunter to start");
+        plugin.getUiManager().sendTitle("\u00a76Pre-Hunt", "\u00a77Damage a hunter to start the hunt");
         plugin.getUiManager().sendToAll("\u00a7ePre-Hunt phase! Runner must damage a hunter to start the hunt.");
     }
 
@@ -110,7 +114,7 @@ public class GameManager {
         World gameWorld = match.getGameWorld();
         if (gameWorld == null) return;
 
-        Location spawn = gameWorld.getSpawnLocation();
+        org.bukkit.Location spawn = gameWorld.getSpawnLocation();
 
         if (match.getRunnerUuid() != null) {
             Player runner = Bukkit.getPlayer(match.getRunnerUuid());
@@ -135,6 +139,13 @@ public class GameManager {
 
         unfreezeAllPlayers();
 
+        if (match.getRunnerUuid() != null) {
+            Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+            if (runner != null) {
+                runner.setInvulnerable(false);
+            }
+        }
+
         plugin.getTrackerManager().giveCompassToAll();
         plugin.getTrackerManager().startTracking();
         plugin.getUiManager().startUIUpdates();
@@ -143,7 +154,7 @@ public class GameManager {
         plugin.getUiManager().sendToAll("\u00a7aThe hunt has started!");
     }
 
-public void stopGame() {
+    public void stopGame() {
         match.accumulatePausedTime();
         match.setState(GameState.FINISHED);
         match.setEndTime(System.currentTimeMillis());
@@ -156,10 +167,6 @@ public void stopGame() {
         plugin.getTrackerManager().stopTracking();
         plugin.getUiManager().stopUIUpdates();
         unfreezeAllPlayers();
-
-        if (plugin.getConfigManager().isWorldResetAfterMatch()) {
-            plugin.getWorldManager().deleteGameWorlds();
-        }
 
         match.setState(GameState.WAITING);
         plugin.getPlayerManager().reset();
@@ -179,7 +186,11 @@ public void stopGame() {
         plugin.getUiManager().broadcastMessage("\u00a76\u00a7lRunner has won the game!");
 
         unfreezeAllPlayers();
-        endGame();
+
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            match.setState(GameState.WAITING);
+            plugin.getPlayerManager().reset();
+        }, 200L);
     }
 
     public void huntersWin() {
@@ -195,17 +206,19 @@ public void stopGame() {
         plugin.getUiManager().broadcastMessage("\u00a7c\u00a7lHunters have won the game!");
 
         unfreezeAllPlayers();
-        endGame();
-    }
 
-    private void endGame() {
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            if (plugin.getConfigManager().isWorldResetAfterMatch()) {
-                plugin.getWorldManager().deleteGameWorlds();
-            }
             match.setState(GameState.WAITING);
             plugin.getPlayerManager().reset();
         }, 200L);
+    }
+
+    public boolean isDragonAlive() {
+        World endWorld = match.getEndWorld();
+        if (endWorld == null) return false;
+        return endWorld.getEntitiesByClass(EnderDragon.class)
+                .stream()
+                .anyMatch(dragon -> dragon.getHealth() > 0);
     }
 
     public void freezeAllPlayers() {
@@ -226,6 +239,25 @@ public void stopGame() {
         }
     }
 
+    public void unfreezeHorizontalAllPlayers() {
+        if (match.getRunnerUuid() != null) {
+            Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+            if (runner != null) {
+                runner.setWalkSpeed(0f);
+                runner.setFlySpeed(0f);
+                runner.setInvulnerable(true);
+            }
+        }
+
+        for (UUID uuid : match.getHunterUuids()) {
+            Player player = Bukkit.getPlayer(uuid);
+            if (player != null) {
+                player.setWalkSpeed(0.2f);
+                player.setFlySpeed(0.1f);
+            }
+        }
+    }
+
     public void unfreezeAllPlayers() {
         if (match.getRunnerUuid() != null) {
             Player runner = Bukkit.getPlayer(match.getRunnerUuid());
@@ -240,29 +272,6 @@ public void stopGame() {
             if (player != null) {
                 player.setWalkSpeed(0.2f);
                 player.setFlySpeed(0.1f);
-            }
-        }
-    }
-
-    private void setAllPlayersInvulnerable(boolean invulnerable) {
-        if (match.getRunnerUuid() != null) {
-            Player runner = Bukkit.getPlayer(match.getRunnerUuid());
-            if (runner != null) runner.setInvulnerable(invulnerable);
-        }
-        for (UUID uuid : match.getHunterUuids()) {
-            Player player = Bukkit.getPlayer(uuid);
-            if (player != null) player.setInvulnerable(invulnerable);
-        }
-    }
-
-    private void clearMobTargets() {
-        World world = match.getGameWorld();
-        if (world == null) return;
-        for (org.bukkit.entity.Entity entity : world.getEntities()) {
-            if (entity instanceof Mob mob) {
-                if (mob.getTarget() instanceof Player) {
-                    mob.setTarget(null);
-                }
             }
         }
     }
@@ -320,6 +329,8 @@ public void stopGame() {
             plugin.getTrackerManager().giveCompassToAll();
             plugin.getTrackerManager().startTracking();
             plugin.getUiManager().startUIUpdates();
+        } else if (previousState == GameState.PRE_HUNT) {
+            unfreezeHorizontalAllPlayers();
         }
 
         plugin.getUiManager().hidePauseTitle();
@@ -330,5 +341,28 @@ public void stopGame() {
 
     public boolean isGamePaused() {
         return match.getState() == GameState.PAUSED;
+    }
+
+    private void setAllPlayersInvulnerable(boolean invulnerable) {
+        if (match.getRunnerUuid() != null) {
+            Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+            if (runner != null) runner.setInvulnerable(invulnerable);
+        }
+        for (UUID uuid : match.getHunterUuids()) {
+            Player player = Bukkit.getPlayer(uuid);
+            if (player != null) player.setInvulnerable(invulnerable);
+        }
+    }
+
+    private void clearMobTargets() {
+        World world = match.getGameWorld();
+        if (world == null) return;
+        for (org.bukkit.entity.Entity entity : world.getEntities()) {
+            if (entity instanceof org.bukkit.entity.Mob mob) {
+                if (mob.getTarget() instanceof Player) {
+                    mob.setTarget(null);
+                }
+            }
+        }
     }
 }

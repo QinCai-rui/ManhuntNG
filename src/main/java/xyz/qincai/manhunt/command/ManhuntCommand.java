@@ -13,6 +13,7 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import xyz.qincai.manhunt.ManhuntNG;
 import xyz.qincai.manhunt.game.GameState;
+import xyz.qincai.manhunt.game.Match;
 import xyz.qincai.manhunt.player.PlayerRole;
 
 import java.util.ArrayList;
@@ -42,6 +43,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             case "reload" -> handleReload(sender, args);
             case "runner" -> handleRunner(sender, args);
             case "hunter" -> handleHunter(sender, args);
+            case "remove" -> handleRemove(sender, args);
             case "forcestart" -> handleForceStart(sender, args);
             case "pause" -> handlePause(sender, args);
             case "resume" -> handleResume(sender, args);
@@ -194,13 +196,53 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        if (plugin.getGameManager().getMatch().getState() != GameState.WAITING) {
-            sender.sendMessage(Component.text("Game is not in waiting state!", NamedTextColor.RED));
+        UUID ownerUuid = sender instanceof Player player ? player.getUniqueId() : null;
+        plugin.getGameManager().startGameForce(ownerUuid);
+        sender.sendMessage(Component.text("Game force started!", NamedTextColor.GREEN));
+        return true;
+    }
+
+    private boolean handleRemove(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("manhunt.admin")) {
+            sender.sendMessage(Component.text("You don't have permission!", NamedTextColor.RED));
             return true;
         }
 
-        UUID ownerUuid = sender instanceof Player player ? player.getUniqueId() : null;
-        plugin.getGameManager().startGame(ownerUuid);
+        if (args.length < 2) {
+            sender.sendMessage(Component.text("Usage: ", NamedTextColor.RED)
+                    .append(Component.text("/manhunt remove <player>", NamedTextColor.WHITE)));
+            return true;
+        }
+
+        Player target = Bukkit.getPlayer(args[1]);
+        if (target == null) {
+            sender.sendMessage(Component.text("Player not found!", NamedTextColor.RED));
+            return true;
+        }
+
+        if (plugin.getGameManager().isGameActive()) {
+            sender.sendMessage(Component.text("Cannot change roles during an active game!", NamedTextColor.RED));
+            return true;
+        }
+
+        UUID targetUuid = target.getUniqueId();
+        Match match = plugin.getGameManager().getMatch();
+
+        if (plugin.getPlayerManager().isRunner(targetUuid)) {
+            match.setRunnerUuid(null);
+            plugin.getPlayerManager().removePlayerFromGame(targetUuid);
+            sender.sendMessage(Component.text(target.getName(), NamedTextColor.AQUA)
+                    .append(Component.text(" is no longer the Runner!", NamedTextColor.YELLOW)));
+            target.sendMessage(Component.text("You are no longer the Runner!", NamedTextColor.YELLOW));
+        } else if (plugin.getPlayerManager().isHunter(targetUuid)) {
+            plugin.getPlayerManager().removePlayerFromGame(targetUuid);
+            sender.sendMessage(Component.text(target.getName(), NamedTextColor.AQUA)
+                    .append(Component.text(" has been removed from Hunters!", NamedTextColor.YELLOW)));
+            target.sendMessage(Component.text("You have been removed from Hunters!", NamedTextColor.YELLOW));
+        } else {
+            sender.sendMessage(Component.text(target.getName(), NamedTextColor.AQUA)
+                    .append(Component.text(" is not in the game!", NamedTextColor.RED)));
+        }
         return true;
     }
 
@@ -322,6 +364,8 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
                     "Click to set runner", "manhunt.admin");
             helpEntry(sender, "/manhunt hunter <player>", "Add a Hunter",
                     "Click to set hunter", "manhunt.admin");
+            helpEntry(sender, "/manhunt remove <player>", "Remove a player from game",
+                    "Click to remove player", "manhunt.admin");
             helpEntry(sender, "/manhunt owner [player]", "View/set game owner",
                     "Click to set owner", "manhunt.admin");
             helpEntry(sender, "/manhunt forcestart", "Skip validation & start",
@@ -371,6 +415,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
                 completions.add("reload");
                 completions.add("runner");
                 completions.add("hunter");
+                completions.add("remove");
                 completions.add("forcestart");
                 completions.add("owner");
             }
@@ -381,7 +426,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
 
         if (args.length == 2) {
             String sub = args[0].toLowerCase();
-            if (sub.equals("runner") || sub.equals("hunter") || sub.equals("owner")) {
+            if (sub.equals("runner") || sub.equals("hunter") || sub.equals("owner") || sub.equals("remove")) {
                 for (Player player : Bukkit.getOnlinePlayers()) {
                     completions.add(player.getName());
                 }

@@ -1,14 +1,9 @@
 package xyz.qincai.manhunt.world;
 
-import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
-import org.bukkit.entity.Player;
 import xyz.qincai.manhunt.ManhuntNG;
 import xyz.qincai.manhunt.game.Match;
-
-import java.io.File;
-import java.util.logging.Level;
 
 public class WorldManager {
     private final ManhuntNG plugin;
@@ -54,63 +49,5 @@ public class WorldManager {
         match.setEndWorld(end);
 
         overworld.setSpawnLocation(overworld.getSpawnLocation());
-    }
-
-    public void deleteGameWorlds() {
-        Match match = plugin.getGameManager().getMatch();
-        World overworld = match.getGameWorld();
-        World nether = match.getNetherWorld();
-        World end = match.getEndWorld();
-
-        if (overworld != null) {
-            for (Player player : overworld.getPlayers()) {
-                player.teleport(Bukkit.getWorlds().get(0).getSpawnLocation());
-            }
-        }
-        if (nether != null) {
-            for (Player player : nether.getPlayers()) {
-                player.teleport(Bukkit.getWorlds().get(0).getSpawnLocation());
-            }
-        }
-        if (end != null) {
-            for (Player player : end.getPlayers()) {
-                player.teleport(Bukkit.getWorlds().get(0).getSpawnLocation());
-            }
-        }
-
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            if (nether != null) {
-                Bukkit.unloadWorld(nether, false);
-                deleteWorldFolder(nether.getName());
-            }
-            if (end != null) {
-                Bukkit.unloadWorld(end, false);
-                deleteWorldFolder(end.getName());
-            }
-            if (overworld != null) {
-                Bukkit.unloadWorld(overworld, false);
-                deleteWorldFolder(overworld.getName());
-            }
-        }, 20L);
-    }
-
-    private void deleteWorldFolder(String worldName) {
-        File worldFolder = new File(Bukkit.getWorldContainer(), worldName);
-        if (worldFolder.exists()) {
-            deleteRecursive(worldFolder);
-            plugin.getLogger().info("Deleted world folder: " + worldName);
-        }
-    }
-
-    private void deleteRecursive(File file) {
-        if (file.isDirectory()) {
-            File[] children = file.listFiles();
-            if (children != null) {
-                for (File child : children) {
-                    deleteRecursive(child);
-                }
-            }
-        }
-        file.delete();
     }
 }

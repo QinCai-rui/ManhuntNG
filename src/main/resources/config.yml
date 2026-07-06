@@ -1,16 +1,13 @@
 # ManhuntNG Configuration
 
-world:
-  resetAfterMatch: true
-
 runner:
   lives: 1
-  keepInventory: false
 
 hunters:
   infiniteRespawns: true
   respawnLimit: -1
   keepInventory: false
+  keepArmor: false
 
 tracking:
   enabled: true

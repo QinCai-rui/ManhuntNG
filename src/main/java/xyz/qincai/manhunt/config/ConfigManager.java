@@ -108,15 +108,11 @@ public class ConfigManager {
         return config.getBoolean("actionBar.enabled", true);
     }
 
-    public boolean isWorldResetAfterMatch() {
-        return config.getBoolean("world.resetAfterMatch", true);
-    }
-
     public boolean isHunterKeepInventory() {
         return config.getBoolean("hunters.keepInventory", false);
     }
 
-    public boolean isRunnerKeepInventory() {
-        return config.getBoolean("runner.keepInventory", false);
+    public boolean isHunterKeepArmor() {
+        return config.getBoolean("hunters.keepArmor", false);
     }
 }
