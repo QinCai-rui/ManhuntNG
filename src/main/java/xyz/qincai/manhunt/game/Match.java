@@ -17,6 +17,7 @@ public class Match {
     private long endTime;
     private long pausedAt;
     private long totalPausedDuration;
+    private GameState prePauseState;
     private World gameWorld;
     private World netherWorld;
     private World endWorld;
@@ -124,6 +125,14 @@ public class Match {
 
     public void setTotalPausedDuration(long totalPausedDuration) {
         this.totalPausedDuration = totalPausedDuration;
+    }
+
+    public GameState getPrePauseState() {
+        return prePauseState;
+    }
+
+    public void setPrePauseState(GameState prePauseState) {
+        this.prePauseState = prePauseState;
     }
 
     public void accumulatePausedTime() {

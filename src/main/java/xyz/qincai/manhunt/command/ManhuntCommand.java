@@ -216,7 +216,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        if (!plugin.getGameManager().getMatch().isOwner(player.getUniqueId())) {
+        if (!plugin.getGameManager().getMatch().isOwner(player.getUniqueId()) && !player.hasPermission("manhunt.admin")) {
             player.sendMessage(Component.text("Only the game owner can pause the game!", NamedTextColor.RED));
             return true;
         }
@@ -238,7 +238,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        if (!plugin.getGameManager().getMatch().isOwner(player.getUniqueId())) {
+        if (!plugin.getGameManager().getMatch().isOwner(player.getUniqueId()) && !player.hasPermission("manhunt.admin")) {
             player.sendMessage(Component.text("Only the game owner can resume the game!", NamedTextColor.RED));
             return true;
         }

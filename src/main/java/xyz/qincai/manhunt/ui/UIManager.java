@@ -204,6 +204,37 @@ public class UIManager {
         }
     }
 
+    public void showPauseTitle() {
+        Match match = plugin.getGameManager().getMatch();
+        Component titleComp = Component.text("\u00a7e\u00a7lGAME PAUSED", NamedTextColor.GOLD);
+        Component subtitleComp = Component.text("\u00a77Use /manhunt resume to continue", NamedTextColor.GRAY);
+        Title titleObj = Title.title(titleComp, subtitleComp, Title.Times.times(
+                Duration.ofMillis(500), Duration.ofHours(24), Duration.ofMillis(500)));
+
+        for (UUID uuid : match.getHunterUuids()) {
+            Player player = Bukkit.getPlayer(uuid);
+            if (player != null) player.showTitle(titleObj);
+        }
+        if (match.getRunnerUuid() != null) {
+            Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+            if (runner != null) runner.showTitle(titleObj);
+        }
+    }
+
+    public void hidePauseTitle() {
+        Match match = plugin.getGameManager().getMatch();
+        Component empty = Component.empty();
+
+        for (UUID uuid : match.getHunterUuids()) {
+            Player player = Bukkit.getPlayer(uuid);
+            if (player != null) player.sendTitle(empty, empty, 0, 1, 500);
+        }
+        if (match.getRunnerUuid() != null) {
+            Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+            if (runner != null) runner.sendTitle(empty, empty, 0, 1, 500);
+        }
+    }
+
     public void sendTitle(String title, String subtitle) {
         Match match = plugin.getGameManager().getMatch();
         Component titleComp = Component.text(title, NamedTextColor.GOLD);

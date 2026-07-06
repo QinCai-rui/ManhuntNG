@@ -2,8 +2,10 @@ package xyz.qincai.manhunt.game;
 
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.GameRule;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import xyz.qincai.manhunt.ManhuntNG;
 import xyz.qincai.manhunt.ui.GamePhase;
@@ -142,6 +144,7 @@ public class GameManager {
     }
 
 public void stopGame() {
+        match.accumulatePausedTime();
         match.setState(GameState.FINISHED);
         match.setEndTime(System.currentTimeMillis());
 
@@ -241,14 +244,41 @@ public void stopGame() {
         }
     }
 
+    private void setAllPlayersInvulnerable(boolean invulnerable) {
+        if (match.getRunnerUuid() != null) {
+            Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+            if (runner != null) runner.setInvulnerable(invulnerable);
+        }
+        for (UUID uuid : match.getHunterUuids()) {
+            Player player = Bukkit.getPlayer(uuid);
+            if (player != null) player.setInvulnerable(invulnerable);
+        }
+    }
+
+    private void clearMobTargets() {
+        World world = match.getGameWorld();
+        if (world == null) return;
+        for (org.bukkit.entity.Entity entity : world.getEntities()) {
+            if (entity instanceof Mob mob) {
+                if (mob.getTarget() instanceof Player) {
+                    mob.setTarget(null);
+                }
+            }
+        }
+    }
+
     public boolean isGameActive() {
         return match.getState() == GameState.RUNNING || match.getState() == GameState.PRE_HUNT || match.getState() == GameState.PAUSED;
     }
 
     public boolean pauseGame(UUID ownerUuid) {
         if (match.getState() != GameState.RUNNING && match.getState() != GameState.PRE_HUNT) return false;
-        if (!match.isOwner(ownerUuid)) return false;
+        if (!match.isOwner(ownerUuid)) {
+            Player player = Bukkit.getPlayer(ownerUuid);
+            if (player == null || !player.hasPermission("manhunt.admin")) return false;
+        }
 
+        match.setPrePauseState(match.getState());
         match.setState(GameState.PAUSED);
         match.setPausedAt(System.currentTimeMillis());
 
@@ -256,22 +286,44 @@ public void stopGame() {
         plugin.getTrackerManager().stopTracking();
         plugin.getUiManager().stopUIUpdates();
 
-        plugin.getUiManager().sendTitle("\u00a7eGame Paused", "\u00a77The game has been paused by the owner");
+        if (match.getGameWorld() != null) {
+            match.getGameWorld().setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
+        }
+
+        setAllPlayersInvulnerable(true);
+        clearMobTargets();
+
+        plugin.getUiManager().showPauseTitle();
         plugin.getUiManager().sendToAll("\u00a7eGame has been paused!");
         return true;
     }
 
     public boolean resumeGame(UUID ownerUuid) {
         if (match.getState() != GameState.PAUSED) return false;
-        if (!match.isOwner(ownerUuid)) return false;
+        if (!match.isOwner(ownerUuid)) {
+            Player player = Bukkit.getPlayer(ownerUuid);
+            if (player == null || !player.hasPermission("manhunt.admin")) return false;
+        }
 
         match.accumulatePausedTime();
-        match.setState(GameState.RUNNING);
 
-        unfreezeAllPlayers();
-        plugin.getTrackerManager().startTracking();
-        plugin.getUiManager().startUIUpdates();
+        GameState previousState = match.getPrePauseState();
+        match.setState(previousState);
 
+        if (match.getGameWorld() != null) {
+            match.getGameWorld().setGameRule(GameRule.DO_DAYLIGHT_CYCLE, true);
+        }
+
+        setAllPlayersInvulnerable(false);
+
+        if (previousState == GameState.RUNNING) {
+            unfreezeAllPlayers();
+            plugin.getTrackerManager().giveCompassToAll();
+            plugin.getTrackerManager().startTracking();
+            plugin.getUiManager().startUIUpdates();
+        }
+
+        plugin.getUiManager().hidePauseTitle();
         plugin.getUiManager().sendTitle("\u00a7aGame Resumed", "\u00a77The game has been resumed");
         plugin.getUiManager().sendToAll("\u00a7aGame has been resumed!");
         return true;
