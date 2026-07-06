@@ -22,7 +22,7 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
-import org.bukkit.event.player.PlayerAdvancementCriterionGrantEvent;
+import io.papermc.paper.event.player.PlayerAdvancementCriterionGrantEvent;
 import org.bukkit.event.inventory.FurnaceSmeltEvent;
 import org.bukkit.event.inventory.FurnaceBurnEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
