@@ -3,12 +3,14 @@ package xyz.qincai.manhunt.world;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
+import org.bukkit.entity.Player;
 import xyz.qincai.manhunt.ManhuntNG;
 import xyz.qincai.manhunt.game.Match;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class WorldManager {
     private final ManhuntNG plugin;
@@ -160,5 +162,32 @@ public class WorldManager {
             }
         }
         folder.delete();
+    }
+
+    public void teleportToMainWorld() {
+        Match match = plugin.getGameManager().getMatch();
+        World mainWorld = Bukkit.getWorlds().get(0);
+        org.bukkit.Location spawn = mainWorld.getSpawnLocation();
+
+        if (match.getRunnerUuid() != null) {
+            Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+            if (runner != null && runner.isOnline()) {
+                runner.teleport(spawn);
+            }
+        }
+
+        for (UUID uuid : match.getHunterUuids()) {
+            Player player = Bukkit.getPlayer(uuid);
+            if (player != null && player.isOnline()) {
+                player.teleport(spawn);
+            }
+        }
+
+        for (UUID uuid : match.getSpectatorUuids()) {
+            Player player = Bukkit.getPlayer(uuid);
+            if (player != null && player.isOnline()) {
+                player.teleport(spawn);
+            }
+        }
     }
 }

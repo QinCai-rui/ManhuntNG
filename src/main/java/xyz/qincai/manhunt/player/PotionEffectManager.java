@@ -48,14 +48,16 @@ public class PotionEffectManager {
         if (match.getRunnerUuid() != null) {
             Player runner = Bukkit.getPlayer(match.getRunnerUuid());
             if (runner != null) {
-                clearConfiguredEffects(runner, plugin.getConfigManager().getRunnerPotionEffects());
+                runner.getActivePotionEffects().stream().map(PotionEffect::getType)
+                        .forEach(runner::removePotionEffect);
             }
         }
 
         for (UUID uuid : match.getHunterUuids()) {
             Player hunter = Bukkit.getPlayer(uuid);
             if (hunter != null) {
-                clearConfiguredEffects(hunter, plugin.getConfigManager().getHunterPotionEffects());
+                hunter.getActivePotionEffects().stream().map(PotionEffect::getType)
+                        .forEach(hunter::removePotionEffect);
             }
         }
     }

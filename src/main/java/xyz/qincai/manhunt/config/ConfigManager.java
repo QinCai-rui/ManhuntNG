@@ -1,5 +1,6 @@
 package xyz.qincai.manhunt.config;
 
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.potion.PotionEffect;
@@ -14,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 
 public class ConfigManager {
@@ -51,6 +53,62 @@ public class ConfigManager {
             plugin.saveResource("config.yml", false);
         }
         config = YamlConfiguration.loadConfiguration(configFile);
+        checkConfigVersion();
+    }
+
+    private void checkConfigVersion() {
+        FileConfiguration defaultConfig = loadDefaultConfig();
+        if (defaultConfig == null) return;
+
+        int currentVersion = config.getInt("config-version", 0);
+        int latestVersion = defaultConfig.getInt("config-version", 1);
+
+        if (currentVersion < latestVersion) {
+            plugin.getLogger().info("Config outdated (v" + currentVersion + "). Merging new options from v" + latestVersion + "...");
+            mergeMissingKeys(defaultConfig, config);
+            config.set("config-version", latestVersion);
+            try {
+                config.save(configFile);
+                plugin.getLogger().info("Config updated to v" + latestVersion);
+            } catch (IOException e) {
+                plugin.getLogger().log(Level.WARNING, "Could not save updated config", e);
+            }
+        }
+    }
+
+    private FileConfiguration loadDefaultConfig() {
+        InputStream in = plugin.getResource("config.yml");
+        if (in == null) return null;
+        return YamlConfiguration.loadConfiguration(new InputStreamReader(in, StandardCharsets.UTF_8));
+    }
+
+    private void mergeMissingKeys(ConfigurationSection source, ConfigurationSection target) {
+        mergeSection(source, target, "");
+    }
+
+    private void mergeSection(ConfigurationSection source, ConfigurationSection target, String prefix) {
+        for (String key : source.getKeys(false)) {
+            String fullPath = prefix.isEmpty() ? key : prefix + "." + key;
+            if (source.isConfigurationSection(key)) {
+                ConfigurationSection childSource = source.getConfigurationSection(key);
+                if (childSource == null) continue;
+                if (!target.isConfigurationSection(fullPath)) {
+                    for (String childKey : childSource.getKeys(true)) {
+                        String childPath = fullPath + "." + childKey;
+                        if (!childSource.isConfigurationSection(childKey)) {
+                            target.set(childPath, childSource.get(childKey));
+                        }
+                    }
+                } else {
+                    ConfigurationSection childTarget = target.getConfigurationSection(fullPath);
+                    if (childTarget != null) {
+                        mergeSection(childSource, childTarget, "");
+                    }
+                }
+            } else if (!target.contains(fullPath)) {
+                target.set(fullPath, source.get(key));
+            }
+        }
     }
 
     private void saveDefaultMessages() {
