@@ -52,6 +52,9 @@ public class UIManager {
         if (runner == null) return;
 
         World.Environment env = runner.getWorld().getEnvironment();
+        boolean hasBlazeRod = runner.getInventory().contains(org.bukkit.Material.BLAZE_ROD);
+        boolean hasEnderPearl = runner.getInventory().contains(org.bukkit.Material.ENDER_PEARL);
+        boolean hasEyeOfEnder = runner.getInventory().contains(org.bukkit.Material.ENDER_EYE);
 
         if (env == World.Environment.THE_END) {
             if (plugin.getGameManager().isDragonAlive()) {
@@ -60,15 +63,17 @@ public class UIManager {
                 currentPhase = GamePhase.FINALE;
             }
         } else if (env == World.Environment.NETHER) {
-            if (match.isBlazeRodObtained()) {
+            if (hasBlazeRod && hasEnderPearl) {
+                currentPhase = GamePhase.BASTION_ROUTE;
+            } else if (hasBlazeRod) {
                 currentPhase = GamePhase.FORTRESS_RUN;
             } else {
                 currentPhase = GamePhase.NETHER_RUSH;
             }
         } else {
-            if (match.isStrongholdDiscovered()) {
+            if (hasEndPortalFrame || hasEyeOfEnder) {
                 currentPhase = GamePhase.STRONGHOLD_DIVE;
-            } else if (match.isBlazeRodObtained()) {
+            } else if (hasBlazeRod || hasEnderPearl) {
                 currentPhase = GamePhase.RETURN_EYES;
             } else {
                 currentPhase = GamePhase.OVERWORLD_PREP;
