@@ -10,6 +10,7 @@ import org.bukkit.entity.Player;
 import xyz.qincai.manhunt.ManhuntNG;
 import xyz.qincai.manhunt.player.PlayerRole;
 
+import java.util.Iterator;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
