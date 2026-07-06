@@ -21,9 +21,12 @@ import java.util.UUID;
 public class UIManager {
     private final ManhuntNG plugin;
     private Scoreboard scoreboard;
+    private Objective objective;
     private int actionBarTaskId = -1;
     private int scoreboardTaskId = -1;
     private GamePhase currentPhase = GamePhase.OVERWORLD_PREP;
+
+    private String[] currentEntries = new String[8];
 
     public UIManager(ManhuntNG plugin) {
         this.plugin = plugin;
@@ -69,6 +72,7 @@ public class UIManager {
 
     public void startUIUpdates() {
         stopUIUpdates();
+        setupScoreboard();
         if (plugin.getConfigManager().isActionBarEnabled()) {
             actionBarTaskId = Bukkit.getScheduler().runTaskTimer(plugin, this::updateActionBar, 0L, 20L).getTaskId();
         }
@@ -86,6 +90,87 @@ public class UIManager {
             Bukkit.getScheduler().cancelTask(scoreboardTaskId);
             scoreboardTaskId = -1;
         }
+        if (objective != null) {
+            objective.unregister();
+            objective = null;
+        }
+        for (int i = 0; i < currentEntries.length; i++) {
+            currentEntries[i] = null;
+        }
+    }
+
+    private void setupScoreboard() {
+        if (objective != null) return;
+        objective = scoreboard.registerNewObjective("manhunt", Criteria.DUMMY, Component.text("Manhunt", NamedTextColor.GOLD));
+        objective.setDisplaySlot(DisplaySlot.SIDEBAR);
+    }
+
+    private void updateScoreboard() {
+        Match match = plugin.getGameManager().getMatch();
+        if (objective == null) return;
+
+        updateLine(0, match.getRunnerUuid() != null
+                ? "Runner: " + getRunnerName(match)
+                : "Runner: None");
+        updateLine(1, "");
+        updateLine(2, "Hunters: " + plugin.getPlayerManager().getAliveHunterCount());
+        updateLine(3, " ");
+        updateLine(4, "Time: " + formatTime(match.getElapsedSeconds()));
+        updateLine(5, "  ");
+        updateLine(6, "Dimension: " + getDimension(match));
+        updateLine(7, "Dragon: " + getDragonStatus(match));
+
+        for (UUID uuid : match.getHunterUuids()) {
+            Player player = Bukkit.getPlayer(uuid);
+            if (player != null) player.setScoreboard(scoreboard);
+        }
+        if (match.getRunnerUuid() != null) {
+            Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+            if (runner != null) runner.setScoreboard(scoreboard);
+        }
+    }
+
+    private void updateLine(int index, String text) {
+        String old = currentEntries[index];
+        if (text.equals(old)) return;
+
+        if (old != null) {
+            objective.getScore(old).resetScore();
+        }
+        objective.getScore(text).setScore(7 - index);
+        currentEntries[index] = text;
+    }
+
+    private String getRunnerName(Match match) {
+        Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+        return runner != null ? runner.getName() : "Unknown";
+    }
+
+    private String formatTime(long elapsedSeconds) {
+        return String.format("%02d:%02d:%02d",
+                elapsedSeconds / 3600,
+                (elapsedSeconds % 3600) / 60,
+                elapsedSeconds % 60);
+    }
+
+    private String getDimension(Match match) {
+        if (match.getRunnerUuid() == null) return "Overworld";
+        Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+        if (runner == null) return "Overworld";
+        return switch (runner.getWorld().getEnvironment()) {
+            case NETHER -> "Nether";
+            case THE_END -> "End";
+            default -> "Overworld";
+        };
+    }
+
+    private String getDragonStatus(Match match) {
+        World endWorld = match.getEndWorld();
+        if (endWorld == null) return "Unknown";
+        boolean alive = endWorld.getEntitiesByClass(org.bukkit.entity.EnderDragon.class)
+                .stream()
+                .anyMatch(dragon -> dragon.getHealth() > 0);
+        return alive ? "Alive" : "Dead";
     }
 
     private void updateActionBar() {
@@ -103,71 +188,6 @@ public class UIManager {
         if (match.getRunnerUuid() != null) {
             Player runner = Bukkit.getPlayer(match.getRunnerUuid());
             if (runner != null) runner.sendActionBar(actionBar);
-        }
-    }
-
-    private void updateScoreboard() {
-        Match match = plugin.getGameManager().getMatch();
-
-        Objective obj = scoreboard.getObjective("manhunt");
-        if (obj != null) obj.unregister();
-
-        obj = scoreboard.registerNewObjective("manhunt", Criteria.DUMMY, Component.text("Manhunt", NamedTextColor.GOLD));
-        obj.setDisplaySlot(DisplaySlot.SIDEBAR);
-
-        int line = 6;
-
-        if (match.getRunnerUuid() != null) {
-            Player runner = Bukkit.getPlayer(match.getRunnerUuid());
-            String runnerName = runner != null ? runner.getName() : "Unknown";
-            obj.getScore("Runner: " + runnerName).setScore(line--);
-        }
-
-        obj.getScore("").setScore(line--);
-
-        int aliveHunters = plugin.getPlayerManager().getAliveHunterCount();
-        obj.getScore("Hunters: " + aliveHunters).setScore(line--);
-
-        obj.getScore(" ").setScore(line--);
-
-        long elapsed = match.getElapsedSeconds();
-        String timeStr = String.format("%02d:%02d:%02d", elapsed / 3600, (elapsed % 3600) / 60, elapsed % 60);
-        obj.getScore("Time: " + timeStr).setScore(line--);
-
-        obj.getScore("  ").setScore(line--);
-
-        String dimension = "Overworld";
-        if (match.getRunnerUuid() != null) {
-            Player runner = Bukkit.getPlayer(match.getRunnerUuid());
-            if (runner != null) {
-                dimension = switch (runner.getWorld().getEnvironment()) {
-                    case NETHER -> "Nether";
-                    case THE_END -> "End";
-                    default -> "Overworld";
-                };
-            }
-        }
-        obj.getScore("Dimension: " + dimension).setScore(line--);
-
-        obj.getScore("   ").setScore(line--);
-
-        String dragonStatus = "Alive";
-        World endWorld = match.getEndWorld();
-        if (endWorld != null) {
-            boolean alive = endWorld.getEntitiesByClass(org.bukkit.entity.EnderDragon.class)
-                    .stream()
-                    .anyMatch(dragon -> dragon.getHealth() > 0);
-            dragonStatus = alive ? "Alive" : "Dead";
-        }
-        obj.getScore("Dragon: " + dragonStatus).setScore(line);
-
-        for (UUID uuid : match.getHunterUuids()) {
-            Player player = Bukkit.getPlayer(uuid);
-            if (player != null) player.setScoreboard(scoreboard);
-        }
-        if (match.getRunnerUuid() != null) {
-            Player runner = Bukkit.getPlayer(match.getRunnerUuid());
-            if (runner != null) runner.setScoreboard(scoreboard);
         }
     }
 
