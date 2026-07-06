@@ -131,13 +131,17 @@ public class GameManager {
         plugin.getUiManager().sendToAll("\u00a7aThe hunt has started!");
     }
 
-    public void stopGame() {
+public void stopGame() {
         match.setState(GameState.FINISHED);
         match.setEndTime(System.currentTimeMillis());
 
+        if (countdownTaskId != -1) {
+            Bukkit.getScheduler().cancelTask(countdownTaskId);
+            countdownTaskId = -1;
+        }
+
         plugin.getTrackerManager().stopTracking();
         plugin.getUiManager().stopUIUpdates();
-
         unfreezeAllPlayers();
 
         if (plugin.getConfigManager().isWorldResetAfterMatch()) {
