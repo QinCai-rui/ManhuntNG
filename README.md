@@ -75,16 +75,16 @@ On first run the plugin creates a `plugins/ManhuntNG/` folder with `config.yml` 
 
 Edit these files to adjust to what you desire. See the default configuration in [src/main/resources/config.yml](src/main/resources/config.yml) for available options.
 
-Messages support `&` colour codes and `{player}` placeholders.
+The messages support legacy `&` colour codes and `{player}` placeholders. (TODO: change to Adventure text components/MiniMessage)
 
 ## Gameplay (Overview)
 
 1. "Lobby": players join and the admin assigns runner/hunters.
-2. Countdown: players are frozen while the match readies.
-3. Pre-hunt: players are teleported to the match world; hunters form around the runner.
+2. Countdown: players are frozen for 5 seconds (configurable).
+3. Pre-hunt: players are teleported to the match world; hunters form  circle around the runner.
 4. Running: hunters receive tracking compasses; potion effects (if used) are applied.
-5. Pause/Resume: owner/admin may pause or resume; world and mob behaviour are handled safely. Game automatically pauses when the runner leaves during a game.
-6. Win conditions: runner wins by killing the Ender Dragon; hunters win by eliminating the runner (or if the runner dies).
+5. Pause/Resume: owner/admin may pause or resume; world and mob behaviour are handled properly. Game automatically pauses when the runner leaves during a game.
+6. **Win conditions**: runner wins by killing the Ender Dragon; hunters win by eliminating the runner (or if the runner dies).
 
 ## Tracking Behavior
 
@@ -108,42 +108,27 @@ TODO: add teamchat support
 
 ### Better Tracking
 
-- Live runner tracking in the same dimension  
-- Dimension‑aware lastknown location tracking  
-- Compass safely disables when data is missing  
-- Event‑driven updates (death, respawn, dimension change)
+Runner tracking is live within the same dimension, updates last‑known locations correctly across dimensions, and automatically disables the compass when data isn’t available.
 
 ### Match Lifecycle
 
-- Working pause/resume system. Prevents movement, world time, block & entity interaction, furnace burning/smelting, and crafting. (TODO: add mob AI freezing)
-- Auto‑pause when runner disconnects  
+The pause/resume system freezes movement (including camera angle), world time, block & entity interactions, furnace activity, and crafting (mob AI freeze: TODO). Matches also pause automatically whenever the runner disconnects.
 
 ### Respawn Handling
 
-- Automatic compass removal on death (prevents duplication)
-- Automatic compass re‑giving on respawn  
-- Optional partial/complete inventory restoration
+Respawns are handled cleanly: compasses are removed on death to avoid duplication and automatically returned on respawn; optional partial or full inventory restoration.
 
 ### World Management
 
-- Custom world selection  
-- Custom seed selection  
-- Multi‑match support on the same server  
-- Clean world teardown/reset between matches
+The plugin allows for preexisting worlds or new worlds with custom seeds to be used for matches, and allows for multiple matches to run on the same server.
 
 ### Better Player UI/UX
 
-- Action bar tracking messages (dimension‑aware)  
-- Scoreboard with live match info  
-- Clear state transitions  
-- Fully configurable messages
+Players get a clean, simple UI with action bar messages and a scoreboard. The help menu is clickable with hover/click actions (Adventure API).
 
 ### Simple Config
 
-- potion effects  
-- respawn rules  
-- Clean tracking options  
-- No complex twist scripting required
+Potion effects, inventory restoration, and other options are configurable in `config.yml`. Messages are configurable in `messages.yml`.
 
 ### Modern-ish
 
