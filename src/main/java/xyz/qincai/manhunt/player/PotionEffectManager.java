@@ -9,6 +9,13 @@ import xyz.qincai.manhunt.game.Match;
 import java.util.List;
 import java.util.UUID;
 
+/*
+ * Handles applying and clearing configured potion effects
+ * for runners and hunters during the game.
+ *
+ * Effects are defined in config.yml
+ * This simply applies and removes effects based on those lists.
+ */
 public class PotionEffectManager {
     private final ManhuntNG plugin;
 
@@ -16,9 +23,14 @@ public class PotionEffectManager {
         this.plugin = plugin;
     }
 
+    /*
+     * Applies configured potion effects to runner and hunters.
+     * Called when the hunt starts (RUNNING state) or force-start.
+     */
     public void applyEffects() {
         Match match = plugin.getGameManager().getMatch();
 
+        // Apply runner effects
         List<PotionEffect> runnerEffects = plugin.getConfigManager().getRunnerPotionEffects();
         if (match.getRunnerUuid() != null && !runnerEffects.isEmpty()) {
             Player runner = Bukkit.getPlayer(match.getRunnerUuid());
@@ -29,6 +41,7 @@ public class PotionEffectManager {
             }
         }
 
+        // Apply hunter effects
         List<PotionEffect> hunterEffects = plugin.getConfigManager().getHunterPotionEffects();
         if (!hunterEffects.isEmpty()) {
             for (UUID uuid : match.getHunterUuids()) {
@@ -42,26 +55,41 @@ public class PotionEffectManager {
         }
     }
 
+    /*
+     * Clears ALL active potion effects from runner and hunters.
+     * Called when the game ends or is stopped.
+     *
+     * Note: This clears ALL effects, including but not limited to configured ones.
+     * This ensures players return to a clean state ready for next game
+     */
     public void clearEffects() {
         Match match = plugin.getGameManager().getMatch();
 
+        // Clear runner effects
         if (match.getRunnerUuid() != null) {
             Player runner = Bukkit.getPlayer(match.getRunnerUuid());
             if (runner != null) {
-                runner.getActivePotionEffects().stream().map(PotionEffect::getType)
+                runner.getActivePotionEffects().stream()
+                        .map(PotionEffect::getType)
                         .forEach(runner::removePotionEffect);
             }
         }
 
+        // Clear hunter effects
         for (UUID uuid : match.getHunterUuids()) {
             Player hunter = Bukkit.getPlayer(uuid);
             if (hunter != null) {
-                hunter.getActivePotionEffects().stream().map(PotionEffect::getType)
+                hunter.getActivePotionEffects().stream()
+                        .map(PotionEffect::getType)
                         .forEach(hunter::removePotionEffect);
             }
         }
     }
 
+    /*
+     * Applies hunter effects to a single hunter.
+     * Used when a hunter respawns mid-game.
+     */
     public void applyHunterEffects(UUID hunterUuid) {
         List<PotionEffect> hunterEffects = plugin.getConfigManager().getHunterPotionEffects();
         if (hunterEffects.isEmpty()) return;
@@ -74,6 +102,10 @@ public class PotionEffectManager {
         }
     }
 
+    /*
+     * Removes only the configured potion effects from a player.
+     * NOTE: (Currently unused)
+     */
     private void clearConfiguredEffects(Player player, List<PotionEffect> configuredEffects) {
         for (PotionEffect effect : configuredEffects) {
             player.removePotionEffect(effect.getType());
