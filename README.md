@@ -26,10 +26,10 @@ A (n *almost*) feature complete Minecraft Manhunt plugin for PaperMC. ManhuntNG 
 ### Tracking & Compass System
 
 - Hunters receive a compass that points to the runner when in the same dimension.
-- When across dimensions, the compass points to the runner's last known location or the relevant portal
+- When across dimensions, the compass points to the runner's *last known location* in the tracking hunter's dimension
 - Automatic compass regeneration on respawn
 - Compass destruction on death to prevent duplication
-- Action bar distance indicators (configurable)
+- **Action bar** distance indicators (configurable)
 
 ### Gameplay
 
@@ -45,7 +45,7 @@ A (n *almost*) feature complete Minecraft Manhunt plugin for PaperMC. ManhuntNG 
 - Auto pause when runner disconnects
 - Owner‑based match control (admin with permissions can override)
 - Force‑start option for debugging or other reasons
-- Custom, preexisting world + seed selection for matches
+- Custom, preexisting world & seed selection for matches
 - Ability to run multiple matches on the same server
 
 ### UI
@@ -58,7 +58,10 @@ A (n *almost*) feature complete Minecraft Manhunt plugin for PaperMC. ManhuntNG 
 ## Requirements
 
 - Java 17+ (match your server runtime. Use Java 25 for latest Minecraft versions)
-- PaperMC server (1.21.4+, I try to keep this plugin up-to-date for newer versions. I have tested on 26.1.2)
+- Bukkit/Spigot/**PaperMC** server (1.21.4+, I try to keep this plugin up-to-date for newer versions. I have tested on 26.1.2)
+
+>[!NOTE]
+> Although Bukkit/Spigot/PaperMC is supported, this plugin is primarily tested on PaperMC. Some features may not work as expected on non-PaperMC implementations. All servers *based on* PaperMC (such as PurpurMC) should work fine, but if you encounter issues on other server types, please report them.
 
 ## Permissions
 
@@ -112,7 +115,6 @@ TODO: add teamchat support
 
 ### Match Lifecycle
 
-- Lobby → countdown → pre‑hunt → running → finish  
 - Working pause/resume system. Prevents movement, world time, block & entity interaction, furnace burning/smelting, and crafting. (TODO: add mob AI freezing)
 - Auto‑pause when runner disconnects  
 
