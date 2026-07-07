@@ -8,14 +8,37 @@ A (n *almost*) feature complete Minecraft Manhunt plugin for PaperMC. ManhuntNG 
 
 ## Features
 
-- Tracking compasses that follow the runner across dimensions
-- Automatic potion effects and respawn handling for hunters and runner
-- Pause/resume and owner/admin controls to manage games
-- Action bar messages for tracking and game state
-- Scoreboard for quick glance info
-- Configurable respawn and inventory options
-- Configurable potion effects for hunters and runner
-- Configurable messages and options via `config.yml` and `messages.yml`
+### Tracking & Compass System
+
+- Hunters receive a compass that points to the runner when in the same dimension.
+- When across dimensions, the compass points to the runner's last known location or the relevant portal
+- Automatic compass regeneration on respawn
+- Compass destruction on death to prevent duplication
+- Action bar distance indicators (configurable)
+
+### Gameplay
+
+- Fully automated match ("lobby" -> countdown -> pre‑hunt -> running -> finish)
+- Runner/hunter role assignment
+- Automatic respawn handling for hunters
+- Configurable inventory restoration (keepinventory, or keeparmour & keepoffhand) on respawn
+- Automatic potion effects for runner/hunters (configurable)
+
+### Match Management & Admin Tools
+
+- Pause/resume system with working world freezing
+- Auto pause when runner disconnects
+- Owner‑based match control (admin with permissions can override)
+- Force‑start option for debugging or other reasons
+- Custom, preexisting world + seed selection for matches
+- Ability to run multiple matches on the same server
+
+### UI
+
+- Action bar tracking messages
+- Scoreboard with game info and timer
+- Clickable help menu with hover/click actions (Adventure API)
+- Configurable messages via `messages.yml`
 
 ## Requirements
 
