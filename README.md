@@ -61,11 +61,11 @@ A (n *almost*) feature complete Minecraft Manhunt plugin for PaperMC. ManhuntNG 
 - Bukkit/Spigot/**PaperMC** server (1.21.4+, I try to keep this plugin up-to-date for newer versions. I have tested on 26.1.2)
 
 >[!NOTE]
-> Although Bukkit/Spigot/PaperMC is supported, this plugin is primarily tested on PaperMC. Some features may not work as expected on non-PaperMC implementations. All servers *based on* PaperMC (such as PurpurMC) should work fine, but if you encounter issues on other server types, please report them.
+> Although Bukkit/Spigot/PaperMC is supported, this plugin is primarily tested on PaperMC. Some features may not work as expected on non-PaperMC implementations. All servers *based on* PaperMC (such as PurpurMC) should work fine, but if you encounter issues on other server types, please [report them](https://github.com/QinCai-rui/ManhuntNG/issues).
 
 ## Permissions
 
-- `manhunt.admin` — administrative actions (OP by default)
+- `manhunt.admin` — admin permissions (OP by default)
 - `manhunt.play` — play and basic controls (true by default)
 - `manhunt.spectate` — spectator access (true by default)
 
