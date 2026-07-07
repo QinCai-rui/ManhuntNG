@@ -6,6 +6,15 @@ A (n *almost*) feature complete Minecraft Manhunt plugin for PaperMC. ManhuntNG 
 
 ---
 
+## Installation
+
+1. Download the latest release JAR from the [Releases](https://github.com/QinCai-rui/ManhuntNG/releases/latest), or build from source (see Building & Development).
+2. Place the JAR in your server's `plugins/` folder.
+3. Start the server to generate the default configuration files.
+4. Configure `config.yml` and `messages.yml` to your liking, then run `/manhunt reload` or restart the server to apply changes.
+
+---
+
 ## Screenshots
 
 ![ManhuntNG help message (`/manhunt help`)](assets/screenshots/help-page.png)
@@ -50,23 +59,6 @@ A (n *almost*) feature complete Minecraft Manhunt plugin for PaperMC. ManhuntNG 
 
 - Java 17+ (match your server runtime. Use Java 25 for latest Minecraft versions)
 - PaperMC server (1.21.4+, I try to keep this plugin up-to-date for newer versions. I have tested on 26.1.2)
-
-## Installation
-
-Download the latest release JAR from the [Releases](https://github.com/QinCai-rui/ManhuntNG/releases/latest), or build from source (see Building & Development).
-
-## Quick Start
-
-1. Place the JAR in the server `plugins/` folder and start the server.
-2. Configure matches and roles using the `/manhunt` command group (see Commands below).
-
-Example:
-
-```minecraft-console
-/manhunt runner <player>
-/manhunt hunter <player>
-/manhunt start
-```
 
 ## Commands
 
