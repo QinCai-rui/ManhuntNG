@@ -240,9 +240,8 @@ public class UIManager {
 
             player.sendActionBar(actionBar);
         }
-        if (match.getRunnerUuid() != null) {
-            Player runner = Bukkit.getPlayer(match.getRunnerUuid());
-            if (runner != null) runner.sendActionBar(actionBar);
+        if (runner != null) {
+            runner.sendActionBar(actionBar);
         }
     }
 
