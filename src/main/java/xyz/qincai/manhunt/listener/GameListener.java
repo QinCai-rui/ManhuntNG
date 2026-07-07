@@ -42,7 +42,11 @@ import java.util.UUID;
 
 public class GameListener implements Listener {
     private final ManhuntNG plugin;
+
+    // Cooldown to prevent pause-blocked spam messages
     private final Map<UUID, Long> pauseMessageCooldowns = new HashMap<>();
+
+    // Saved armor/offhand for hunters who keep inventory on death
     private final Map<UUID, ItemStack[]> savedArmor = new HashMap<>();
     private final Map<UUID, ItemStack> savedOffhand = new HashMap<>();
 
@@ -50,22 +54,36 @@ public class GameListener implements Listener {
         this.plugin = plugin;
     }
 
+    /*
+     * Clears saved armor/offhand caches.
+     * Called when game resets.
+     */
     public void clearSavedItems() {
         savedArmor.clear();
         savedOffhand.clear();
     }
 
+    /*
+     * Sends a "game paused" message with cooldown to avoid spam.
+     */
     private void sendPauseBlockedMessage(Player player) {
         long now = System.currentTimeMillis();
+
+        // Remove old cooldown entries
         pauseMessageCooldowns.entrySet().removeIf(e -> now - e.getValue() > 60_000);
 
         UUID uuid = player.getUniqueId();
         if (now - pauseMessageCooldowns.getOrDefault(uuid, 0L) > 5000) {
-            player.sendMessage(Component.text("The game is paused \u2014 action blocked", NamedTextColor.GRAY));
+            player.sendMessage(Component.text("The game is paused — action blocked", NamedTextColor.GRAY));
             pauseMessageCooldowns.put(uuid, now);
         }
     }
 
+    /*
+     * Handles player joining the server.
+     * If game is inactive -> they become spectator.
+     * If hunter joins during RUNNING -> give compass after short delay.
+     */
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
@@ -77,6 +95,7 @@ public class GameListener implements Listener {
             return;
         }
 
+        // Hunters joining mid-game get a compass
         if (plugin.getPlayerManager().isHunter(player.getUniqueId())) {
             if (match.getState() == GameState.RUNNING) {
                 Bukkit.getScheduler().runTaskLater(plugin, () -> {
@@ -88,25 +107,38 @@ public class GameListener implements Listener {
         }
     }
 
+    /*
+     * Updates runner last-known location when switching worlds.
+     */
     @EventHandler
     public void onPlayerChangedWorld(PlayerChangedWorldEvent event) {
         Player player = event.getPlayer();
         Match match = plugin.getGameManager().getMatch();
-        if (match.getState() == GameState.RUNNING
-                && player.getUniqueId().equals(match.getRunnerUuid())) {
+
+        if (match.getState() == GameState.RUNNING &&
+                player.getUniqueId().equals(match.getRunnerUuid())) {
             plugin.getTrackerManager().updateRunnerLastKnown(player);
         }
     }
 
+    /*
+     * If runner quits mid-game -> pause the game automatically.
+     */
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         Match match = plugin.getGameManager().getMatch();
         if (match.getState() != GameState.RUNNING) return;
         if (!event.getPlayer().getUniqueId().equals(match.getRunnerUuid())) return;
-        plugin.getUiManager().sendToAll("\u00a7eRunner has disconnected — pausing game!");
+
+        plugin.getUiManager().sendToAll("§eRunner has disconnected — pausing game!");
         plugin.getGameManager().pauseGame();
     }
 
+    /*
+     * Handles player death logic for runner + hunters.
+     * - Runner death -> hunters win
+     * - Hunter death -> respawn logic, inventory rules, respawn limits
+     */
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
@@ -117,6 +149,7 @@ public class GameListener implements Listener {
 
         destroyTrackingCompass(player, event);
 
+        // Runner death -> hunters win
         if (plugin.getPlayerManager().isRunner(uuid)) {
             Component vanilla = event.deathMessage();
             if (vanilla != null) {
@@ -125,10 +158,15 @@ public class GameListener implements Listener {
                         .append(vanilla.colorIfAbsent(NamedTextColor.WHITE))
                         .build());
             }
+
             plugin.getPlayerManager().eliminateRunner(uuid);
             plugin.getStatsManager().recordDeath(uuid);
             plugin.getGameManager().huntersWin();
-        } else if (plugin.getPlayerManager().isHunter(uuid)) {
+            return;
+        }
+
+        // Hunter death -> respawn logic
+        if (plugin.getPlayerManager().isHunter(uuid)) {
             Component vanilla = event.deathMessage();
             if (vanilla != null) {
                 event.deathMessage(Component.text()
@@ -139,6 +177,7 @@ public class GameListener implements Listener {
 
             plugin.getPlayerManager().addHunterRespawn(uuid);
 
+            // Check respawn limit
             if (!plugin.getConfigManager().isHunterInfiniteRespawns()) {
                 int limit = plugin.getConfigManager().getHunterRespawnLimit();
                 if (plugin.getPlayerManager().getHunterRespawnCount(uuid) > limit) {
@@ -147,12 +186,14 @@ public class GameListener implements Listener {
                 }
             }
 
+            // Inventory rules
             if (plugin.getConfigManager().isHunterKeepInventory()) {
                 event.setKeepInventory(true);
                 event.getDrops().clear();
             } else {
                 event.setKeepInventory(false);
 
+                // Keep armor/offhand if configured
                 if (plugin.getConfigManager().isHunterKeepArmor()) {
                     ItemStack[] armor = player.getInventory().getArmorContents();
                     savedArmor.put(uuid, armor.clone());
@@ -175,8 +216,12 @@ public class GameListener implements Listener {
         }
     }
 
+    /*
+     * Removes tracking compasses from drops + inventory.
+     */
     private void destroyTrackingCompass(Player player, PlayerDeathEvent event) {
         event.getDrops().removeIf(item -> plugin.getTrackerManager().isTrackerCompass(item));
+
         for (int i = 0; i < player.getInventory().getSize(); i++) {
             ItemStack item = player.getInventory().getItem(i);
             if (plugin.getTrackerManager().isTrackerCompass(item)) {
@@ -185,6 +230,12 @@ public class GameListener implements Listener {
         }
     }
 
+    /*
+     * Handles hunter respawn logic:
+     * - Restore armor/offhand if saved
+     * - Give compass
+     * - Announce respawn
+     */
     @EventHandler
     public void onPlayerRespawn(PlayerRespawnEvent event) {
         Player player = event.getPlayer();
@@ -199,21 +250,24 @@ public class GameListener implements Listener {
                 ItemStack offhand = savedOffhand.remove(uuid);
 
                 if (!player.isOnline()) return;
+
                 player.setGameMode(GameMode.SURVIVAL);
 
-                if (armor != null) {
-                    player.getInventory().setArmorContents(armor);
-                }
-                if (offhand != null) {
-                    player.getInventory().setItemInOffHand(offhand);
-                }
+                if (armor != null) player.getInventory().setArmorContents(armor);
+                if (offhand != null) player.getInventory().setItemInOffHand(offhand);
 
                 plugin.getTrackerManager().giveCompassToPlayer(player);
-                plugin.getUiManager().sendToAll("\u00a7e" + player.getName() + " has respawned!");
+                plugin.getUiManager().sendToAll("§e" + player.getName() + " has respawned!");
             }, 1L);
         }
     }
 
+    /*
+     * Handles PvP rules:
+     * - PAUSED -> cancel
+     * - PRE_HUNT -> runner hitting hunter starts hunt
+     * - RUNNING -> allow
+     */
     @EventHandler(priority = EventPriority.HIGH)
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         if (!(event.getDamager() instanceof Player damager)) return;
@@ -221,34 +275,44 @@ public class GameListener implements Listener {
 
         Match match = plugin.getGameManager().getMatch();
 
+        // No combat during pause
         if (match.getState() == GameState.PAUSED) {
             event.setCancelled(true);
             sendPauseBlockedMessage(damager);
             return;
         }
 
+        // PRE_HUNT: runner must hit hunter to start game
         if (match.getState() == GameState.PRE_HUNT) {
             event.setCancelled(true);
 
             if (plugin.getPlayerManager().isRunner(damager.getUniqueId()) &&
-                    plugin.getPlayerManager().isHunter(victim.getUniqueId())) {
+                plugin.getPlayerManager().isHunter(victim.getUniqueId())) {
                 plugin.getGameManager().startHunt();
             }
             return;
         }
 
+        // No combat outside RUNNING
         if (match.getState() != GameState.RUNNING) {
             event.setCancelled(true);
-            return;
         }
     }
 
+    /*
+     * Movement restrictions:
+     * - PAUSED -> freeze
+     * - PRE_HUNT -> freeze
+     * - COUNTDOWN -> freeze
+     * - RUNNING -> allow, but track runner world changes
+     */
     @EventHandler
     public void onPlayerMove(PlayerMoveEvent event) {
         Player player = event.getPlayer();
         UUID uuid = player.getUniqueId();
         Match match = plugin.getGameManager().getMatch();
 
+        // Freeze movement during PAUSED
         if (match.getState() == GameState.PAUSED) {
             if (event.getTo() == null) return;
             if (plugin.getPlayerManager().isRunner(uuid) || plugin.getPlayerManager().isHunter(uuid)) {
@@ -257,11 +321,12 @@ public class GameListener implements Listener {
             return;
         }
 
+        // Freeze movement during PRE_HUNT
         if (match.getState() == GameState.PRE_HUNT) {
             if (event.getTo() == null) return;
             if (plugin.getPlayerManager().isRunner(uuid) || plugin.getPlayerManager().isHunter(uuid)) {
-                org.bukkit.Location to = event.getTo();
-                org.bukkit.Location from = event.getFrom();
+                var to = event.getTo();
+                var from = event.getFrom();
                 to.setX(from.getX());
                 to.setY(from.getY());
                 to.setZ(from.getZ());
@@ -269,6 +334,7 @@ public class GameListener implements Listener {
             return;
         }
 
+        // Freeze movement during COUNTDOWN
         if (match.getState() == GameState.COUNTDOWN) {
             if (event.getTo() == null) return;
             if (plugin.getPlayerManager().isRunner(uuid) || plugin.getPlayerManager().isHunter(uuid)) {
@@ -277,58 +343,82 @@ public class GameListener implements Listener {
             return;
         }
 
+        // Track runner world changes during RUNNING
         if (match.getState() == GameState.RUNNING && plugin.getPlayerManager().isRunner(uuid)) {
             World fromWorld = event.getFrom().getWorld();
             World toWorld = event.getTo().getWorld();
             if (!fromWorld.equals(toWorld)) {
-                plugin.getTrackerManager().updateRunnerLastKnown(
-                        Bukkit.getPlayer(uuid));
+                plugin.getTrackerManager().updateRunnerLastKnown(Bukkit.getPlayer(uuid));
             }
         }
     }
 
+    /*
+     * Prevent interaction during PAUSED, PRE_HUNT, COUNTDOWN.
+     */
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
         Match match = plugin.getGameManager().getMatch();
 
-        if (match.getState() == GameState.PRE_HUNT || match.getState() == GameState.COUNTDOWN || match.getState() == GameState.PAUSED) {
+        if (match.getState() == GameState.PRE_HUNT ||
+            match.getState() == GameState.COUNTDOWN ||
+            match.getState() == GameState.PAUSED) {
+
             if (plugin.getPlayerManager().isRunner(player.getUniqueId()) ||
-                    plugin.getPlayerManager().isHunter(player.getUniqueId())) {
+                plugin.getPlayerManager().isHunter(player.getUniqueId())) {
+
                 event.setCancelled(true);
                 if (plugin.getGameManager().isGamePaused()) sendPauseBlockedMessage(player);
             }
         }
     }
 
+    /*
+     * Prevent block breaking during restricted phases.
+     */
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
         Match match = plugin.getGameManager().getMatch();
 
-        if (match.getState() == GameState.PRE_HUNT || match.getState() == GameState.COUNTDOWN || match.getState() == GameState.PAUSED) {
+        if (match.getState() == GameState.PRE_HUNT ||
+            match.getState() == GameState.COUNTDOWN ||
+            match.getState() == GameState.PAUSED) {
+
             if (plugin.getPlayerManager().isRunner(player.getUniqueId()) ||
-                    plugin.getPlayerManager().isHunter(player.getUniqueId())) {
+                plugin.getPlayerManager().isHunter(player.getUniqueId())) {
+
                 event.setCancelled(true);
                 if (plugin.getGameManager().isGamePaused()) sendPauseBlockedMessage(player);
             }
         }
     }
 
+    /*
+     * Prevent block placing during restricted phases.
+     */
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
         Player player = event.getPlayer();
         Match match = plugin.getGameManager().getMatch();
 
-        if (match.getState() == GameState.PRE_HUNT || match.getState() == GameState.COUNTDOWN || match.getState() == GameState.PAUSED) {
+        if (match.getState() == GameState.PRE_HUNT ||
+            match.getState() == GameState.COUNTDOWN ||
+            match.getState() == GameState.PAUSED) {
+
             if (plugin.getPlayerManager().isRunner(player.getUniqueId()) ||
-                    plugin.getPlayerManager().isHunter(player.getUniqueId())) {
+                plugin.getPlayerManager().isHunter(player.getUniqueId())) {
+
                 event.setCancelled(true);
                 if (plugin.getGameManager().isGamePaused()) sendPauseBlockedMessage(player);
             }
         }
     }
 
+    /*
+     * Prevent hunters from dropping their tracking compass.
+     */
     @EventHandler
     public void onPlayerDropItem(PlayerDropItemEvent event) {
         Player player = event.getPlayer();
@@ -340,68 +430,103 @@ public class GameListener implements Listener {
         }
     }
 
+    /*
+     * Prevent entity interaction during restricted phases.
+     */
     @EventHandler
     public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
         Player player = event.getPlayer();
         Match match = plugin.getGameManager().getMatch();
 
-        if (match.getState() == GameState.PRE_HUNT || match.getState() == GameState.COUNTDOWN || match.getState() == GameState.PAUSED) {
+        if (match.getState() == GameState.PRE_HUNT ||
+            match.getState() == GameState.COUNTDOWN ||
+            match.getState() == GameState.PAUSED) {
+
             if (plugin.getPlayerManager().isRunner(player.getUniqueId()) ||
-                    plugin.getPlayerManager().isHunter(player.getUniqueId())) {
+                plugin.getPlayerManager().isHunter(player.getUniqueId())) {
+
                 event.setCancelled(true);
                 if (plugin.getGameManager().isGamePaused()) sendPauseBlockedMessage(player);
             }
         }
     }
 
+    /*
+     * Prevent furnace smelting during pause.
+     */
     @EventHandler
     public void onFurnaceSmelt(FurnaceSmeltEvent event) {
         if (!plugin.getGameManager().isGamePaused()) return;
 
         Match match = plugin.getGameManager().getMatch();
-        if (event.getBlock().getWorld().equals(match.getGameWorld()) ||
-                event.getBlock().getWorld().equals(match.getNetherWorld()) ||
-                event.getBlock().getWorld().equals(match.getEndWorld())) {
+        World world = event.getBlock().getWorld();
+
+        if (world.equals(match.getGameWorld()) ||
+            world.equals(match.getNetherWorld()) ||
+            world.equals(match.getEndWorld())) {
+
             event.setCancelled(true);
         }
     }
 
+    /*
+     * Prevent furnace burning during pause.
+     */
     @EventHandler
     public void onFurnaceBurn(FurnaceBurnEvent event) {
         if (!plugin.getGameManager().isGamePaused()) return;
 
         Match match = plugin.getGameManager().getMatch();
-        if (event.getBlock().getWorld().equals(match.getGameWorld()) ||
-                event.getBlock().getWorld().equals(match.getNetherWorld()) ||
-                event.getBlock().getWorld().equals(match.getEndWorld())) {
+        World world = event.getBlock().getWorld();
+
+        if (world.equals(match.getGameWorld()) ||
+            world.equals(match.getNetherWorld()) ||
+            world.equals(match.getEndWorld())) {
+
             event.setCancelled(true);
         }
     }
 
+    /*
+     * Prevent crafting during pause.
+     */
     @EventHandler
     public void onCraftItem(CraftItemEvent event) {
         if (!(event.getWhoClicked() instanceof Player player)) return;
         if (!plugin.getGameManager().isGamePaused()) return;
+
         if (!plugin.getPlayerManager().isRunner(player.getUniqueId()) &&
-                !plugin.getPlayerManager().isHunter(player.getUniqueId())) return;
+            !plugin.getPlayerManager().isHunter(player.getUniqueId())) return;
+
         event.setCancelled(true);
         sendPauseBlockedMessage(player);
     }
 
+    /*
+     * Prevent mobs from targeting players during pause.
+     */
     @EventHandler
     public void onEntityTarget(EntityTargetEvent event) {
         if (!plugin.getGameManager().isGamePaused()) return;
         if (!(event.getTarget() instanceof Player target)) return;
 
         Match match = plugin.getGameManager().getMatch();
-        org.bukkit.World world = event.getEntity().getWorld();
-        if (!(world.equals(match.getGameWorld()) || world.equals(match.getNetherWorld()) || world.equals(match.getEndWorld()))) return;
+        World world = event.getEntity().getWorld();
 
-        if (plugin.getPlayerManager().isRunner(target.getUniqueId()) || plugin.getPlayerManager().isHunter(target.getUniqueId())) {
+        if (!(world.equals(match.getGameWorld()) ||
+              world.equals(match.getNetherWorld()) ||
+              world.equals(match.getEndWorld()))) return;
+
+        if (plugin.getPlayerManager().isRunner(target.getUniqueId()) ||
+            plugin.getPlayerManager().isHunter(target.getUniqueId())) {
+
             event.setCancelled(true);
         }
     }
 
+    /*
+     * Ender Dragon death -> runner wins.
+     */
     @EventHandler
     public void onEnderDragonDeath(EntityDeathEvent event) {
         if (!(event.getEntity() instanceof EnderDragon)) return;
@@ -412,22 +537,42 @@ public class GameListener implements Listener {
         plugin.getGameManager().runnerWins();
     }
 
+    /*
+     * Tracks runner advancements to update progression flags.
+     * These flags are used by the UI and stats systems to show game progress.
+     */
     @EventHandler
     public void onAdvancementGrant(PlayerAdvancementDoneEvent event) {
+        // Only track advancements when game is active (RUNNING or PRE_HUNT)
         if (!plugin.getGameManager().isGameActive()) return;
 
         Player player = event.getPlayer();
         Match match = plugin.getGameManager().getMatch();
 
+        // Only runner advancements matter for progression
+        // does NOT count hunters' advancements
         if (!plugin.getPlayerManager().isRunner(player.getUniqueId())) return;
 
         NamespacedKey key = event.getAdvancement().getKey();
 
+        // Update progression flags (using advancement keys)
         switch (key.toString()) {
-            case "minecraft:nether/find_fortress" -> match.setFortressDiscovered(true);
-            case "minecraft:nether/find_bastion" -> match.setBastionDiscovered(true);
-            case "minecraft:nether/obtain_blaze_rod" -> match.setBlazeRodObtained(true);
-            case "minecraft:story/follow_ender_eye" -> match.setStrongholdDiscovered(true);
+            case "minecraft:nether/find_fortress" -> {
+                // Runner found a fortress
+                match.setFortressDiscovered(true);
+            }
+            case "minecraft:nether/find_bastion" -> {
+                // Runner found a bastion
+                match.setBastionDiscovered(true);
+            }
+            case "minecraft:nether/obtain_blaze_rod" -> {
+                // Runner got a blaze roid
+                match.setBlazeRodObtained(true);
+            }
+            case "minecraft:story/follow_ender_eye" -> {
+                // Runner entered the stronghold
+                match.setStrongholdDiscovered(true);
+            }
         }
     }
 }
