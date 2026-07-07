@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/QinCai-rui/ManhuntNG/actions/workflows/ci.yml/badge.svg)](https://github.com/QinCai-rui/ManhuntNG/actions/workflows/ci.yml) [![Release](https://github.com/QinCai-rui/ManhuntNG/actions/workflows/release.yml/badge.svg)](https://github.com/QinCai-rui/ManhuntNG/actions/workflows/release.yml)
 
-A *(n almost)* feature complete Minecraft Manhunt plugin for PaperMC. ManhuntNG provides enjoyable manhunt gameplay, cross-dimension compass tracking, "twists" such as potion effects, and controls for running multiple Manhunt games on Minecraft servers.
+A (n *almost*) feature complete Minecraft Manhunt plugin for PaperMC. ManhuntNG provides enjoyable manhunt gameplay, cross-dimension compass tracking, "twists" such as potion effects, and controls for running multiple Manhunt games on Minecraft servers.
 
 ## Features
 
@@ -72,7 +72,7 @@ Messages support `&` colour codes and `{player}` placeholders.
 2. Countdown: players are frozen while the match readies.
 3. Pre-hunt: players are teleported to the match world; hunters form around the runner.
 4. Running: hunters receive tracking compasses; potion effects (if used) are applied.
-5. Pause/Resume: owner/admin may pause or resume; world and mob behaviour are handled safely.
+5. Pause/Resume: owner/admin may pause or resume; world and mob behaviour are handled safely. Game automatically pauses when the runner leaves during a game.
 6. Win conditions: runner wins by killing the Ender Dragon; hunters win by eliminating the runner (or if the runner dies).
 
 ## Tracking Behavior
