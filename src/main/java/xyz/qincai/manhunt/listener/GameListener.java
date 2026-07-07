@@ -23,6 +23,7 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerAdvancementDoneEvent;
+import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.inventory.FurnaceSmeltEvent;
 import org.bukkit.event.inventory.FurnaceBurnEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
@@ -76,6 +77,16 @@ public class GameListener implements Listener {
                     }
                 }, 20L);
             }
+        }
+    }
+
+    @EventHandler
+    public void onPlayerChangedWorld(PlayerChangedWorldEvent event) {
+        Player player = event.getPlayer();
+        Match match = plugin.getGameManager().getMatch();
+        if (match.getState() == GameState.RUNNING
+                && player.getUniqueId().equals(match.getRunnerUuid())) {
+            plugin.getTrackerManager().updateRunnerLastKnown(player);
         }
     }
 

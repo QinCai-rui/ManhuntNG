@@ -82,14 +82,9 @@ public class TrackerManager {
         Location target;
         if (hunterWorld.equals(runnerWorld)) {
             target = runner.getLocation();
-        } else if (runnerWorld.getEnvironment() == World.Environment.NETHER && hunterWorld.getEnvironment() == World.Environment.NORMAL) {
-            Location r = runner.getLocation();
-            target = new Location(hunterWorld, r.getX() * 8, r.getY(), r.getZ() * 8);
-        } else if (runnerWorld.getEnvironment() == World.Environment.NORMAL && hunterWorld.getEnvironment() == World.Environment.NETHER) {
-            Location r = runner.getLocation();
-            target = new Location(hunterWorld, r.getX() / 8, r.getY(), r.getZ() / 8);
         } else {
-            Location lastKnown = runnerLastKnownLocations.get(hunterWorld.getEnvironment());
+            World.Environment hunterEnv = hunterWorld.getEnvironment();
+            Location lastKnown = runnerLastKnownLocations.get(hunterEnv);
             target = (lastKnown != null && lastKnown.getWorld() != null) ? lastKnown : hunterWorld.getSpawnLocation();
         }
 
