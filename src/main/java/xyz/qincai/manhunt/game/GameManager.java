@@ -29,6 +29,13 @@ public class GameManager {
         return match;
     }
 
+    private void resetMatchTiming() {
+        match.setEndTime(0);
+        match.setPausedAt(0);
+        match.setTotalPausedDuration(0);
+        match.setStartTime(0);
+    }
+
     public void startGame() {
         startGame(null);
     }
@@ -114,6 +121,8 @@ public class GameManager {
         match.setBlazeRodObtained(false);
         match.setBastionDiscovered(false);
 
+        resetMatchTiming();
+
         if (forceStart) {
             forceStart = false;
             match.setState(GameState.RUNNING);
@@ -169,6 +178,7 @@ public class GameManager {
         if (match.getState() != GameState.PRE_HUNT) return;
 
         match.setState(GameState.RUNNING);
+        resetMatchTiming();
         match.setStartTime(System.currentTimeMillis());
         match.setStrongholdDiscovered(false);
         match.setFortressDiscovered(false);
@@ -207,6 +217,7 @@ public class GameManager {
         plugin.getUiManager().stopUIUpdates();
         plugin.getPotionEffectManager().clearEffects();
         unfreezeAllPlayers();
+        plugin.getWorldManager().teleportToMainWorld();
 
         match.setState(GameState.WAITING);
         match.setSeed(null);
@@ -229,6 +240,7 @@ public class GameManager {
         plugin.getUiManager().broadcastMessage("\u00a76\u00a7lRunner has won the game!");
 
         unfreezeAllPlayers();
+        plugin.getWorldManager().teleportToMainWorld();
 
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             match.setState(GameState.WAITING);
@@ -252,6 +264,7 @@ public class GameManager {
         plugin.getUiManager().broadcastMessage("\u00a7c\u00a7lHunters have won the game!");
 
         unfreezeAllPlayers();
+        plugin.getWorldManager().teleportToMainWorld();
 
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             match.setState(GameState.WAITING);
