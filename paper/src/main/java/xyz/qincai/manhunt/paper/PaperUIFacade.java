@@ -5,6 +5,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.EnderCrystal;
 import org.bukkit.entity.EnderDragon;
@@ -233,10 +234,22 @@ public class PaperUIFacade implements UIFacade {
                             case THE_END -> "End Portal";
                             default -> "Nether Portal";
                         };
-                        player.sendActionBar(
-                                Component.text("Tracking ", NamedTextColor.GOLD)
-                                        .append(Component.text(portal, NamedTextColor.WHITE))
-                        );
+                        Location lastLoc = plugin.getTrackerManager().getLastRunnerLocation(
+                                player.getWorld().getEnvironment());
+                        if (lastLoc != null) {
+                            int dist = (int) Math.round(player.getLocation().distance(lastLoc));
+                            player.sendActionBar(
+                                    Component.text("Tracking ", NamedTextColor.GOLD)
+                                            .append(Component.text(portal, NamedTextColor.WHITE))
+                                            .append(Component.text(" \u2014 ", NamedTextColor.GOLD))
+                                            .append(Component.text(dist + "m", NamedTextColor.WHITE))
+                            );
+                        } else {
+                            player.sendActionBar(
+                                    Component.text("Tracking ", NamedTextColor.GOLD)
+                                            .append(Component.text(portal, NamedTextColor.WHITE))
+                            );
+                        }
                     }
                     continue;
                 }
@@ -244,7 +257,13 @@ public class PaperUIFacade implements UIFacade {
 
             player.sendActionBar(actionBar);
         }
+<<<<<<< HEAD:src/main/java/xyz/qincai/manhunt/ui/UIManager.java
+        if (runner != null) {
+            runner.sendActionBar(actionBar);
+        }
+=======
         if (runner != null) runner.sendActionBar(actionBar);
+>>>>>>> feat/fabric-support:paper/src/main/java/xyz/qincai/manhunt/paper/PaperUIFacade.java
     }
 
     @Override

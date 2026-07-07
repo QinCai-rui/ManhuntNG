@@ -47,12 +47,20 @@ import java.util.UUID;
 public class GameListener implements Listener {
     private final PaperManhuntNG plugin;
     private final Map<UUID, Long> pauseMessageCooldowns = new HashMap<>();
+<<<<<<< HEAD:src/main/java/xyz/qincai/manhunt/listener/GameListener.java
+    private final Map<UUID, ItemStack[]> savedArmor = new HashMap<>();
+    private final Map<UUID, ItemStack> savedOffhand = new HashMap<>();
     private final NamespacedKey trackerKey;
     private final Map<World.Environment, Location> runnerLastKnownLocations = new HashMap<>();
 
     public GameListener(PaperManhuntNG plugin) {
         this.plugin = plugin;
         this.trackerKey = new NamespacedKey(plugin, "tracking_compass");
+    }
+
+    public void clearSavedItems() {
+        savedArmor.clear();
+        savedOffhand.clear();
     }
 
     private void sendPauseBlockedMessage(Player player) {
@@ -151,14 +159,28 @@ public class GameListener implements Listener {
                 event.getDrops().clear();
             } else {
                 event.setKeepInventory(false);
+<<<<<<< HEAD:src/main/java/xyz/qincai/manhunt/listener/GameListener.java
+
+                if (plugin.getConfigManager().isHunterKeepArmor()) {
+=======
                 if (!plugin.getConfigProvider().isHunterKeepArmor()) {
                     event.getDrops().clear();
                 } else {
+>>>>>>> feat/fabric-support:paper/src/main/java/xyz/qincai/manhunt/paper/listener/GameListener.java
                     ItemStack[] armor = player.getInventory().getArmorContents();
-                    event.getDrops().clear();
+                    savedArmor.put(uuid, armor.clone());
+
                     for (ItemStack item : armor) {
                         if (item != null && item.getType() != Material.AIR) {
-                            event.getDrops().add(item);
+                            event.getDrops().remove(item);
+                        }
+                    }
+
+                    if (plugin.getConfigManager().isHunterKeepOffhand()) {
+                        ItemStack offhand = player.getInventory().getItemInOffHand();
+                        if (offhand != null && offhand.getType() != Material.AIR) {
+                            savedOffhand.put(uuid, offhand.clone());
+                            event.getDrops().remove(offhand);
                         }
                     }
                 }
@@ -186,11 +208,26 @@ public class GameListener implements Listener {
 
         if (plugin.getPlayerRegistry().isHunter(uuid)) {
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                ItemStack[] armor = savedArmor.remove(uuid);
+                ItemStack offhand = savedOffhand.remove(uuid);
+
                 if (!player.isOnline()) return;
                 player.setGameMode(GameMode.SURVIVAL);
 
+<<<<<<< HEAD:src/main/java/xyz/qincai/manhunt/listener/GameListener.java
+                if (armor != null) {
+                    player.getInventory().setArmorContents(armor);
+                }
+                if (offhand != null) {
+                    player.getInventory().setItemInOffHand(offhand);
+                }
+
+                plugin.getTrackerManager().giveCompassToPlayer(player);
+                plugin.getUiManager().sendToAll("\u00a7e" + player.getName() + " has respawned!");
+=======
                 giveCompassToPlayer(player);
                 plugin.getUIFacade().sendToAll("\u00a7e" + player.getName() + " has respawned!");
+>>>>>>> feat/fabric-support:paper/src/main/java/xyz/qincai/manhunt/paper/listener/GameListener.java
             }, 1L);
         }
     }
