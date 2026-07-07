@@ -1,5 +1,6 @@
 package xyz.qincai.manhunt.config;
 
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.potion.PotionEffect;
@@ -28,37 +29,92 @@ public class ConfigManager {
     }
 
     public void loadConfigs() {
-        saveDefaultConfig();
-        saveDefaultMessages();
-        reloadConfigs();
-    }
-
-    public void reloadConfigs() {
-        plugin.reloadConfig();
-        config = plugin.getConfig();
-        messages = YamlConfiguration.loadConfiguration(messagesFile);
-        InputStream defMessagesStream = plugin.getResource("messages.yml");
-        if (defMessagesStream != null) {
-            YamlConfiguration defMessages = YamlConfiguration.loadConfiguration(
-                    new InputStreamReader(defMessagesStream, StandardCharsets.UTF_8));
-            messages.setDefaults(defMessages);
-        }
-    }
-
-    private void saveDefaultConfig() {
         configFile = new File(plugin.getDataFolder(), "config.yml");
+        messagesFile = new File(plugin.getDataFolder(), "messages.yml");
+
         if (!configFile.exists()) {
             plugin.saveResource("config.yml", false);
         }
-        config = YamlConfiguration.loadConfiguration(configFile);
-    }
-
-    private void saveDefaultMessages() {
-        messagesFile = new File(plugin.getDataFolder(), "messages.yml");
         if (!messagesFile.exists()) {
             plugin.saveResource("messages.yml", false);
         }
+
+        config = YamlConfiguration.loadConfiguration(configFile);
         messages = YamlConfiguration.loadConfiguration(messagesFile);
+
+        mergeWithDefaults("config.yml", config, configFile);
+        mergeWithDefaults("messages.yml", messages, messagesFile);
+    }
+
+    public void reloadConfigs() {
+        if (configFile == null) {
+            configFile = new File(plugin.getDataFolder(), "config.yml");
+        }
+        if (messagesFile == null) {
+            messagesFile = new File(plugin.getDataFolder(), "messages.yml");
+        }
+
+        config = YamlConfiguration.loadConfiguration(configFile);
+        messages = YamlConfiguration.loadConfiguration(messagesFile);
+
+        mergeWithDefaults("config.yml", config, configFile);
+        mergeWithDefaults("messages.yml", messages, messagesFile);
+    }
+
+    private void mergeWithDefaults(String resourcePath,
+                                    FileConfiguration userConfig, File file) {
+        try (InputStream stream = plugin.getResource(resourcePath)) {
+            if (stream == null) return;
+
+            FileConfiguration defaultConfig = YamlConfiguration.loadConfiguration(
+                    new InputStreamReader(stream, StandardCharsets.UTF_8));
+
+            int defaultVersion = defaultConfig.getInt("config-version", 0);
+            int userVersion = userConfig.getInt("config-version", 0);
+
+            if (userVersion >= defaultVersion) return;
+
+            plugin.getLogger().info("Updating " + file.getName()
+                    + " from v" + userVersion + " to v" + defaultVersion);
+
+            if (mergeSection(defaultConfig, userConfig, true)) {
+                userConfig.set("config-version", defaultVersion);
+                userConfig.save(file);
+            }
+        } catch (IOException e) {
+            plugin.getLogger().log(Level.SEVERE,
+                    "Could not save updated " + file.getName(), e);
+        }
+    }
+
+    private static boolean mergeSection(ConfigurationSection defaultSection,
+                                         ConfigurationSection userSection,
+                                         boolean isRoot) {
+        boolean changed = false;
+        for (String key : defaultSection.getKeys(false)) {
+            if (isRoot && "config-version".equals(key)) continue;
+
+            if (defaultSection.isConfigurationSection(key)) {
+                ConfigurationSection defaultSub = defaultSection.getConfigurationSection(key);
+                if (defaultSub == null) continue;
+
+                if (!userSection.contains(key)) {
+                    userSection.createSection(key);
+                    changed = true;
+                }
+                ConfigurationSection userSub = userSection.getConfigurationSection(key);
+                if (userSub != null
+                        && mergeSection(defaultSub, userSub, false)) {
+                    changed = true;
+                }
+            } else {
+                if (!userSection.contains(key)) {
+                    userSection.set(key, defaultSection.get(key));
+                    changed = true;
+                }
+            }
+        }
+        return changed;
     }
 
     public FileConfiguration getConfig() {

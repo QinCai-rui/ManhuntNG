@@ -2,6 +2,7 @@ package xyz.qincai.manhunt.listener;
 
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
@@ -135,7 +136,8 @@ public class GameListener implements Listener {
 
         if (plugin.getPlayerManager().isHunter(uuid)) {
             if (match.getGameWorld() != null) {
-                event.setRespawnLocation(match.getGameWorld().getSpawnLocation());
+                Location bedSpawn = player.getBedSpawnLocation();
+                event.setRespawnLocation(bedSpawn != null ? bedSpawn : match.getGameWorld().getSpawnLocation());
                 Bukkit.getScheduler().runTaskLater(plugin, () -> {
                     if (!player.isOnline()) return;
                     player.setGameMode(GameMode.SURVIVAL);
