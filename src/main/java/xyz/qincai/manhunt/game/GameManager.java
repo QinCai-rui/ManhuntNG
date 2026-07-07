@@ -1,6 +1,7 @@
 package xyz.qincai.manhunt.game;
 
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.GameRule;
 import org.bukkit.World;
 import org.bukkit.advancement.Advancement;
@@ -112,9 +113,10 @@ public class GameManager {
             return;
         }
 
-        teleportPlayersToWorlds();
         clearPlayerState();
         plugin.getFormationManager().teleportToFormation();
+
+        setAllPlayersSurvival();
 
         match.setStrongholdDiscovered(false);
         match.setFortressDiscovered(false);
@@ -153,24 +155,14 @@ public class GameManager {
         }
     }
 
-    private void teleportPlayersToWorlds() {
-        World gameWorld = match.getGameWorld();
-        if (gameWorld == null) return;
-
-        org.bukkit.Location spawn = gameWorld.getSpawnLocation();
-
+    private void setAllPlayersSurvival() {
         if (match.getRunnerUuid() != null) {
             Player runner = Bukkit.getPlayer(match.getRunnerUuid());
-            if (runner != null) {
-                runner.teleport(spawn);
-            }
+            if (runner != null) runner.setGameMode(GameMode.SURVIVAL);
         }
-
         for (UUID uuid : match.getHunterUuids()) {
-            Player hunter = Bukkit.getPlayer(uuid);
-            if (hunter != null) {
-                hunter.teleport(spawn);
-            }
+            Player player = Bukkit.getPlayer(uuid);
+            if (player != null) player.setGameMode(GameMode.SURVIVAL);
         }
     }
 
