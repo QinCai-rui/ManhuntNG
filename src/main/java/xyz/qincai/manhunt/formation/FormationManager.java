@@ -27,6 +27,7 @@ public class FormationManager {
         if (runner == null) return;
 
         double radius = plugin.getConfigManager().getHunterCircleRadius();
+        int searchRadius = plugin.getConfigManager().getFormationSearchRadius();
         List<UUID> hunterUuids = List.copyOf(match.getHunterUuids());
         int hunterCount = hunterUuids.size();
 
@@ -40,7 +41,7 @@ public class FormationManager {
             int spawnZ = spawnLoc.getBlockZ();
 
             outer:
-            for (int range = 1; range <= 20; range++) {
+            for (int range = 1; range <= searchRadius; range++) {
                 for (int dx = -range; dx <= range; dx++) {
                     for (int dz = -range; dz <= range; dz++) {
                         if (Math.abs(dx) != range && Math.abs(dz) != range) continue;
@@ -75,17 +76,19 @@ public class FormationManager {
             Player hunter = org.bukkit.Bukkit.getPlayer(hunterUuid);
             if (hunter == null) continue;
 
-            if (formationFound) {
-                double angle = angleStep * i;
-                double x = center.getX() + radius * Math.cos(angle);
-                double z = center.getZ() + radius * Math.sin(angle);
+            double angle = angleStep * i;
+            double x = center.getX() + radius * Math.cos(angle);
+            double z = center.getZ() + radius * Math.sin(angle);
 
-                Location hunterLoc = new Location(gameWorld, x, y, z);
-                hunterLoc.setDirection(center.toVector().subtract(hunterLoc.toVector()).setY(0).normalize());
-                hunter.teleport(hunterLoc);
+            Location hunterLoc;
+            if (formationFound) {
+                hunterLoc = new Location(gameWorld, x, y, z);
             } else {
-                hunter.teleport(center);
+                Location ground = findSafeSurfaceLocation(new Location(gameWorld, x, center.getY(), z));
+                hunterLoc = ground != null ? ground : center;
             }
+            hunterLoc.setDirection(center.toVector().subtract(hunterLoc.toVector()).setY(0).normalize());
+            hunter.teleport(hunterLoc);
         }
     }
 

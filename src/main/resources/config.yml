@@ -17,6 +17,7 @@ tracking:
 preHunt:
   countdown: 5
   hunterCircleRadius: 3.0
+  formationSearchRadius: 30
 
 scoreboard:
   enabled: true

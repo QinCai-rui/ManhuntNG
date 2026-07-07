@@ -142,6 +142,10 @@ public class ConfigManager {
         return config.getDouble("preHunt.hunterCircleRadius", 3.0);
     }
 
+    public int getFormationSearchRadius() {
+        return config.getInt("preHunt.formationSearchRadius", 20);
+    }
+
     public boolean isTrackingEnabled() {
         return config.getBoolean("tracking.enabled", true);
     }
