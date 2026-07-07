@@ -195,14 +195,15 @@ public class GameListener implements Listener {
 
         if (plugin.getPlayerManager().isHunter(uuid)) {
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                ItemStack[] armor = savedArmor.remove(uuid);
+                ItemStack offhand = savedOffhand.remove(uuid);
+
                 if (!player.isOnline()) return;
                 player.setGameMode(GameMode.SURVIVAL);
 
-                ItemStack[] armor = savedArmor.remove(uuid);
                 if (armor != null) {
                     player.getInventory().setArmorContents(armor);
                 }
-                ItemStack offhand = savedOffhand.remove(uuid);
                 if (offhand != null) {
                     player.getInventory().setItemInOffHand(offhand);
                 }
