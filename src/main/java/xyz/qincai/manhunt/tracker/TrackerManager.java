@@ -79,26 +79,24 @@ public class TrackerManager {
         World runnerWorld = runner.getWorld();
         World hunterWorld = hunter.getWorld();
 
+        Location target;
         if (hunterWorld.equals(runnerWorld)) {
-            CompassMeta meta = (CompassMeta) compass.getItemMeta();
-            meta.setLodestone(runner.getLocation());
-            meta.setLodestoneTracked(false);
-            compass.setItemMeta(meta);
+            target = runner.getLocation();
+        } else if (runnerWorld.getEnvironment() == World.Environment.NETHER && hunterWorld.getEnvironment() == World.Environment.NORMAL) {
+            Location r = runner.getLocation();
+            target = new Location(hunterWorld, r.getX() * 8, r.getY(), r.getZ() * 8);
+        } else if (runnerWorld.getEnvironment() == World.Environment.NORMAL && hunterWorld.getEnvironment() == World.Environment.NETHER) {
+            Location r = runner.getLocation();
+            target = new Location(hunterWorld, r.getX() / 8, r.getY(), r.getZ() / 8);
         } else {
-            World.Environment hunterEnv = hunterWorld.getEnvironment();
-            Location lastKnown = runnerLastKnownLocations.get(hunterEnv);
-            if (lastKnown != null && lastKnown.getWorld() != null) {
-                CompassMeta meta = (CompassMeta) compass.getItemMeta();
-                meta.setLodestone(lastKnown);
-                meta.setLodestoneTracked(false);
-                compass.setItemMeta(meta);
-            } else {
-                CompassMeta meta = (CompassMeta) compass.getItemMeta();
-                meta.setLodestone(hunterWorld.getSpawnLocation());
-                meta.setLodestoneTracked(false);
-                compass.setItemMeta(meta);
-            }
+            Location lastKnown = runnerLastKnownLocations.get(hunterWorld.getEnvironment());
+            target = (lastKnown != null && lastKnown.getWorld() != null) ? lastKnown : hunterWorld.getSpawnLocation();
         }
+
+        CompassMeta meta = (CompassMeta) compass.getItemMeta();
+        meta.setLodestone(target);
+        meta.setLodestoneTracked(false);
+        compass.setItemMeta(meta);
     }
 
     private ItemStack createTrackerCompass() {
