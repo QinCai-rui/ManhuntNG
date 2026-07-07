@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/QinCai-rui/ManhuntNG/actions/workflows/ci.yml/badge.svg)](https://github.com/QinCai-rui/ManhuntNG/actions/workflows/ci.yml) [![Release](https://github.com/QinCai-rui/ManhuntNG/actions/workflows/release.yml/badge.svg)](https://github.com/QinCai-rui/ManhuntNG/actions/workflows/release.yml)
 
-A (n *almost*) feature complete Minecraft Manhunt plugin for PaperMC. ManhuntNG provides enjoyable manhunt gameplay, cross-dimension compass tracking, "twists" such as potion effects, and controls for running multiple Manhunt games on Minecraft servers.
+A (n *almost*) feature complete Minecraft Manhunt plugin for PaperMC. ManhuntNG provides enjoyable manhunt gameplay, cross-dimension **compass tracking**, "twists" such as potion effects (*more to come*), and controls for running multiple Manhunt games on Minecraft servers.
 
 ## Features
 
@@ -18,12 +18,12 @@ A (n *almost*) feature complete Minecraft Manhunt plugin for PaperMC. ManhuntNG 
 
 ## Installation
 
-Download the latest release JAR from the [Releases](https://github.com/QinCai-rui/ManhuntNG/releases/latest)
+Download the latest release JAR from the [Releases](https://github.com/QinCai-rui/ManhuntNG/releases/latest), or build from source (see Building & Development).
 
 ## Quick Start
 
-1. Place the JAR in `plugins/` and start the server.
-2. Configure the game using the `/manhunt` command group (see Commands below).
+1. Place the JAR in the server `plugins/` folder and start the server.
+2. Configure matches and roles using the `/manhunt` command group (see Commands below).
 
 Example:
 
@@ -87,7 +87,11 @@ Action bar examples (with `tracking.showDistance: true`):
 
 ## Building & Development
 
-- Build with `mvn clean package`.
+Build with:
+
+```bash
+mvn clean package
+```
 
 ## Contributing
 
