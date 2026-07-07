@@ -33,7 +33,7 @@ A (n *almost*) feature complete Minecraft Manhunt plugin for PaperMC. ManhuntNG 
 
 ### Gameplay
 
-- Fully automated match ("lobby" -> countdown -> pre‑hunt -> running -> finish)
+- Fully automated match (`"lobby"` -> `countdown` -> `pre‑hunt` -> `running` -> `finish`)
 - Runner/hunter role assignment
 - Automatic respawn handling for hunters
 - Configurable inventory restoration (keepinventory, or keeparmour & keepoffhand) on respawn
