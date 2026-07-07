@@ -1,8 +1,5 @@
 name: CI
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 on:
   push:
     branches: ["**"]
@@ -25,20 +22,9 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-          cache: maven
 
-      - name: Stamp build version
-        id: version
-        shell: bash
-        run: |
-          DATE="$(date -u +%y.%m.%d)"
-          BRANCH="${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
-          CLEAN_BRANCH="$(echo "${BRANCH}" | sed 's/[^a-zA-Z0-9._-]/-/g')"
-          SHORT_SHA="${GITHUB_SHA::7}"
-          VERSION="${DATE}-${CLEAN_BRANCH}.${SHORT_SHA}"
-
-          echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
-          echo "Build version: ${VERSION}"
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
 
       - name: Build and test
-        run: mvn -B -ntp -Drevision=${{ steps.version.outputs.version }} test
+        run: ./gradlew build

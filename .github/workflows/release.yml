@@ -1,8 +1,5 @@
 name: Release
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 on:
   push:
     branches: ["main"]
@@ -13,7 +10,6 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -25,28 +21,20 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-          cache: maven
 
-      - name: Stamp build version
-        id: version
-        shell: bash
-        run: |
-          DATE="$(date -u +%y.%m.%d)"
-          SHORT_SHA="${GITHUB_SHA::7}"
-          VERSION="${DATE}-dev.${GITHUB_RUN_NUMBER}.${SHORT_SHA}"
-
-          echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
-          echo "Build version: ${VERSION}"
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
 
       - name: Build package
-        run: mvn -B -ntp -Drevision=${{ steps.version.outputs.version }} package
+        run: ./gradlew :paper:shadowJar :fabric:jar
 
       - name: Create GitHub release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          VERSION="${{ steps.version.outputs.version }}"
+          VERSION="$(date -u +%y.%m.%d)-dev.${GITHUB_RUN_NUMBER}.${GITHUB_SHA::7}"
           gh release create "${VERSION}" \
-            target/ManhuntNG-${VERSION}.jar \
+            paper/build/libs/ManhuntNG-*.jar \
+            fabric/build/libs/ManhuntNG-fabric-*.jar \
             --title "${VERSION}" \
             --generate-notes
