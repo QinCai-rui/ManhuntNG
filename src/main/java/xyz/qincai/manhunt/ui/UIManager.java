@@ -8,6 +8,7 @@ import org.bukkit.World;
 import org.bukkit.entity.EnderCrystal;
 import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.scoreboard.Criteria;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
@@ -206,9 +207,38 @@ public class UIManager {
 
         Component actionBar = Component.text(currentPhase.getDisplay(), NamedTextColor.GOLD);
 
+        boolean showDistance = plugin.getConfigManager().isTrackingShowDistance();
+        Player runner = match.getRunnerUuid() != null ? Bukkit.getPlayer(match.getRunnerUuid()) : null;
+
         for (UUID uuid : match.getHunterUuids()) {
             Player player = Bukkit.getPlayer(uuid);
-            if (player != null) player.sendActionBar(actionBar);
+            if (player == null) continue;
+
+            if (showDistance && runner != null) {
+                ItemStack hand = player.getInventory().getItemInMainHand();
+                if (plugin.getTrackerManager().isTrackerCompass(hand)) {
+                    if (player.getWorld().equals(runner.getWorld())) {
+                        int dist = (int) Math.round(player.getLocation().distance(runner.getLocation()));
+                        player.sendActionBar(
+                                Component.text("Runner \u2014 ", NamedTextColor.GOLD)
+                                        .append(Component.text(dist + "m", NamedTextColor.WHITE))
+                        );
+                    } else {
+                        String portal = switch (runner.getWorld().getEnvironment()) {
+                            case NETHER -> "Nether Portal";
+                            case THE_END -> "End Portal";
+                            default -> "Nether Portal";
+                        };
+                        player.sendActionBar(
+                                Component.text("Tracking ", NamedTextColor.GOLD)
+                                        .append(Component.text(portal, NamedTextColor.WHITE))
+                        );
+                    }
+                    continue;
+                }
+            }
+
+            player.sendActionBar(actionBar);
         }
         if (match.getRunnerUuid() != null) {
             Player runner = Bukkit.getPlayer(match.getRunnerUuid());

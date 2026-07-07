@@ -154,6 +154,10 @@ public class ConfigManager {
         return config.getInt("tracking.updateTicks", 5);
     }
 
+    public boolean isTrackingShowDistance() {
+        return config.getBoolean("tracking.showDistance", true);
+    }
+
     public int getRunnerLives() {
         return config.getInt("runner.lives", 1);
     }
