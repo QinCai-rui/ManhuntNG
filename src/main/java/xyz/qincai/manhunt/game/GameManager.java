@@ -366,6 +366,12 @@ public class GameManager {
         return match.getState() == GameState.RUNNING || match.getState() == GameState.PRE_HUNT || match.getState() == GameState.PAUSED;
     }
 
+    public boolean pauseGame() {
+        if (match.getState() != GameState.RUNNING && match.getState() != GameState.PRE_HUNT) return false;
+        pauseInternal();
+        return true;
+    }
+
     public boolean pauseGame(UUID ownerUuid) {
         if (match.getState() != GameState.RUNNING && match.getState() != GameState.PRE_HUNT) return false;
         if (!match.isOwner(ownerUuid)) {
@@ -373,6 +379,11 @@ public class GameManager {
             if (player == null || !player.hasPermission("manhunt.admin")) return false;
         }
 
+        pauseInternal();
+        return true;
+    }
+
+    private void pauseInternal() {
         match.setPrePauseState(match.getState());
         match.setState(GameState.PAUSED);
         match.setPausedAt(System.currentTimeMillis());
@@ -389,7 +400,6 @@ public class GameManager {
 
         plugin.getUiManager().showPauseTitle();
         plugin.getUiManager().sendToAll("\u00a7eGame has been paused!");
-        return true;
     }
 
     public boolean resumeGame(UUID ownerUuid) {

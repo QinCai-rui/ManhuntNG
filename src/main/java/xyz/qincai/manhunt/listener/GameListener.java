@@ -24,6 +24,7 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerAdvancementDoneEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.inventory.FurnaceSmeltEvent;
 import org.bukkit.event.inventory.FurnaceBurnEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
@@ -88,6 +89,15 @@ public class GameListener implements Listener {
                 && player.getUniqueId().equals(match.getRunnerUuid())) {
             plugin.getTrackerManager().updateRunnerLastKnown(player);
         }
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        Match match = plugin.getGameManager().getMatch();
+        if (match.getState() != GameState.RUNNING) return;
+        if (!event.getPlayer().getUniqueId().equals(match.getRunnerUuid())) return;
+        plugin.getUiManager().sendToAll("\u00a7eRunner has disconnected — pausing game!");
+        plugin.getGameManager().pauseGame();
     }
 
     @EventHandler
@@ -360,7 +370,7 @@ public class GameListener implements Listener {
         Player player = event.getPlayer();
         Match match = plugin.getGameManager().getMatch();
 
-        if (!match.isParticipant(player.getUniqueId())) return;
+        if (!plugin.getPlayerManager().isRunner(player.getUniqueId())) return;
 
         NamespacedKey key = event.getAdvancement().getKey();
 
