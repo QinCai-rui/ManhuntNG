@@ -42,5 +42,6 @@ potionEffects:
   hunters:
     - type: SPEED
       level: 1
-      duration: 60
+      # 1 minute (60x20=1200 ticks)
+      duration: 1200
       ambient: true
