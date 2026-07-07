@@ -108,13 +108,27 @@ public class GameListener implements Listener {
 
         if (match.getState() != GameState.RUNNING) return;
 
+        destroyTrackingCompass(player, event);
+
         if (plugin.getPlayerManager().isRunner(uuid)) {
-            event.setDeathMessage("\u00a7c\u00a7l" + player.getName() + " (Runner) has been eliminated!");
+            Component vanilla = event.deathMessage();
+            if (vanilla != null) {
+                event.deathMessage(Component.text()
+                        .append(Component.text(player.getName() + " (Runner) ", NamedTextColor.RED))
+                        .append(vanilla.colorIfAbsent(NamedTextColor.WHITE))
+                        .build());
+            }
             plugin.getPlayerManager().eliminateRunner(uuid);
             plugin.getStatsManager().recordDeath(uuid);
             plugin.getGameManager().huntersWin();
         } else if (plugin.getPlayerManager().isHunter(uuid)) {
-            event.setDeathMessage("\u00a7e" + player.getName() + " (Hunter) died! Respawning...");
+            Component vanilla = event.deathMessage();
+            if (vanilla != null) {
+                event.deathMessage(Component.text()
+                        .append(Component.text(player.getName() + " (Hunter) ", NamedTextColor.GOLD))
+                        .append(vanilla.colorIfAbsent(NamedTextColor.WHITE))
+                        .build());
+            }
 
             plugin.getPlayerManager().addHunterRespawn(uuid);
 
@@ -122,7 +136,6 @@ public class GameListener implements Listener {
                 int limit = plugin.getConfigManager().getHunterRespawnLimit();
                 if (plugin.getPlayerManager().getHunterRespawnCount(uuid) > limit) {
                     plugin.getPlayerManager().eliminateHunter(uuid);
-                    event.setDeathMessage("\u00a7c" + player.getName() + " (Hunter) has been eliminated!");
                     return;
                 }
             }
@@ -142,6 +155,16 @@ public class GameListener implements Listener {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    private void destroyTrackingCompass(Player player, PlayerDeathEvent event) {
+        event.getDrops().removeIf(item -> plugin.getTrackerManager().isTrackerCompass(item));
+        for (int i = 0; i < player.getInventory().getSize(); i++) {
+            ItemStack item = player.getInventory().getItem(i);
+            if (plugin.getTrackerManager().isTrackerCompass(item)) {
+                player.getInventory().clear(i);
             }
         }
     }

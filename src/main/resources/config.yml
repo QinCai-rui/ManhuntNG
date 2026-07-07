@@ -16,7 +16,7 @@ tracking:
 
 preHunt:
   countdown: 5
-  hunterCircleRadius: 3.0
+  hunterCircleRadius: 2.0
 
 scoreboard:
   enabled: true

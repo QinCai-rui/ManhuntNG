@@ -68,6 +68,7 @@ public class FormationManager {
 
         if (hunterCount == 0) return;
 
+        double y = center.getY();
         double angleStep = 2 * Math.PI / hunterCount;
         for (int i = 0; i < hunterCount; i++) {
             UUID hunterUuid = hunterUuids.get(i);
@@ -78,12 +79,7 @@ public class FormationManager {
             double x = center.getX() + radius * Math.cos(angle);
             double z = center.getZ() + radius * Math.sin(angle);
 
-            Location hunterLoc = new Location(gameWorld, x, center.getY(), z);
-            Location safeHunterLoc = findSafeSurfaceLocation(hunterLoc);
-            if (safeHunterLoc != null) {
-                hunterLoc = safeHunterLoc;
-            }
-
+            Location hunterLoc = new Location(gameWorld, x, y, z);
             hunterLoc.setDirection(center.toVector().subtract(hunterLoc.toVector()).setY(0).normalize());
             hunter.teleport(hunterLoc);
         }
@@ -112,14 +108,13 @@ public class FormationManager {
 
     private boolean areHunterPositionsSafe(Location center, double radius, int hunterCount, World world) {
         double angleStep = 2 * Math.PI / hunterCount;
+        double y = center.getY();
         for (int i = 0; i < hunterCount; i++) {
             double angle = angleStep * i;
             double x = center.getX() + radius * Math.cos(angle);
             double z = center.getZ() + radius * Math.sin(angle);
-            Location loc = new Location(world, x, center.getY(), z);
-            Location safe = findSafeSurfaceLocation(loc);
-            if (safe == null) return false;
-            if (!isSafeForPlayer(safe)) return false;
+            Location loc = new Location(world, x, y, z);
+            if (!isSafeForPlayer(loc)) return false;
         }
         return true;
     }
