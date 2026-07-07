@@ -261,12 +261,12 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        if (!plugin.getGameManager().getMatch().isOwner(player.getUniqueId()) && !player.hasPermission("manhunt.admin")) {
-            player.sendMessage(Component.text("Only the game owner can pause the game!", NamedTextColor.RED));
+        if (!plugin.getPlayerManager().isRunner(player.getUniqueId())) {
+            player.sendMessage(Component.text("Only the runner can pause the game!", NamedTextColor.RED));
             return true;
         }
 
-        if (!plugin.getGameManager().pauseGame(player.getUniqueId())) {
+        if (!plugin.getGameManager().pauseGame()) {
             player.sendMessage(Component.text("Failed to pause the game!", NamedTextColor.RED));
         }
         return true;
@@ -283,12 +283,12 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        if (!plugin.getGameManager().getMatch().isOwner(player.getUniqueId()) && !player.hasPermission("manhunt.admin")) {
-            player.sendMessage(Component.text("Only the game owner can resume the game!", NamedTextColor.RED));
+        if (!plugin.getPlayerManager().isRunner(player.getUniqueId())) {
+            player.sendMessage(Component.text("Only the runner can resume the game!", NamedTextColor.RED));
             return true;
         }
 
-        if (!plugin.getGameManager().resumeGame(player.getUniqueId())) {
+        if (!plugin.getGameManager().resumeGame()) {
             player.sendMessage(Component.text("Failed to resume the game!", NamedTextColor.RED));
         }
         return true;

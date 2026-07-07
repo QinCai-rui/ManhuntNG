@@ -366,12 +366,8 @@ public class GameManager {
         return match.getState() == GameState.RUNNING || match.getState() == GameState.PRE_HUNT || match.getState() == GameState.PAUSED;
     }
 
-    public boolean pauseGame(UUID ownerUuid) {
+    public boolean pauseGame() {
         if (match.getState() != GameState.RUNNING && match.getState() != GameState.PRE_HUNT) return false;
-        if (!match.isOwner(ownerUuid)) {
-            Player player = Bukkit.getPlayer(ownerUuid);
-            if (player == null || !player.hasPermission("manhunt.admin")) return false;
-        }
 
         match.setPrePauseState(match.getState());
         match.setState(GameState.PAUSED);
@@ -392,12 +388,8 @@ public class GameManager {
         return true;
     }
 
-    public boolean resumeGame(UUID ownerUuid) {
+    public boolean resumeGame() {
         if (match.getState() != GameState.PAUSED) return false;
-        if (!match.isOwner(ownerUuid)) {
-            Player player = Bukkit.getPlayer(ownerUuid);
-            if (player == null || !player.hasPermission("manhunt.admin")) return false;
-        }
 
         match.accumulatePausedTime();
 
