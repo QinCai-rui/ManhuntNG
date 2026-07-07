@@ -264,19 +264,9 @@ public class GameListener implements Listener {
         Player player = event.getPlayer();
         Match match = plugin.getGameManager().getMatch();
 
-        if (plugin.getTrackerManager().isTrackerCompass(event.getItemDrop().getItemStack())) {
-            if (match.getState() == GameState.RUNNING && plugin.getPlayerManager().isHunter(player.getUniqueId())) {
-                event.setCancelled(true);
-                return;
-            }
-        }
-
-        if (match.getState() == GameState.PRE_HUNT || match.getState() == GameState.COUNTDOWN || match.getState() == GameState.PAUSED) {
-            if (plugin.getPlayerManager().isRunner(player.getUniqueId()) ||
-                    plugin.getPlayerManager().isHunter(player.getUniqueId())) {
-                event.setCancelled(true);
-                if (plugin.getGameManager().isGamePaused()) sendPauseBlockedMessage(player);
-            }
+        if (plugin.getTrackerManager().isTrackerCompass(event.getItemDrop().getItemStack())
+                && plugin.getPlayerManager().isHunter(player.getUniqueId())) {
+            event.setCancelled(true);
         }
     }
 
