@@ -132,13 +132,15 @@ public class TrackerManager {
             Player hunter = Bukkit.getPlayer(uuid);
             if (hunter == null) continue;
 
-            ItemStack compass = createTrackerCompass();
-            hunter.getInventory().addItem(compass);
+            if (findCompass(hunter) == null) {
+                hunter.getInventory().addItem(createTrackerCompass());
+            }
         }
     }
 
     public void giveCompassToPlayer(Player player) {
-        ItemStack compass = createTrackerCompass();
-        player.getInventory().addItem(compass);
+        if (findCompass(player) == null) {
+            player.getInventory().addItem(createTrackerCompass());
+        }
     }
 }

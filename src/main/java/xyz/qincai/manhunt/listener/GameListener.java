@@ -2,7 +2,6 @@ package xyz.qincai.manhunt.listener;
 
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
@@ -135,25 +134,13 @@ public class GameListener implements Listener {
         if (match.getState() != GameState.RUNNING) return;
 
         if (plugin.getPlayerManager().isHunter(uuid)) {
-            if (match.getGameWorld() != null) {
-                Location bedSpawn = player.getBedSpawnLocation();
-                event.setRespawnLocation(bedSpawn != null ? bedSpawn : match.getGameWorld().getSpawnLocation());
-                Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                    if (!player.isOnline()) return;
-                    player.setGameMode(GameMode.SURVIVAL);
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                if (!player.isOnline()) return;
+                player.setGameMode(GameMode.SURVIVAL);
 
-                    if (plugin.getConfigManager().isHunterKeepInventory()) {
-                        // Inventory was kept via event.setKeepInventory(true)
-                    } else if (plugin.getConfigManager().isHunterKeepArmor()) {
-                        // Armor was kept, but inventory was cleared - give compass back
-                    }
-
-                    plugin.getTrackerManager().giveCompassToPlayer(player);
-                    plugin.getUiManager().sendToAll("\u00a7e" + player.getName() + " has respawned!");
-                }, 1L);
-            }
-        } else if (plugin.getPlayerManager().isRunner(uuid)) {
-            event.setRespawnLocation(match.getGameWorld().getSpawnLocation());
+                plugin.getTrackerManager().giveCompassToPlayer(player);
+                plugin.getUiManager().sendToAll("\u00a7e" + player.getName() + " has respawned!");
+            }, 1L);
         }
     }
 
