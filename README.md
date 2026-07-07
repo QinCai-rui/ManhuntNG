@@ -6,6 +6,12 @@ A (n *almost*) feature complete Minecraft Manhunt plugin for PaperMC. ManhuntNG 
 
 ---
 
+## Screenshots
+
+![ManhuntNG help message (`/manhunt help`)](assets/screenshots/help-page.png)
+
+---
+
 ## Features
 
 ### Tracking & Compass System
@@ -113,6 +119,64 @@ Action bar examples (with `tracking.showDistance: true`):
 - Same dimension: `Runner — 123m`
 - Runner in Nether: `Tracking Nether Portal — 234m`
 - Runner in The End: `Tracking End Portal — 567m`
+
+---
+
+## Why ManhuntNG
+
+I made this plugin because I wanted a more accurate tracking system for Minecraft Manhunt. Many existing plugins/datapacks have issues with cross-dimension tracking, and I wanted to create a solution that was reliable, easy to use, and configurable.
+
+ManhuntNG is designed to be simple to set up and use, and also having advanced features for those who want more control over their Manhunt games.
+
+TODO: add teamchat support
+
+### Better Tracking
+
+- Live runner tracking in the same dimension  
+- Dimension‑aware lastknown location tracking  
+- Compass safely disables when data is missing  
+- Event‑driven updates (death, respawn, dimension change)
+
+### Match Lifecycle
+
+- Lobby → countdown → pre‑hunt → running → finish  
+- Working pause/resume system. Prevents movement, world time, block & entity interaction, furnace burning/smelting, and crafting. (TODO: add mob AI freezing)
+- Auto‑pause when runner disconnects  
+
+### Respawn Handling
+
+- Automatic compass removal on death (prevents duplication)
+- Automatic compass re‑giving on respawn  
+- Optional partial/complete inventory restoration
+
+### World Management
+
+- Custom world selection  
+- Custom seed selection  
+- Multi‑match support on the same server  
+- Clean world teardown/reset between matches
+
+### Better Player UI/UX
+
+- Action bar tracking messages (dimension‑aware)  
+- Scoreboard with live match info  
+- Clear state transitions  
+- Fully configurable messages
+
+### Simple Config
+
+- potion effects  
+- respawn rules  
+- Clean tracking options  
+- No complex twist scripting required
+
+### Modern-ish
+
+(pls dont tell me to use gradle, i tried. trust me)
+
+- Built with Adventure API  
+- Modular managers (tracking, players, world, UI)  
+- Clean command system  
 
 ---
 
