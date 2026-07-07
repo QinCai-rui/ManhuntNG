@@ -82,8 +82,8 @@ Hunters receive a compass that points to the runner when in the same dimension. 
 Action bar examples (with `tracking.showDistance: true`):
 
 - Same dimension: `Runner — 123m`
-- Runner in Nether: `Tracking Nether Portal`
-- Runner in The End: `Tracking End Portal`
+- Runner in Nether: `Tracking Nether Portal — 234m`
+- Runner in The End: `Tracking End Portal — 567m`
 
 ## Building & Development
 
