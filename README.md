@@ -4,6 +4,8 @@
 
 A (n *almost*) feature complete Minecraft Manhunt plugin for PaperMC. ManhuntNG provides enjoyable manhunt gameplay, cross-dimension **compass tracking**, "twists" such as potion effects (*more to come*), and controls for running multiple Manhunt games on Minecraft servers.
 
+---
+
 ## Features
 
 - Tracking compasses that follow the runner across dimensions
@@ -88,6 +90,8 @@ Action bar examples (with `tracking.showDistance: true`):
 - Same dimension: `Runner — 123m`
 - Runner in Nether: `Tracking Nether Portal — 234m`
 - Runner in The End: `Tracking End Portal — 567m`
+
+---
 
 ## Building & Development
 
