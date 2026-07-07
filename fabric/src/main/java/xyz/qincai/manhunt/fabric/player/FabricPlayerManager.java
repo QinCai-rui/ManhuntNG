@@ -1,6 +1,6 @@
 package xyz.qincai.manhunt.fabric.player;
 
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import xyz.qincai.manhunt.player.PlayerRole;
 import xyz.qincai.manhunt.fabric.game.FabricGameManager;
 
@@ -16,43 +16,43 @@ public class FabricPlayerManager {
         this.gameManager = gameManager;
     }
 
-    public PlayerRole getRole(ServerPlayerEntity player) {
-        return gameManager.getPlayerRoles().get(player.getUuid());
+    public PlayerRole getRole(ServerPlayer player) {
+        return gameManager.getPlayerRoles().get(player.getUUID());
     }
 
-    public boolean isRunner(ServerPlayerEntity player) {
+    public boolean isRunner(ServerPlayer player) {
         return getRole(player) == PlayerRole.RUNNER;
     }
 
-    public boolean isHunter(ServerPlayerEntity player) {
+    public boolean isHunter(ServerPlayer player) {
         return getRole(player) == PlayerRole.HUNTER;
     }
 
-    public boolean isSpectator(ServerPlayerEntity player) {
+    public boolean isSpectator(ServerPlayer player) {
         return getRole(player) == PlayerRole.SPECTATOR;
     }
 
-    public void recordKill(ServerPlayerEntity killer) {
-        killCount.merge(killer.getUuid(), 1, Integer::sum);
+    public void recordKill(ServerPlayer killer) {
+        killCount.merge(killer.getUUID(), 1, Integer::sum);
     }
 
-    public void recordDeath(ServerPlayerEntity victim) {
-        deathCount.merge(victim.getUuid(), 1, Integer::sum);
+    public void recordDeath(ServerPlayer victim) {
+        deathCount.merge(victim.getUUID(), 1, Integer::sum);
     }
 
-    public void recordWin(ServerPlayerEntity player) {
-        winCount.merge(player.getUuid(), 1, Integer::sum);
+    public void recordWin(ServerPlayer player) {
+        winCount.merge(player.getUUID(), 1, Integer::sum);
     }
 
-    public int getKills(ServerPlayerEntity player) {
-        return killCount.getOrDefault(player.getUuid(), 0);
+    public int getKills(ServerPlayer player) {
+        return killCount.getOrDefault(player.getUUID(), 0);
     }
 
-    public int getDeaths(ServerPlayerEntity player) {
-        return deathCount.getOrDefault(player.getUuid(), 0);
+    public int getDeaths(ServerPlayer player) {
+        return deathCount.getOrDefault(player.getUUID(), 0);
     }
 
-    public int getWins(ServerPlayerEntity player) {
-        return winCount.getOrDefault(player.getUuid(), 0);
+    public int getWins(ServerPlayer player) {
+        return winCount.getOrDefault(player.getUUID(), 0);
     }
 }

@@ -1,16 +1,16 @@
 package xyz.qincai.manhunt.fabric.world;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
 import xyz.qincai.manhunt.fabric.game.FabricGameManager;
 
 import java.util.*;
 
 public class FabricWorldManager {
     private final FabricGameManager gameManager;
-    private final List<ServerWorld> gameWorlds = new ArrayList<>();
+    private final List<ServerLevel> gameWorlds = new ArrayList<>();
 
     public FabricWorldManager(FabricGameManager gameManager) {
         this.gameManager = gameManager;
@@ -20,9 +20,9 @@ public class FabricWorldManager {
         MinecraftServer server = gameManager.getServer();
         gameWorlds.clear();
 
-        ServerWorld overworld = server.getOverworld();
-        ServerWorld nether = server.getWorld(World.NETHER);
-        ServerWorld end = server.getWorld(World.END);
+        ServerLevel overworld = server.overworld();
+        ServerLevel nether = server.getLevel(Level.NETHER);
+        ServerLevel end = server.getLevel(Level.END);
 
         if (overworld != null) gameWorlds.add(overworld);
         if (nether != null) gameWorlds.add(nether);
@@ -30,15 +30,15 @@ public class FabricWorldManager {
     }
 
     public BlockPos getRunnerSpawn() {
-        ServerWorld overworld = gameManager.getServer().getOverworld();
-        BlockPos spawn = overworld.getSpawnPos();
-        return spawn.add(50, 0, 0);
+        ServerLevel overworld = gameManager.getServer().overworld();
+        BlockPos spawn = overworld.getSharedSpawnPos();
+        return spawn.offset(50, 0, 0);
     }
 
     public BlockPos getHunterSpawn() {
-        ServerWorld overworld = gameManager.getServer().getOverworld();
-        BlockPos spawn = overworld.getSpawnPos();
-        return spawn.add(-50, 0, 0);
+        ServerLevel overworld = gameManager.getServer().overworld();
+        BlockPos spawn = overworld.getSharedSpawnPos();
+        return spawn.offset(-50, 0, 0);
     }
 
     public void cleanup() {

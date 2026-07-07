@@ -1,9 +1,11 @@
 package xyz.qincai.manhunt.fabric.game;
 
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import xyz.qincai.manhunt.game.GameState;
@@ -29,9 +31,9 @@ public class FabricGameManager {
     private int gameTicks = 0;
     private int elapsedSeconds = 0;
 
-    private final Set<ServerPlayerEntity> runners = new HashSet<>();
-    private final Set<ServerPlayerEntity> hunters = new HashSet<>();
-    private final Set<ServerPlayerEntity> spectators = new HashSet<>();
+    private final Set<ServerPlayer> runners = new HashSet<>();
+    private final Set<ServerPlayer> hunters = new HashSet<>();
+    private final Set<ServerPlayer> spectators = new HashSet<>();
     private final Map<UUID, PlayerRole> playerRoles = new HashMap<>();
 
     private boolean paused = false;
@@ -61,8 +63,8 @@ public class FabricGameManager {
 
     private void tickCountdown() {
         countdownSeconds--;
-        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-            player.sendMessage(Text.literal("\u23f3 " + countdownSeconds + " seconds until game starts!").formatted(Formatting.YELLOW), false);
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            player.sendSystemMessage(Component.literal("\u23f3 " + countdownSeconds + " seconds until game starts!").withStyle(ChatFormatting.YELLOW));
         }
         if (countdownSeconds <= 0) {
             startPreHunt();
@@ -71,9 +73,9 @@ public class FabricGameManager {
 
     private void tickPreHunt() {
         preHuntSeconds--;
-        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             if (preHuntSeconds % 10 == 0 || preHuntSeconds <= 5) {
-                player.sendMessage(Text.literal("\u23f3 " + preHuntSeconds + " seconds until hunters release!").formatted(Formatting.RED), false);
+                player.sendSystemMessage(Component.literal("\u23f3 " + preHuntSeconds + " seconds until hunters release!").withStyle(ChatFormatting.RED));
             }
         }
         if (preHuntSeconds <= 0) {
@@ -88,42 +90,42 @@ public class FabricGameManager {
 
     private void updateTracking() {
         if (!trackingEnabled) return;
-        for (ServerPlayerEntity hunter : hunters) {
-            Optional<ServerPlayerEntity> nearest = findNearestRunner(hunter);
+        for (ServerPlayer hunter : hunters) {
+            Optional<ServerPlayer> nearest = findNearestRunner(hunter);
             nearest.ifPresent(runner -> {
                 updateCompass(hunter, runner);
             });
         }
     }
 
-    private Optional<ServerPlayerEntity> findNearestRunner(ServerPlayerEntity hunter) {
+    private Optional<ServerPlayer> findNearestRunner(ServerPlayer hunter) {
         return runners.stream()
-                .filter(r -> r.getWorld() == hunter.getWorld())
-                .min(Comparator.comparingDouble(r -> r.squaredDistanceTo(hunter)));
+                .filter(r -> r.level() == hunter.level())
+                .min(Comparator.comparingDouble(r -> r.distanceToSqr(hunter)));
     }
 
-    private void updateCompass(ServerPlayerEntity hunter, ServerPlayerEntity target) {
-        var stack = hunter.getInventory().selectedSlot == 0
-                ? hunter.getInventory().getStack(0)
+    private void updateCompass(ServerPlayer hunter, ServerPlayer target) {
+        var stack = hunter.getInventory().selected == 0
+                ? hunter.getInventory().getItem(0)
                 : null;
-        if (stack != null && stack.getItem() == net.minecraft.item.Items.COMPASS) {
-            hunter.setSpawnPoint(
-                    net.minecraft.world.World.OVERWORLD,
-                    target.getBlockPos(),
+        if (stack != null && stack.getItem() == Items.COMPASS) {
+            hunter.setRespawnPosition(
+                    Level.OVERWORLD,
+                    target.blockPosition(),
                     0,
                     false
             );
         }
     }
 
-    public void startGame(ServerPlayerEntity starter) {
+    public void startGame(ServerPlayer starter) {
         if (state != GameState.WAITING) return;
 
-        List<ServerPlayerEntity> players = new ArrayList<>(server.getPlayerManager().getPlayerList());
-        players.removeIf(p -> p.getUuid().equals(starter.getUuid()) || hasPermission(p, "manhunt.spectate"));
+        List<ServerPlayer> players = new ArrayList<>(server.getPlayerList().getPlayers());
+        players.removeIf(p -> p.getUUID().equals(starter.getUUID()) || hasPermission(p, "manhunt.spectate"));
 
         if (players.isEmpty()) {
-            starter.sendMessage(Text.literal("Not enough players to start!").formatted(Formatting.RED));
+            starter.sendSystemMessage(Component.literal("Not enough players to start!").withStyle(ChatFormatting.RED));
             return;
         }
 
@@ -131,31 +133,31 @@ public class FabricGameManager {
         state = GameState.COUNTDOWN;
         countdownSeconds = 30;
 
-        broadcast(Text.literal("Manhunt game starting!").formatted(Formatting.GREEN));
+        broadcast(Component.literal("Manhunt game starting!").withStyle(ChatFormatting.GREEN));
     }
 
-    private void assignRoles(ServerPlayerEntity starter, List<ServerPlayerEntity> players) {
+    private void assignRoles(ServerPlayer starter, List<ServerPlayer> players) {
         runners.clear();
         hunters.clear();
         spectators.clear();
         playerRoles.clear();
 
-        List<ServerPlayerEntity> available = new ArrayList<>(players);
+        List<ServerPlayer> available = new ArrayList<>(players);
         Collections.shuffle(available);
 
-        ServerPlayerEntity runner = available.remove(0);
+        ServerPlayer runner = available.remove(0);
         runners.add(runner);
-        playerRoles.put(runner.getUuid(), PlayerRole.RUNNER);
+        playerRoles.put(runner.getUUID(), PlayerRole.RUNNER);
 
-        for (ServerPlayerEntity p : available) {
+        for (ServerPlayer p : available) {
             hunters.add(p);
-            playerRoles.put(p.getUuid(), PlayerRole.HUNTER);
+            playerRoles.put(p.getUUID(), PlayerRole.HUNTER);
         }
 
-        starter.sendMessage(Text.literal("Runner: " + runner.getName().getString()).formatted(Formatting.AQUA));
-        runner.sendMessage(Text.literal("You are the RUNNER! Run!").formatted(Formatting.GOLD));
-        for (ServerPlayerEntity hunter : hunters) {
-            hunter.sendMessage(Text.literal("You are a HUNTER! Hunt the runner!").formatted(Formatting.RED));
+        starter.sendSystemMessage(Component.literal("Runner: " + runner.getName().getString()).withStyle(ChatFormatting.AQUA));
+        runner.sendSystemMessage(Component.literal("You are the RUNNER! Run!").withStyle(ChatFormatting.GOLD));
+        for (ServerPlayer hunter : hunters) {
+            hunter.sendSystemMessage(Component.literal("You are a HUNTER! Hunt the runner!").withStyle(ChatFormatting.RED));
         }
 
         prepareWorlds();
@@ -168,82 +170,83 @@ public class FabricGameManager {
     private void startPreHunt() {
         state = GameState.PRE_HUNT;
         preHuntSeconds = 60;
-        broadcast(Text.literal("Runner has been released! Hunters will follow shortly.").formatted(Formatting.YELLOW));
+        broadcast(Component.literal("Runner has been released! Hunters will follow shortly.").withStyle(ChatFormatting.YELLOW));
     }
 
     private void startRunning() {
         state = GameState.RUNNING;
-        broadcast(Text.literal("Hunters released! The hunt is on!").formatted(Formatting.RED));
+        broadcast(Component.literal("Hunters released! The hunt is on!").withStyle(ChatFormatting.RED));
     }
 
     public void pauseGame() {
         paused = true;
-        broadcast(Text.literal("Game paused.").formatted(Formatting.YELLOW));
+        broadcast(Component.literal("Game paused.").withStyle(ChatFormatting.YELLOW));
     }
 
     public void resumeGame() {
         paused = false;
-        broadcast(Text.literal("Game resumed.").formatted(Formatting.GREEN));
+        broadcast(Component.literal("Game resumed.").withStyle(ChatFormatting.GREEN));
     }
 
     public void endGame() {
         state = GameState.FINISHED;
-        broadcast(Text.literal("Game over!").formatted(Formatting.GRAY));
+        broadcast(Component.literal("Game over!").withStyle(ChatFormatting.GRAY));
         worldManager.cleanup();
     }
 
-    public void onPlayerDeath(ServerPlayerEntity player) {
-        PlayerRole role = playerRoles.get(player.getUuid());
+    public void onPlayerDeath(ServerPlayer player) {
+        PlayerRole role = playerRoles.get(player.getUUID());
         if (role == PlayerRole.RUNNER) {
-            broadcast(Text.literal("Runner " + player.getName().getString() + " died! Hunters win!").formatted(Formatting.GREEN));
+            broadcast(Component.literal("Runner " + player.getName().getString() + " died! Hunters win!").withStyle(ChatFormatting.GREEN));
             state = GameState.FINISHED;
         } else if (role == PlayerRole.HUNTER) {
             hunters.remove(player);
             spectators.add(player);
-            broadcast(Text.literal("Hunter " + player.getName().getString() + " eliminated!").formatted(Formatting.GRAY));
+            broadcast(Component.literal("Hunter " + player.getName().getString() + " eliminated!").withStyle(ChatFormatting.GRAY));
         }
     }
 
-    public void onPlayerRespawn(ServerPlayerEntity player) {
-        PlayerRole role = playerRoles.get(player.getUuid());
+    public void onPlayerRespawn(ServerPlayer player) {
+        PlayerRole role = playerRoles.get(player.getUUID());
         if (role == PlayerRole.RUNNER) {
-            player.teleport(worldManager.getRunnerSpawn(), 0, 0);
+            player.teleportTo(worldManager.getRunnerSpawn(), 0, 0);
         } else if (role == PlayerRole.HUNTER) {
-            player.teleport(worldManager.getHunterSpawn(), 0, 0);
+            player.teleportTo(worldManager.getHunterSpawn(), 0, 0);
         }
     }
 
-    public void onPlayerJoin(ServerPlayerEntity player) {
+    public void onPlayerJoin(ServerPlayer player) {
         if (state == GameState.RUNNING) {
-            player.sendMessage(Text.literal("A Manhunt game is in progress!").formatted(Formatting.YELLOW));
+            player.sendSystemMessage(Component.literal("A Manhunt game is in progress!").withStyle(ChatFormatting.YELLOW));
         }
     }
 
-    public void onPlayerDisconnect(ServerPlayerEntity player) {
-        PlayerRole role = playerRoles.get(player.getUuid());
+    public void onPlayerDisconnect(ServerPlayer player) {
+        PlayerRole role = playerRoles.get(player.getUUID());
         if (role == PlayerRole.RUNNER && state == GameState.RUNNING) {
-            broadcast(Text.literal("Runner disconnected! Hunters win!").formatted(Formatting.GREEN));
+            broadcast(Component.literal("Runner disconnected! Hunters win!").withStyle(ChatFormatting.GREEN));
             state = GameState.FINISHED;
         }
     }
 
-    public void broadcast(Text message) {
-        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-            player.sendMessage(message, false);
+    public void broadcast(Component message) {
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            player.sendSystemMessage(message);
         }
     }
 
-    public boolean hasPermission(ServerPlayerEntity player, String permission) {
-        return server.getPlayerManager().isOperator(player.getGameProfile());
+    public boolean hasPermission(ServerPlayer player, String permission) {
+        return server.getPlayerList().isOp(player.getGameProfile());
     }
 
     public GameState getState() { return state; }
     public FabricPlayerManager getPlayerManager() { return playerManager; }
     public FabricWorldManager getWorldManager() { return worldManager; }
     public FabricUIManager getUiManager() { return uiManager; }
-    public Set<ServerPlayerEntity> getRunners() { return runners; }
-    public Set<ServerPlayerEntity> getHunters() { return hunters; }
+    public Set<ServerPlayer> getRunners() { return runners; }
+    public Set<ServerPlayer> getHunters() { return hunters; }
     public Map<UUID, PlayerRole> getPlayerRoles() { return playerRoles; }
+    public MinecraftServer getServer() { return server; }
     public void shutdown() {
         if (state == GameState.RUNNING) endGame();
     }

@@ -1,7 +1,7 @@
 package xyz.qincai.manhunt.fabric.formation;
 
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 
 import java.util.*;
 
@@ -21,12 +21,12 @@ public class FabricFormationManager {
         return positions;
     }
 
-    public BlockPos findSafeSpawn(ServerWorld world, BlockPos origin) {
-        BlockPos.Mutable pos = origin.mutableCopy();
-        for (int y = origin.getY(); y < world.getTopY(); y++) {
+    public BlockPos findSafeSpawn(ServerLevel world, BlockPos origin) {
+        BlockPos.Mutable pos = origin.mutable();
+        for (int y = origin.getY(); y < world.getMaxBuildHeight(); y++) {
             pos.setY(y);
-            if (world.getBlockState(pos).isAir() && world.getBlockState(pos.up()).isAir()) {
-                return pos.toImmutable();
+            if (world.getBlockState(pos).isAir() && world.getBlockState(pos.above()).isAir()) {
+                return pos.immutable();
             }
         }
         return origin;

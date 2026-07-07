@@ -1,12 +1,12 @@
 package xyz.qincai.manhunt.fabric.tracker;
 
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.LodestoneTrackerComponent;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.GlobalPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.GlobalPos;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.LodestoneTracker;
 import xyz.qincai.manhunt.fabric.game.FabricGameManager;
 
 import java.util.Optional;
@@ -18,17 +18,19 @@ public class FabricTrackerManager {
         this.gameManager = gameManager;
     }
 
-    public ItemStack createTrackerCompass(ServerPlayerEntity target) {
+    public ItemStack createTrackerCompass(ServerPlayer target) {
         ItemStack compass = new ItemStack(Items.COMPASS);
-        BlockPos pos = target.getBlockPos();
-        var globalPos = GlobalPos.create(target.getWorld().getRegistryKey(), pos);
-        compass.set(DataComponentTypes.LODESTONE_TRACKER,
-                new LodestoneTrackerComponent(Optional.of(globalPos), false));
+        BlockPos pos = target.blockPosition();
+        var globalPos = GlobalPos.of(target.level().dimension(), pos);
+        compass.set(DataComponents.LODESTONE_TRACKER,
+                new LodestoneTracker(Optional.of(globalPos), false));
         return compass;
     }
 
-    public void giveTrackerToPlayer(ServerPlayerEntity player, ServerPlayerEntity target) {
+    public void giveTrackerToPlayer(ServerPlayer player, ServerPlayer target) {
         ItemStack compass = createTrackerCompass(target);
-        player.getInventory().offerOrDrop(compass);
+        if (!player.getInventory().add(compass)) {
+            player.drop(compass, true);
+        }
     }
 }
