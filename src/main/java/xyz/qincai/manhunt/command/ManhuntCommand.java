@@ -51,6 +51,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             case "owner" -> handleOwner(sender, args);
             case "seed" -> handleSeed(sender, args);
             case "world" -> handleWorld(sender, args);
+            case "debug" -> new ManhuntDebugCommand(plugin).onCommand(sender, null, null, args);
             default -> {
                 sendHelp(sender);
                 yield true;
@@ -507,6 +508,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
                 completions.add("owner");
                 completions.add("seed");
                 completions.add("world");
+                completions.add("debug");
             }
             completions.add("pause");
             completions.add("resume");
@@ -526,6 +528,10 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
                     completions.add(world.getName());
                 }
                 completions.add("clear");
+                return filterPartial(args[1], completions);
+            }
+            if (sub.equals("debug")) {
+                completions.add("lastknown");
                 return filterPartial(args[1], completions);
             }
         }
