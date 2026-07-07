@@ -186,6 +186,10 @@ public class ConfigManager {
         return config.getBoolean("hunters.keepArmor", false);
     }
 
+    public boolean isHunterKeepOffhand() {
+        return config.getBoolean("hunters.keepOffhand", false);
+    }
+
     public List<PotionEffect> getRunnerPotionEffects() {
         return getPotionEffects("potionEffects.runner");
     }

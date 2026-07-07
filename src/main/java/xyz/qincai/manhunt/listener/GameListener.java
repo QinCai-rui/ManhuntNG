@@ -43,9 +43,16 @@ import java.util.UUID;
 public class GameListener implements Listener {
     private final ManhuntNG plugin;
     private final Map<UUID, Long> pauseMessageCooldowns = new HashMap<>();
+    private final Map<UUID, ItemStack[]> savedArmor = new HashMap<>();
+    private final Map<UUID, ItemStack> savedOffhand = new HashMap<>();
 
     public GameListener(ManhuntNG plugin) {
         this.plugin = plugin;
+    }
+
+    public void clearSavedItems() {
+        savedArmor.clear();
+        savedOffhand.clear();
     }
 
     private void sendPauseBlockedMessage(Player player) {
@@ -145,14 +152,22 @@ public class GameListener implements Listener {
                 event.getDrops().clear();
             } else {
                 event.setKeepInventory(false);
-                if (!plugin.getConfigManager().isHunterKeepArmor()) {
-                    event.getDrops().clear();
-                } else {
+
+                if (plugin.getConfigManager().isHunterKeepArmor()) {
                     ItemStack[] armor = player.getInventory().getArmorContents();
-                    event.getDrops().clear();
+                    savedArmor.put(uuid, armor.clone());
+
                     for (ItemStack item : armor) {
                         if (item != null && item.getType() != Material.AIR) {
-                            event.getDrops().add(item);
+                            event.getDrops().remove(item);
+                        }
+                    }
+
+                    if (plugin.getConfigManager().isHunterKeepOffhand()) {
+                        ItemStack offhand = player.getInventory().getItemInOffHand();
+                        if (offhand != null && offhand.getType() != Material.AIR) {
+                            savedOffhand.put(uuid, offhand.clone());
+                            event.getDrops().remove(offhand);
                         }
                     }
                 }
@@ -182,6 +197,15 @@ public class GameListener implements Listener {
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
                 if (!player.isOnline()) return;
                 player.setGameMode(GameMode.SURVIVAL);
+
+                ItemStack[] armor = savedArmor.remove(uuid);
+                if (armor != null) {
+                    player.getInventory().setArmorContents(armor);
+                }
+                ItemStack offhand = savedOffhand.remove(uuid);
+                if (offhand != null) {
+                    player.getInventory().setItemInOffHand(offhand);
+                }
 
                 plugin.getTrackerManager().giveCompassToPlayer(player);
                 plugin.getUiManager().sendToAll("\u00a7e" + player.getName() + " has respawned!");

@@ -25,6 +25,7 @@ public class ManhuntNG extends JavaPlugin {
     private WorldManager worldManager;
     private UIManager uiManager;
     private StatisticsManager statsManager;
+    private GameListener gameListener;
     private CommandRegistrar commandRegistrar;
 
     @Override
@@ -50,7 +51,8 @@ public class ManhuntNG extends JavaPlugin {
         ManhuntCommand manhuntCommand = new ManhuntCommand(this);
         commandRegistrar.register("manhunt", "ManhuntNG main command", manhuntCommand, manhuntCommand);
 
-        getServer().getPluginManager().registerEvents(new GameListener(this), this);
+        gameListener = new GameListener(this);
+        getServer().getPluginManager().registerEvents(gameListener, this);
 
         getLogger().info("ManhuntNG has been enabled!");
     }
@@ -104,5 +106,9 @@ public class ManhuntNG extends JavaPlugin {
 
     public StatisticsManager getStatsManager() {
         return statsManager;
+    }
+
+    public GameListener getGameListener() {
+        return gameListener;
     }
 }

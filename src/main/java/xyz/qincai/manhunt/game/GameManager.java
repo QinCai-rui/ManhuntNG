@@ -234,6 +234,7 @@ public class GameManager {
         match.setWorldName(null);
         plugin.getPlayerManager().reset();
         plugin.getStatsManager().reset();
+        plugin.getGameListener().clearSavedItems();
     }
 
     public void runnerWins() {
@@ -257,6 +258,7 @@ public class GameManager {
             match.setSeed(null);
             match.setWorldName(null);
             plugin.getPlayerManager().reset();
+            plugin.getGameListener().clearSavedItems();
         }, 200L);
     }
 
@@ -281,6 +283,7 @@ public class GameManager {
             match.setSeed(null);
             match.setWorldName(null);
             plugin.getPlayerManager().reset();
+            plugin.getGameListener().clearSavedItems();
         }, 200L);
     }
 
