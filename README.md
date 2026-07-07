@@ -20,7 +20,7 @@ A (n *almost*) feature complete Minecraft Manhunt plugin for PaperMC. ManhuntNG 
 ## Requirements
 
 - Java 17+ (match your server runtime. Use Java 25 for latest Minecraft versions)
-- Paper server compatible with the plugin's target Minecraft version (1.21.4+)
+- PaperMC server (1.21.4+, I try to keep this plugin up-to-date for newer versions. I have tested on 26.1.2)
 
 ## Installation
 
