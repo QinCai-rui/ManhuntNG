@@ -125,7 +125,7 @@ public class GameListener implements Listener {
             Component vanilla = event.deathMessage();
             if (vanilla != null) {
                 event.deathMessage(Component.text()
-                        .append(Component.text(player.getName() + " (Hunter) ", NamedTextColor.GOLD))
+                        .append(Component.text("(Hunter) ", NamedTextColor.GOLD))
                         .append(vanilla.colorIfAbsent(NamedTextColor.WHITE))
                         .build());
             }
@@ -142,6 +142,7 @@ public class GameListener implements Listener {
 
             if (plugin.getConfigManager().isHunterKeepInventory()) {
                 event.setKeepInventory(true);
+                event.getDrops().clear();
             } else {
                 event.setKeepInventory(false);
                 if (!plugin.getConfigManager().isHunterKeepArmor()) {
