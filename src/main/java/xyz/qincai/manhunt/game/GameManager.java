@@ -117,6 +117,7 @@ public class GameManager {
         plugin.getFormationManager().teleportToFormation();
 
         setAllPlayersSurvival();
+        healAllPlayers();
 
         match.setStrongholdDiscovered(false);
         match.setFortressDiscovered(false);
@@ -164,6 +165,23 @@ public class GameManager {
             Player player = Bukkit.getPlayer(uuid);
             if (player != null) player.setGameMode(GameMode.SURVIVAL);
         }
+    }
+
+    private void healAllPlayers() {
+        if (match.getRunnerUuid() != null) {
+            Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+            if (runner != null) healPlayer(runner);
+        }
+        for (UUID uuid : match.getHunterUuids()) {
+            Player player = Bukkit.getPlayer(uuid);
+            if (player != null) healPlayer(player);
+        }
+    }
+
+    private void healPlayer(Player player) {
+        player.setHealth(player.getMaxHealth());
+        player.setFoodLevel(20);
+        player.setSaturation(20f);
     }
 
     public void startHunt() {
