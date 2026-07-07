@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "manhuntng",
+  "version": "${version}",
+  "name": "ManhuntNG",
+  "description": "A feature complete Minecraft Manhunt server mod",
+  "authors": ["QinCai"],
+  "license": "GPL-3.0",
+  "environment": "server",
+  "accessWidener": "manhunt.accesswidener",
+  "entrypoints": {
+    "main": ["xyz.qincai.manhunt.ManhuntNG"]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.3",
+    "fabric-api": "*",
+    "minecraft": ">=26.2"
+  }
+}

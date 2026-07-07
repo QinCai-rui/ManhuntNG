@@ -1,5 +1,9 @@
 # Build output
 target/
+build/
+
+# Gradle
+.gradle/
 
 # IDE files
 .idea/
@@ -8,8 +12,6 @@ target/
 *.ipr
 .vscode/
 *.class
-*.jar
-*.war
 
 # OS files
 .DS_Store
@@ -22,3 +24,6 @@ mvnw.cmd
 
 # Logs
 *.log
+
+# Local session artifacts
+importantsession
