@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/QinCai-rui/ManhuntNG/actions/workflows/ci.yml/badge.svg)](https://github.com/QinCai-rui/ManhuntNG/actions/workflows/ci.yml) [![Release](https://github.com/QinCai-rui/ManhuntNG/actions/workflows/release.yml/badge.svg)](https://github.com/QinCai-rui/ManhuntNG/actions/workflows/release.yml)
 
-A (n almost) feature complete Minecraft Manhunt plugin for PaperMC. ManhuntNG provides enjoyable game flow, cross-dimension compass tracking, and controls for running Manhunt matches on Minecraft servers.
+A (n almost) feature complete Minecraft Manhunt plugin for PaperMC. ManhuntNG provides enjoyable manhunt gameplay, cross-dimension compass tracking, "twists" such as potion effects, and controls for running multiple Manhunt games on Minecraft servers.
 
 ## Features
 
@@ -13,8 +13,8 @@ A (n almost) feature complete Minecraft Manhunt plugin for PaperMC. ManhuntNG pr
 
 ## Requirements
 
-- Java 17+ (match your server runtime. Use java 25 for latest Minecraft versions)
-- Paper server compatible with the plugin's target Minecraft version
+- Java 17+ (match your server runtime. Use Java 25 for latest Minecraft versions)
+- Paper server compatible with the plugin's target Minecraft version (1.21.4+)
 
 ## Installation
 
