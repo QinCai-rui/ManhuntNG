@@ -60,25 +60,6 @@ A (n *almost*) feature complete Minecraft Manhunt plugin for PaperMC. ManhuntNG 
 - Java 17+ (match your server runtime. Use Java 25 for latest Minecraft versions)
 - PaperMC server (1.21.4+, I try to keep this plugin up-to-date for newer versions. I have tested on 26.1.2)
 
-## Commands
-
-| Command | Permission | Description |
-| --- | --- | --- |
-| `/manhunt join` | `manhunt.play` | Join the lobby |
-| `/manhunt leave` | `manhunt.play` | Leave the lobby |
-| `/manhunt pause` | `manhunt.play` (owner) | Pause the current match |
-| `/manhunt resume` | `manhunt.play` (owner) | Resume a paused match |
-| `/manhunt start` | `manhunt.admin` | Start a match (requires runner + hunter(s)) |
-| `/manhunt forcestart` | `manhunt.admin` | Force-start skipping validation |
-| `/manhunt stop` | `manhunt.admin` | Force stop the current match |
-| `/manhunt runner <player>` | `manhunt.admin` | Set the runner |
-| `/manhunt hunter <player>` | `manhunt.admin` | Add a hunter |
-| `/manhunt remove <player>` | `manhunt.admin` | Remove a player from the match |
-| `/manhunt owner [player]` | `manhunt.admin` | View or set the game owner |
-| `/manhunt seed [value]` | `manhunt.admin` | View or set the world seed |
-| `/manhunt world [name]` | `manhunt.admin` | Use an existing world instead of generating one |
-| `/manhunt reload` | `manhunt.admin` | Reload plugin config and messages |
-
 ## Permissions
 
 - `manhunt.admin` — administrative actions (OP by default)
