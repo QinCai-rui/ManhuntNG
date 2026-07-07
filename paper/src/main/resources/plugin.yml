@@ -1,5 +1,5 @@
 name: ManhuntNG
-version: '${project.version}'
+version: '${version}'
 main: xyz.qincai.manhunt.ManhuntNG
 api-version: '1.21'
 description: A feature complete Minecraft Manhunt server plugin

@@ -1,5 +1,6 @@
 # Build output
 target/
+build/
 
 # IDE files
 .idea/
@@ -19,6 +20,9 @@ Thumbs.db
 .mvn/
 mvnw
 mvnw.cmd
+
+# Gradle
+.gradle/
 
 # Logs
 *.log
