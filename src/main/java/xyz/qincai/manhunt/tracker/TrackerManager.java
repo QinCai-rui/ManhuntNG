@@ -69,7 +69,8 @@ public class TrackerManager {
     }
 
     public Location getLastRunnerLocation(World.Environment environment) {
-        return runnerLastKnownLocations.get(environment);
+        Location loc = runnerLastKnownLocations.get(environment);
+        return loc == null ? null : loc.clone();
     }
 
     private void updateCompass(Player hunter, Player runner) {
