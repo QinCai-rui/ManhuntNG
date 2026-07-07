@@ -23,13 +23,17 @@ public class GameManager {
 
     public GameManager(ManhuntNG plugin) {
         this.plugin = plugin;
-        this.match = new Match();
+        this.match = new Match(); // Each GameManager owns a single Match instance
     }
 
     public Match getMatch() {
         return match;
     }
 
+    /*
+     * Resets all timing-related fields for a new match.
+     * Called when starting or force-starting a game.
+     */
     private void resetMatchTiming() {
         match.setEndTime(0);
         match.setPausedAt(0);
@@ -37,18 +41,27 @@ public class GameManager {
         match.setStartTime(0);
     }
 
+    /*
+     * wrapper for startGame(null)
+     */
     public void startGame() {
         startGame(null);
     }
 
+    /*
+     * Starts the game normally (NOT force-start).
+     * Validates runner & hunters, then transitions to COUNTDOWN.
+     */
     public void startGame(UUID ownerUuid) {
-        if (match.getState() != GameState.WAITING) return;
+        if (match.getState() != GameState.WAITING) return; // Only allowed from WAITING state
+
+        // Must have runner + hunters selected
         if (match.getRunnerUuid() == null) {
-            plugin.getUiManager().broadcastMessage("\u00a7cNo runner selected!");
+            plugin.getUiManager().broadcastMessage("§cNo runner selected!");
             return;
         }
         if (match.getHunterUuids().isEmpty()) {
-            plugin.getUiManager().broadcastMessage("\u00a7cNo hunters selected!");
+            plugin.getUiManager().broadcastMessage("§cNo hunters selected!");
             return;
         }
 
@@ -57,23 +70,34 @@ public class GameManager {
         startCountdown();
     }
 
+    /*
+     * force-start bypasses runner/hunter checks.
+     * Used by admins or debugging only. skips PRE_HUNT phase
+     */
     public void startGameForce(UUID ownerUuid) {
         if (match.getState() != GameState.WAITING) return;
+
         match.setOwnerUuid(ownerUuid);
-        forceStart = true;
+        forceStart = true; // Marks that countdown should skip PRE_HUNT phase
         match.setState(GameState.COUNTDOWN);
         startCountdown();
     }
 
+    /*
+     * Begins the countdown timer before the game starts.
+     * Freezes all players, shows titles, and transitions to finishCountdown().
+     */
     private void startCountdown() {
         int initialCountdown = plugin.getConfigManager().getPreHuntCountdown();
         match.setState(GameState.COUNTDOWN);
 
-        freezeAllPlayers();
+        freezeAllPlayers(); // Prevent movement during countdown
 
         AtomicInteger countdown = new AtomicInteger(initialCountdown);
 
+        // Schedule repeating countdown task
         countdownTaskId = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            // If state changed externally, stop countdown
             if (match.getState() != GameState.COUNTDOWN) {
                 Bukkit.getScheduler().cancelTask(countdownTaskId);
                 return;
@@ -81,21 +105,25 @@ public class GameManager {
 
             int current = countdown.get();
             if (current <= 0) {
+                // Countdown finished -> start game
                 Bukkit.getScheduler().cancelTask(countdownTaskId);
                 finishCountdown();
                 return;
             }
 
+            // Send countdown titles to all hunters
             for (UUID uuid : match.getHunterUuids()) {
                 Player player = Bukkit.getPlayer(uuid);
                 if (player != null) {
-                    player.sendTitle("\u00a7e" + current, "\u00a77Game starting in...", 0, 25, 0);
+                    player.sendTitle("§e" + current, "§7Game starting in...", 0, 25, 0);
                 }
             }
+
+            // Send countdown title to runner
             if (match.getRunnerUuid() != null) {
                 Player runner = Bukkit.getPlayer(match.getRunnerUuid());
                 if (runner != null) {
-                    runner.sendTitle("\u00a7e" + current, "\u00a77Game starting in...", 0, 25, 0);
+                    runner.sendTitle("§e" + current, "§7Game starting in...", 0, 25, 0);
                 }
             }
 
@@ -103,22 +131,28 @@ public class GameManager {
         }, 0L, 20L).getTaskId();
     }
 
+    /*
+     * Called when countdown reaches zero.
+     * Creates worlds, teleports players, applies effects, and transitions into PRE_HUNT or RUNNING.
+     */
     private void finishCountdown() {
         plugin.getWorldManager().createGameWorlds();
 
         World gameWorld = match.getGameWorld();
         if (gameWorld == null) {
-            plugin.getUiManager().broadcastMessage("\u00a7cFailed to create game world!");
+            // World creation failed -> abort
+            plugin.getUiManager().broadcastMessage("§cFailed to create game world!");
             match.setState(GameState.WAITING);
             return;
         }
 
-        clearPlayerState();
-        plugin.getFormationManager().teleportToFormation();
+        clearPlayerState(); // Reset inventories + advancements
+        plugin.getFormationManager().teleportToFormation(); // Teleport runner & hunters into formation
 
-        setAllPlayersSurvival();
-        healAllPlayers();
+        setAllPlayersSurvival(); // set to survival mode
+        healAllPlayers(); // Full heal + hunger
 
+        // Reset progression flags
         match.setStrongholdDiscovered(false);
         match.setFortressDiscovered(false);
         match.setBlazeRodObtained(false);
@@ -126,36 +160,41 @@ public class GameManager {
 
         resetMatchTiming();
 
+        // FORCE START skips PRE_HUNT entirely
         if (forceStart) {
             forceStart = false;
             match.setState(GameState.RUNNING);
             match.setStartTime(System.currentTimeMillis());
 
-            unfreezeAllPlayers();
+            unfreezeAllPlayers(); // Allow movement
 
+            // Runner becomes vulnerable immediately
             if (match.getRunnerUuid() != null) {
                 Player runner = Bukkit.getPlayer(match.getRunnerUuid());
-                if (runner != null) {
-                    runner.setInvulnerable(false);
-                }
+                if (runner != null) runner.setInvulnerable(false);
             }
 
+            // Start tracking + UI + effects
             plugin.getTrackerManager().giveCompassToAll();
             plugin.getTrackerManager().startTracking();
             plugin.getUiManager().startUIUpdates();
             plugin.getPotionEffectManager().applyEffects();
 
-            plugin.getUiManager().sendTitle("\u00a7cThe Hunt Has Begun!", "\u00a77Runner is on the loose!");
-            plugin.getUiManager().sendToAll("\u00a7aThe hunt has started! (Force started)");
+            plugin.getUiManager().sendTitle("§cThe Hunt Has Begun!", "§7Runner is on the loose!");
+            plugin.getUiManager().sendToAll("§aThe hunt has started! (Force started)");
         } else {
+            // Normal start -> PRE_HUNT phase
             match.setState(GameState.PRE_HUNT);
-            unfreezeHorizontalAllPlayers();
+            unfreezeHorizontalAllPlayers(); // Runner & hunters frozen horizontally but invulnerable
 
-            plugin.getUiManager().sendTitle("\u00a76Pre-Hunt", "\u00a77Damage a hunter to start the hunt");
-            plugin.getUiManager().sendToAll("\u00a7ePre-Hunt phase! Runner must damage a hunter to start the hunt.");
+            plugin.getUiManager().sendTitle("§6Pre-Hunt", "§7Runner must damage a hunter to start the hunt");
+            plugin.getUiManager().sendToAll("§ePre-Hunt phase! The runner must punch any hunter to start the hunt.");
         }
     }
 
+    /*
+     * Sets runner & hunters to survival mode.
+     */
     private void setAllPlayersSurvival() {
         if (match.getRunnerUuid() != null) {
             Player runner = Bukkit.getPlayer(match.getRunnerUuid());
@@ -167,6 +206,9 @@ public class GameManager {
         }
     }
 
+    /*
+     * Fully heals all players. (health, hunger, saturation)
+     */
     private void healAllPlayers() {
         if (match.getRunnerUuid() != null) {
             Player runner = Bukkit.getPlayer(match.getRunnerUuid());
@@ -184,40 +226,50 @@ public class GameManager {
         player.setSaturation(20f);
     }
 
+    /*
+     * Called when runner damages a hunter during PRE_HUNT.
+     * Transitions into RUNNING state.
+     */
     public void startHunt() {
         if (match.getState() != GameState.PRE_HUNT) return;
 
         match.setState(GameState.RUNNING);
         resetMatchTiming();
         match.setStartTime(System.currentTimeMillis());
+
+        // Reset progression flags
         match.setStrongholdDiscovered(false);
         match.setFortressDiscovered(false);
         match.setBlazeRodObtained(false);
         match.setBastionDiscovered(false);
 
-        unfreezeAllPlayers();
+        unfreezeAllPlayers(); // Allow movement
 
+        // Runner becomes vulnerable
         if (match.getRunnerUuid() != null) {
             Player runner = Bukkit.getPlayer(match.getRunnerUuid());
-            if (runner != null) {
-                runner.setInvulnerable(false);
-            }
+            if (runner != null) runner.setInvulnerable(false);
         }
 
+        // Start tracking + UI + effects
         plugin.getTrackerManager().giveCompassToAll();
         plugin.getTrackerManager().startTracking();
         plugin.getUiManager().startUIUpdates();
         plugin.getPotionEffectManager().applyEffects();
 
-        plugin.getUiManager().sendTitle("\u00a7cThe Hunt Has Begun!", "\u00a77Runner is on the loose!");
-        plugin.getUiManager().sendToAll("\u00a7aThe hunt has started!");
+        plugin.getUiManager().sendTitle("§cThe Hunt Has Begun!", "§7Runner is on the loose!");
+        plugin.getUiManager().sendToAll("§aThe hunt has started!");
     }
 
+    /*
+     * Stops the game and resets everything back to WAITING.
+     */
     public void stopGame() {
         match.accumulatePausedTime();
         match.setState(GameState.FINISHED);
         match.setEndTime(System.currentTimeMillis());
 
+        // Cancel countdown if running
         if (countdownTaskId != -1) {
             Bukkit.getScheduler().cancelTask(countdownTaskId);
             countdownTaskId = -1;
@@ -229,6 +281,7 @@ public class GameManager {
         unfreezeAllPlayers();
         plugin.getWorldManager().teleportToMainWorld();
 
+        // Reset match + managers
         match.setState(GameState.WAITING);
         match.setSeed(null);
         match.setWorldName(null);
@@ -237,6 +290,9 @@ public class GameManager {
         plugin.getGameListener().clearSavedItems();
     }
 
+    /*
+     * Called when the Ender Dragon dies.
+     */
     public void runnerWins() {
         match.setState(GameState.FINISHED);
         match.setEndTime(System.currentTimeMillis());
@@ -247,12 +303,13 @@ public class GameManager {
         plugin.getUiManager().stopUIUpdates();
         plugin.getPotionEffectManager().clearEffects();
 
-        plugin.getUiManager().sendTitle("\u00a76Runner Wins!", "\u00a77The Ender Dragon has been defeated!");
-        plugin.getUiManager().broadcastMessage("\u00a76\u00a7lRunner has won the game!");
+        plugin.getUiManager().sendTitle("§6Runner Wins!", "§7The Ender Dragon has been defeated!");
+        plugin.getUiManager().broadcastMessage("§6§lThe Runner has won the game!");
 
         unfreezeAllPlayers();
         plugin.getWorldManager().teleportToMainWorld();
 
+        // Delay reset to allow players to see victory screen
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             match.setState(GameState.WAITING);
             match.setSeed(null);
@@ -262,6 +319,9 @@ public class GameManager {
         }, 200L);
     }
 
+    /*
+     * Called when runner dies.
+     */
     public void huntersWin() {
         match.setState(GameState.FINISHED);
         match.setEndTime(System.currentTimeMillis());
@@ -271,9 +331,9 @@ public class GameManager {
         plugin.getTrackerManager().stopTracking();
         plugin.getUiManager().stopUIUpdates();
         plugin.getPotionEffectManager().clearEffects();
-
-        plugin.getUiManager().sendTitle("\u00a7cHunters Win!", "\u00a77The Runner has been eliminated!");
-        plugin.getUiManager().broadcastMessage("\u00a7c\u00a7lHunters have won the game!");
+        
+        plugin.getUiManager().sendTitle("§cHunters Win!", "§7The Runner has been eliminated!");
+        plugin.getUiManager().broadcastMessage("§c§lThe Hunters have won the game!");
 
         unfreezeAllPlayers();
         plugin.getWorldManager().teleportToMainWorld();
@@ -287,6 +347,9 @@ public class GameManager {
         }, 200L);
     }
 
+    /*
+     * Checks if the Ender Dragon is alive in the End.
+     */
     public boolean isDragonAlive() {
         World endWorld = match.getEndWorld();
         if (endWorld == null) return false;
@@ -295,6 +358,9 @@ public class GameManager {
                 .anyMatch(dragon -> dragon.getHealth() > 0);
     }
 
+    /*
+     * Freezes all players completely (no movement).
+     */
     public void freezeAllPlayers() {
         if (match.getRunnerUuid() != null) {
             Player runner = Bukkit.getPlayer(match.getRunnerUuid());
@@ -313,6 +379,9 @@ public class GameManager {
         }
     }
 
+    /*
+     * Clears inventory, armor, offhand, and all advancements.
+     */
     private void clearPlayerState() {
         if (match.getRunnerUuid() != null) {
             Player runner = Bukkit.getPlayer(match.getRunnerUuid());
@@ -331,6 +400,7 @@ public class GameManager {
         player.getInventory().setItemInMainHand(null);
         player.getInventory().setItemInOffHand(null);
 
+        // Reset all advancements
         Iterator<Advancement> iterator = Bukkit.advancementIterator();
         while (iterator.hasNext()) {
             AdvancementProgress progress = player.getAdvancementProgress(iterator.next());
@@ -338,6 +408,10 @@ public class GameManager {
         }
     }
 
+    /*
+     * Unfreezes hunters fully, runner partially (invulnerable & no horizontal movement).
+     * Used during PRE_HUNT.
+     */
     public void unfreezeHorizontalAllPlayers() {
         if (match.getRunnerUuid() != null) {
             Player runner = Bukkit.getPlayer(match.getRunnerUuid());
@@ -357,6 +431,9 @@ public class GameManager {
         }
     }
 
+    /*
+     * Fully unfreezes all players.
+     */
     public void unfreezeAllPlayers() {
         if (match.getRunnerUuid() != null) {
             Player runner = Bukkit.getPlayer(match.getRunnerUuid());
@@ -375,18 +452,31 @@ public class GameManager {
         }
     }
 
+    /*
+     * Returns true if game is actively running or paused.
+     */
     public boolean isGameActive() {
-        return match.getState() == GameState.RUNNING || match.getState() == GameState.PRE_HUNT || match.getState() == GameState.PAUSED;
+        return match.getState() == GameState.RUNNING ||
+               match.getState() == GameState.PRE_HUNT ||
+               match.getState() == GameState.PAUSED;
     }
 
+    /*
+     * Pauses the game without owner validation. Used for internal logic (right now, only when runner leaves the game)
+     */
     public boolean pauseGame() {
         if (match.getState() != GameState.RUNNING && match.getState() != GameState.PRE_HUNT) return false;
         pauseInternal();
         return true;
     }
 
+    /*
+     * Pauses the game with owner validation.
+     */
     public boolean pauseGame(UUID ownerUuid) {
         if (match.getState() != GameState.RUNNING && match.getState() != GameState.PRE_HUNT) return false;
+
+        // Only owner or admin can pause
         if (!match.isOwner(ownerUuid)) {
             Player player = Bukkit.getPlayer(ownerUuid);
             if (player == null || !player.hasPermission("manhunt.admin")) return false;
@@ -396,6 +486,9 @@ public class GameManager {
         return true;
     }
 
+    /*
+     * Internal pause logic shared by both pauseGame() methods.
+     */
     private void pauseInternal() {
         match.setPrePauseState(match.getState());
         match.setState(GameState.PAUSED);
@@ -404,6 +497,7 @@ public class GameManager {
         freezeAllPlayers();
         plugin.getTrackerManager().stopTracking();
 
+        // Freeze daylight cycle
         if (match.getGameWorld() != null) {
             match.getGameWorld().setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
         }
@@ -412,11 +506,16 @@ public class GameManager {
         clearMobTargets();
 
         plugin.getUiManager().showPauseTitle();
-        plugin.getUiManager().sendToAll("\u00a7eGame has been paused!");
+        plugin.getUiManager().sendToAll("§eGame has been paused!");
     }
 
+    /*
+     * Resumes the game from PAUSED state.
+     */
     public boolean resumeGame(UUID ownerUuid) {
         if (match.getState() != GameState.PAUSED) return false;
+
+        // Only owner or admin can resume
         if (!match.isOwner(ownerUuid)) {
             Player player = Bukkit.getPlayer(ownerUuid);
             if (player == null || !player.hasPermission("manhunt.admin")) return false;
@@ -427,12 +526,14 @@ public class GameManager {
         GameState previousState = match.getPrePauseState();
         match.setState(previousState);
 
+        // Restore daylight cycle
         if (match.getGameWorld() != null) {
             match.getGameWorld().setGameRule(GameRule.DO_DAYLIGHT_CYCLE, true);
         }
 
         setAllPlayersInvulnerable(false);
 
+        // Restore movement + tracking depending on previous state
         if (previousState == GameState.RUNNING) {
             unfreezeAllPlayers();
             plugin.getTrackerManager().giveCompassToAll();
@@ -443,15 +544,23 @@ public class GameManager {
         }
 
         plugin.getUiManager().hidePauseTitle();
-        plugin.getUiManager().sendTitle("\u00a7aGame Resumed", "\u00a77The game has been resumed");
-        plugin.getUiManager().sendToAll("\u00a7aGame has been resumed!");
+        plugin.getUiManager().sendTitle("§aGame Resumed", "§7The game has been resumed");
+        plugin.getUiManager().sendToAll("§aGame has been resumed!");
+
         return true;
     }
 
+    /*
+     * Returns true if the game is currently paused.
+     */
     public boolean isGamePaused() {
         return match.getState() == GameState.PAUSED;
     }
 
+    /*
+     * Sets all players (runner + hunters) to invulnerable or vulnerable.
+     * Used during pause/resume transitions.
+     */
     private void setAllPlayersInvulnerable(boolean invulnerable) {
         if (match.getRunnerUuid() != null) {
             Player runner = Bukkit.getPlayer(match.getRunnerUuid());
@@ -463,11 +572,17 @@ public class GameManager {
         }
     }
 
+    /*
+     * Clears all mob targets in the active game world.
+     * Prevents mobs from continuing to chase players during pause.
+     */
     private void clearMobTargets() {
         World world = match.getGameWorld();
         if (world == null) return;
+
         for (org.bukkit.entity.Entity entity : world.getEntities()) {
             if (entity instanceof org.bukkit.entity.Mob mob) {
+                // If mob is targeting a player, remove the target
                 if (mob.getTarget() instanceof Player) {
                     mob.setTarget(null);
                 }
