@@ -22,9 +22,12 @@ repositories {
 dependencies {
     implementation(project(":common"))
 
-    minecraft("com.mojang:minecraft:${rootProject.findProperty("minecraft_version")}")
+    implementation("com.mojang:minecraft:${rootProject.findProperty("minecraft_version")}")
     implementation("net.fabricmc:fabric-loader:${rootProject.findProperty("fabric_loader_version")}")
     implementation("net.fabricmc.fabric-api:fabric-api:${rootProject.findProperty("fabric_api_version")}")
+    
+    // Adventure API for consistent text handling
+    modImplementation(include("net.kyori:adventure-platform-fabric:6.9.0")!!) // Compatible with MC 1.21.2+
 }
 
 tasks.jar {
