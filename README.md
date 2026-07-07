@@ -9,6 +9,10 @@ A (n *almost*) feature complete Minecraft Manhunt plugin for PaperMC. ManhuntNG 
 - Tracking compasses that follow the runner across dimensions
 - Automatic potion effects and respawn handling for hunters and runner
 - Pause/resume and owner/admin controls to manage games
+- Action bar messages for tracking and game state
+- Scoreboard for quick glance info
+- Configurable respawn and inventory options
+- Configurable potion effects for hunters and runner
 - Configurable messages and options via `config.yml` and `messages.yml`
 
 ## Requirements
