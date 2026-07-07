@@ -427,38 +427,38 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
         Component playerHeader = Component.text("  Player", NamedTextColor.YELLOW, TextDecoration.BOLD);
         sender.sendMessage(playerHeader);
 
-        helpEntry(sender, "/manhunt join", "Join the lobby",
+        helpEntry(sender, "manhunt join", "Join the lobby",
                 "Click to join", "manhunt.play");
-        helpEntry(sender, "/manhunt leave", "Leave the lobby",
+        helpEntry(sender, "manhunt leave", "Leave the lobby",
                 "Click to leave", "manhunt.play");
-        helpEntry(sender, "/manhunt pause", "Pause the game (owner only)",
+        helpEntry(sender, "manhunt pause", "Pause the game (owner only)",
                 "Click to pause", "manhunt.play");
-        helpEntry(sender, "/manhunt resume", "Resume the game (owner only)",
+        helpEntry(sender, "manhunt resume", "Resume the game (owner only)",
                 "Click to resume", "manhunt.play");
 
         if (sender.hasPermission("manhunt.admin")) {
             sender.sendMessage(Component.empty());
             sender.sendMessage(Component.text("  Admin", NamedTextColor.RED, TextDecoration.BOLD));
 
-            helpEntry(sender, "/manhunt start", "Start the match",
+            helpEntry(sender, "manhunt start", "Start the match",
                     "Click to start", "manhunt.admin");
-            helpEntry(sender, "/manhunt stop", "Force stop the match",
+            helpEntry(sender, "manhunt stop", "Force stop the match",
                     "Click to stop", "manhunt.admin");
-            helpEntry(sender, "/manhunt runner <player>", "Set the Runner",
+            helpEntry(sender, "manhunt runner <player>", "Set the Runner",
                     "Click to set runner", "manhunt.admin");
-            helpEntry(sender, "/manhunt hunter <player>", "Add a Hunter",
+            helpEntry(sender, "manhunt hunter <player>", "Add a Hunter",
                     "Click to set hunter", "manhunt.admin");
-            helpEntry(sender, "/manhunt remove <player>", "Remove a player from game",
+            helpEntry(sender, "manhunt remove <player>", "Remove a player from game",
                     "Click to remove player", "manhunt.admin");
-            helpEntry(sender, "/manhunt owner [player]", "View/set game owner",
+            helpEntry(sender, "manhunt owner [player]", "View/set game owner",
                     "Click to set owner", "manhunt.admin");
-            helpEntry(sender, "/manhunt seed [value]", "View/set world seed",
+            helpEntry(sender, "manhunt seed [value]", "View/set world seed",
                     "Click to set seed", "manhunt.admin");
-            helpEntry(sender, "/manhunt world [name]", "View/set existing world to use",
+            helpEntry(sender, "manhunt world [name]", "View/set existing world to use",
                     "Click to set world", "manhunt.admin");
-            helpEntry(sender, "/manhunt forcestart", "Skip validation & start",
+            helpEntry(sender, "manhunt forcestart", "Skip validation & start",
                     "Click to force start", "manhunt.admin");
-            helpEntry(sender, "/manhunt reload", "Reload configuration",
+            helpEntry(sender, "manhunt reload", "Reload configuration",
                     "Click to reload", "manhunt.admin");
         }
 
