@@ -68,6 +68,10 @@ public class TrackerManager {
         runnerLastKnownLocations.put(runner.getWorld().getEnvironment(), runner.getLocation().clone());
     }
 
+    public Location getLastRunnerLocation(World.Environment environment) {
+        return runnerLastKnownLocations.get(environment);
+    }
+
     private void updateCompass(Player hunter, Player runner) {
         ItemStack compass = findCompass(hunter);
         if (compass == null) {
