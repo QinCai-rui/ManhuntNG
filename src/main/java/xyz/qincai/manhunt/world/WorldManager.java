@@ -169,8 +169,8 @@ public class WorldManager {
         World mainWorld = Bukkit.getWorlds().get(0);
         org.bukkit.Location spawn = mainWorld.getSpawnLocation();
 
-        if (match.getRunnerUuid() != null) {
-            Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+        for (UUID runnerUuid : match.getRunnerUuids()) {
+            Player runner = Bukkit.getPlayer(runnerUuid);
             if (runner != null && runner.isOnline()) {
                 runner.teleport(spawn);
             }

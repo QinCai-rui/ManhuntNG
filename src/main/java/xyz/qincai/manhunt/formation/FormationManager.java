@@ -21,14 +21,11 @@ public class FormationManager {
         Match match = plugin.getGameManager().getMatch();
         World gameWorld = match.getGameWorld();
         if (gameWorld == null) return; // No world loaded -> cannot form anything
-        if (match.getRunnerUuid() == null) return; // No runner selected yet
-
-        Player runner = org.bukkit.Bukkit.getPlayer(match.getRunnerUuid());
-        if (runner == null) return; // Runner offline or not found
+        if (match.getRunnerUuids().isEmpty()) return; // No runners selected yet
 
         double radius = plugin.getConfigManager().getHunterCircleRadius(); // Circle radius for hunters
         int searchRadius = plugin.getConfigManager().getFormationSearchRadius(); // How far we search for safe formation center
-        List<UUID> hunterUuids = List.copyOf(match.getHunterUuids()); // Copy to avoid >=1 modification at a time
+        List<UUID> hunterUuids = List.copyOf(match.getHunterUuids()); // Copy to avoid modification at a time
         int hunterCount = hunterUuids.size();
 
         Location spawnLoc = gameWorld.getSpawnLocation();
@@ -73,12 +70,17 @@ public class FormationManager {
             center = findSafeLocationGuaranteed(gameWorld, spawnLoc);
         }
 
-        // Teleport runner first
-        runner.teleport(center);
+        // Teleport all runners to the center
+        for (UUID runnerUuid : match.getRunnerUuids()) {
+            Player runner = org.bukkit.Bukkit.getPlayer(runnerUuid);
+            if (runner != null) {
+                runner.teleport(center.clone().add(0, 0.5, 0));
+            }
+        }
 
         if (hunterCount == 0) return; // No hunters -> formation ends here
 
-        // Compute hunter positions in a CIRCLE around the runner
+        // Compute hunter positions in a CIRCLE around the center
         double y = center.getY();
         double angleStep = 2 * Math.PI / hunterCount;
 
@@ -102,7 +104,7 @@ public class FormationManager {
                 hunterLoc = ground != null ? ground : center; // Fallback to center if needed
             }
 
-            // Make hunter face the runner
+            // Make hunter face the center
             hunterLoc.setDirection(center.toVector().subtract(hunterLoc.toVector()).setY(0).normalize());
             hunter.teleport(hunterLoc);
         }

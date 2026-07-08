@@ -2,6 +2,7 @@
 config-version: 1
 
 runner:
+  keepInventory: false
   lives: 1
 
 hunters:

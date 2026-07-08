@@ -18,6 +18,7 @@ import xyz.qincai.manhunt.game.Match;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.Set;
 
 /*
  * Handles the tracking compass system used by hunters.
@@ -38,8 +39,9 @@ public class TrackerManager {
     // Task ID for repeating tracking update
     private int taskId = -1;
 
-    // Stores runner's last-known location per dimension (OVERWORLD, NETHER, END)
-    private final Map<World.Environment, Location> runnerLastKnownLocations = new HashMap<>();
+    // Stores each runner's last-known location per dimension (OVERWORLD, NETHER, END)
+    // Map<RunnerUUID, Map<Environment, Location>>
+    private final Map<UUID, Map<World.Environment, Location>> allRunnerLastKnownLocations = new HashMap<>();
 
     public TrackerManager(ManhuntNG plugin) {
         this.plugin = plugin;
@@ -55,8 +57,8 @@ public class TrackerManager {
 
     /*
      * Starts the repeating tracking task.
-     * - Updates runner last-known location.
-     * - Updates each hunter's compass.
+     * - Updates each runner's last-known location.
+     * - For each hunter, finds the nearest runner and updates compass.
      * - Runs only during RUNNING state.
      */
     public void startTracking() {
@@ -69,23 +71,64 @@ public class TrackerManager {
 
             // Only track during RUNNING
             if (match.getState() != GameState.RUNNING) return;
-            if (match.getRunnerUuid() == null) return;
+            if (match.getRunnerUuids().isEmpty()) return;
 
-            Player runner = Bukkit.getPlayer(match.getRunnerUuid());
-            if (runner == null) return;
+            // Update last-known location for all runners
+            for (UUID runnerUuid : match.getRunnerUuids()) {
+                Player runner = Bukkit.getPlayer(runnerUuid);
+                if (runner == null) continue;
+                updateRunnerLastKnown(runner);
+            }
 
-            // Update last-known location for runner's current dimension
-            updateRunnerLastKnown(runner);
-
-            // Update each hunter's compass
+            // For each hunter, find nearest runner and update compass
             for (UUID hunterUuid : match.getHunterUuids()) {
                 Player hunter = Bukkit.getPlayer(hunterUuid);
                 if (hunter == null) continue;
                 if (hunter.getGameMode() == org.bukkit.GameMode.SPECTATOR) continue;
 
-                updateCompass(hunter, runner);
+                Player nearestRunner = findNearestRunner(hunter);
+                if (nearestRunner != null) {
+                    updateCompass(hunter, nearestRunner);
+                }
             }
         }, 0L, plugin.getConfigManager().getTrackingUpdateTicks()).getTaskId();
+    }
+
+    /*
+     * Finds the nearest alive runner for a given player.
+     */
+    public Player findNearestRunner(Player hunter) {
+        Match match = plugin.getGameManager().getMatch();
+        Player nearest = null;
+        double nearestDistance = Double.MAX_VALUE;
+
+        for (UUID runnerUuid : match.getRunnerUuids()) {
+            Player runner = Bukkit.getPlayer(runnerUuid);
+            if (runner == null) continue;
+            if (runner.getGameMode() == org.bukkit.GameMode.SPECTATOR) continue;
+
+            double distance = hunter.getWorld().equals(runner.getWorld())
+                    ? hunter.getLocation().distanceSquared(runner.getLocation())
+                    : Double.MAX_VALUE;
+
+            if (distance < nearestDistance) {
+                nearestDistance = distance;
+                nearest = runner;
+            }
+        }
+
+        // If no runner is in the same dimension, just return the first runner
+        if (nearest == null) {
+            for (UUID runnerUuid : match.getRunnerUuids()) {
+                Player runner = Bukkit.getPlayer(runnerUuid);
+                if (runner != null && runner.getGameMode() != org.bukkit.GameMode.SPECTATOR) {
+                    nearest = runner;
+                    break;
+                }
+            }
+        }
+
+        return nearest;
     }
 
     /*
@@ -96,24 +139,25 @@ public class TrackerManager {
             Bukkit.getScheduler().cancelTask(taskId);
             taskId = -1;
         }
-        runnerLastKnownLocations.clear();
+        allRunnerLastKnownLocations.clear();
     }
 
     /*
-     * Stores runner's last-known location for their current dimension.
+     * Stores a runner's last-known location for their current dimension.
      */
     public void updateRunnerLastKnown(Player runner) {
-        runnerLastKnownLocations.put(
-                runner.getWorld().getEnvironment(),
-                runner.getLocation().clone()
-        );
+        allRunnerLastKnownLocations
+                .computeIfAbsent(runner.getUniqueId(), k -> new HashMap<>())
+                .put(runner.getWorld().getEnvironment(), runner.getLocation().clone());
     }
 
     /*
-     * Returns last-known runner location for a given dimension.
+     * Returns last-known location for a specific runner in a given dimension.
      */
-    public Location getLastRunnerLocation(World.Environment environment) {
-        Location loc = runnerLastKnownLocations.get(environment);
+    public Location getRunnerLastKnownLocation(UUID runnerUuid, World.Environment environment) {
+        Map<World.Environment, Location> runnerLocs = allRunnerLastKnownLocations.get(runnerUuid);
+        if (runnerLocs == null) return null;
+        Location loc = runnerLocs.get(environment);
         return loc == null ? null : loc.clone();
     }
 
@@ -142,21 +186,22 @@ public class TrackerManager {
         if (hunterWorld.equals(runnerWorld)) {
             target = runner.getLocation();
         } else {
-            // Different dimension -> use last-known location
+            // Different dimension -> use last-known location for this runner
             World.Environment hunterEnv = hunterWorld.getEnvironment();
-            Location lastKnown = runnerLastKnownLocations.get(hunterEnv);
+            Location lastKnown = getRunnerLastKnownLocation(runner.getUniqueId(), hunterEnv);
 
             // No last-known location -> warn and disable compass
             if (lastKnown == null || lastKnown.getWorld() == null) {
                 String envName = hunterEnv.toString();
 
                 // Console warning
-                plugin.getLogger().warning("[Tracker] No last-known runner location for "
-                        + envName + ". Compass for " + hunter.getName() + " will not update.");
+                plugin.getLogger().warning("[Tracker] No last-known location for runner "
+                        + runner.getName() + " in " + envName
+                        + ". Compass for " + hunter.getName() + " will not update.");
 
                 // Send message to hunter
-                hunter.sendMessage(MiniMessage.miniMessage().deserialize("<red>Tracking unavailable: Runner has not entered the "
-                        + envName + " yet. Check server console for more info."));
+                hunter.sendMessage(MiniMessage.miniMessage().deserialize("<red>Tracking unavailable: " + runner.getName()
+                        + " has not entered the " + envName + " yet."));
 
                 // Disable compass target
                 CompassMeta meta = (CompassMeta) compass.getItemMeta();

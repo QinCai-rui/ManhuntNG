@@ -131,9 +131,16 @@ public class UIManager {
         Match match = plugin.getGameManager().getMatch();
         if (objective == null) return;
 
-        updateLine(0, match.getRunnerUuid() != null
-                ? "Runner: " + getRunnerName(match)
-                : "Runner: None");
+        int runnerCount = match.getRunnerUuids().size();
+        if (runnerCount > 0) {
+            if (runnerCount == 1) {
+                updateLine(0, "Runner: " + getRunnerName(match));
+            } else {
+                updateLine(0, "Runners: " + runnerCount);
+            }
+        } else {
+            updateLine(0, "Runner: None");
+        }
         updateLine(1, "");
         updateLine(2, "Hunters: " + plugin.getPlayerManager().getAliveHunterCount());
         updateLine(3, " ");
@@ -145,8 +152,8 @@ public class UIManager {
             Player player = Bukkit.getPlayer(uuid);
             if (player != null) player.setScoreboard(scoreboard);
         }
-        if (match.getRunnerUuid() != null) {
-            Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+        for (UUID runnerUuid : match.getRunnerUuids()) {
+            Player runner = Bukkit.getPlayer(runnerUuid);
             if (runner != null) runner.setScoreboard(scoreboard);
         }
     }
@@ -198,8 +205,8 @@ public class UIManager {
                 Player player = Bukkit.getPlayer(uuid);
                 if (player != null) player.sendActionBar(pausedBar);
             }
-            if (match.getRunnerUuid() != null) {
-                Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+            for (UUID runnerUuid : match.getRunnerUuids()) {
+                Player runner = Bukkit.getPlayer(runnerUuid);
                 if (runner != null) runner.sendActionBar(pausedBar);
             }
             return;
@@ -210,52 +217,58 @@ public class UIManager {
         Component actionBar = Component.text(currentPhase.getDisplay(), NamedTextColor.GOLD);
 
         boolean showDistance = plugin.getConfigManager().isTrackingShowDistance();
-        Player runner = match.getRunnerUuid() != null ? Bukkit.getPlayer(match.getRunnerUuid()) : null;
 
         for (UUID uuid : match.getHunterUuids()) {
             Player player = Bukkit.getPlayer(uuid);
             if (player == null) continue;
 
-            if (showDistance && runner != null) {
+            if (showDistance) {
                 ItemStack hand = player.getInventory().getItemInMainHand();
                 if (plugin.getTrackerManager().isTrackerCompass(hand)) {
-                    if (player.getWorld().equals(runner.getWorld())) {
-                        int dist = (int) Math.round(player.getLocation().distance(runner.getLocation()));
-                        player.sendActionBar(
-                                Component.text("Runner \u2014 ", NamedTextColor.GOLD)
-                                        .append(Component.text(dist + "m", NamedTextColor.WHITE))
-                        );
-                    } else {
-                        String portal = switch (runner.getWorld().getEnvironment()) {
-                            case NETHER -> "Nether Portal";
-                            case THE_END -> "End Portal";
-                            default -> "Nether Portal";
-                        };
-                        Location lastLoc = plugin.getTrackerManager().getLastRunnerLocation(
-                                player.getWorld().getEnvironment());
-                        if (lastLoc != null) {
-                            int dist = (int) Math.round(player.getLocation().distance(lastLoc));
+                    Player trackedRunner = plugin.getTrackerManager().findNearestRunner(player);
+                    if (trackedRunner != null) {
+                        if (player.getWorld().equals(trackedRunner.getWorld())) {
+                            int dist = (int) Math.round(player.getLocation().distance(trackedRunner.getLocation()));
                             player.sendActionBar(
-                                    Component.text("Tracking ", NamedTextColor.GOLD)
-                                            .append(Component.text(portal, NamedTextColor.WHITE))
-                                            .append(Component.text(" \u2014 ", NamedTextColor.GOLD))
+                                    Component.text("Runner \u2014 ", NamedTextColor.GOLD)
                                             .append(Component.text(dist + "m", NamedTextColor.WHITE))
                             );
                         } else {
-                            player.sendActionBar(
-                                    Component.text("Tracking ", NamedTextColor.GOLD)
-                                            .append(Component.text(portal, NamedTextColor.WHITE))
-                            );
+                            String portal = switch (trackedRunner.getWorld().getEnvironment()) {
+                                case NETHER -> "Nether Portal";
+                                case THE_END -> "End Portal";
+                                default -> "Nether Portal";
+                            };
+                            Location lastLoc = plugin.getTrackerManager().getRunnerLastKnownLocation(
+                                    trackedRunner.getUniqueId(),
+                                    player.getWorld().getEnvironment());
+                            if (lastLoc != null) {
+                                int dist = (int) Math.round(player.getLocation().distance(lastLoc));
+                                player.sendActionBar(
+                                        Component.text("Tracking ", NamedTextColor.GOLD)
+                                                .append(Component.text(portal, NamedTextColor.WHITE))
+                                                .append(Component.text(" \u2014 ", NamedTextColor.GOLD))
+                                                .append(Component.text(dist + "m", NamedTextColor.WHITE))
+                                );
+                            } else {
+                                player.sendActionBar(
+                                        Component.text("Tracking ", NamedTextColor.GOLD)
+                                                .append(Component.text(portal, NamedTextColor.WHITE))
+                                );
+                            }
                         }
+                        continue;
                     }
-                    continue;
                 }
             }
 
             player.sendActionBar(actionBar);
         }
-        if (runner != null) {
-            runner.sendActionBar(actionBar);
+        for (UUID runnerUuid : match.getRunnerUuids()) {
+            Player runner = Bukkit.getPlayer(runnerUuid);
+            if (runner != null) {
+                runner.sendActionBar(actionBar);
+            }
         }
     }
 
@@ -270,8 +283,8 @@ public class UIManager {
             Player player = Bukkit.getPlayer(uuid);
             if (player != null) player.showTitle(titleObj);
         }
-        if (match.getRunnerUuid() != null) {
-            Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+        for (UUID runnerUuid : match.getRunnerUuids()) {
+            Player runner = Bukkit.getPlayer(runnerUuid);
             if (runner != null) runner.showTitle(titleObj);
         }
     }
@@ -283,8 +296,8 @@ public class UIManager {
             Player player = Bukkit.getPlayer(uuid);
             if (player != null) player.resetTitle();
         }
-        if (match.getRunnerUuid() != null) {
-            Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+        for (UUID runnerUuid : match.getRunnerUuids()) {
+            Player runner = Bukkit.getPlayer(runnerUuid);
             if (runner != null) runner.resetTitle();
         }
     }
@@ -301,8 +314,8 @@ public class UIManager {
             Player player = Bukkit.getPlayer(uuid);
             if (player != null) player.showTitle(titleObj);
         }
-        if (match.getRunnerUuid() != null) {
-            Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+        for (UUID runnerUuid : match.getRunnerUuids()) {
+            Player runner = Bukkit.getPlayer(runnerUuid);
             if (runner != null) runner.showTitle(titleObj);
         }
     }
@@ -315,8 +328,8 @@ public class UIManager {
             Player player = Bukkit.getPlayer(uuid);
             if (player != null) player.sendMessage(msg);
         }
-        if (match.getRunnerUuid() != null) {
-            Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+        for (UUID runnerUuid : match.getRunnerUuids()) {
+            Player runner = Bukkit.getPlayer(runnerUuid);
             if (runner != null) runner.sendMessage(msg);
         }
     }

@@ -15,6 +15,7 @@ import xyz.qincai.manhunt.player.PlayerRole;
 
 import java.time.Duration;
 import java.util.Iterator;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -73,9 +74,9 @@ public class GameManager {
     public void startGame(UUID ownerUuid) {
         if (match.getState() != GameState.WAITING) return; // Only allowed from WAITING state
 
-        // Must have runner + hunters selected
-        if (match.getRunnerUuid() == null) {
-            plugin.getUiManager().broadcastMessage("<red>No runner selected!");
+        // Must have runners + hunters selected
+        if (match.getRunnerUuids().isEmpty()) {
+            plugin.getUiManager().broadcastMessage("<red>No runners selected!");
             return;
         }
         if (match.getHunterUuids().isEmpty()) {
@@ -137,9 +138,9 @@ public class GameManager {
                 }
             }
 
-            // Send countdown title to runner
-            if (match.getRunnerUuid() != null) {
-                Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+            // Send countdown title to all runners
+            for (UUID runnerUuid : match.getRunnerUuids()) {
+                Player runner = Bukkit.getPlayer(runnerUuid);
                 if (runner != null) {
                     showCountdownTitle(runner, "<yellow>" + current, "<gray>Game starting in...", 1250);
                 }
@@ -192,9 +193,9 @@ public class GameManager {
 
             unfreezeAllPlayers(); // Allow movement
 
-            // Runner becomes vulnerable immediately
-            if (match.getRunnerUuid() != null) {
-                Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+            // All runners become vulnerable immediately
+            for (UUID runnerUuid : match.getRunnerUuids()) {
+                Player runner = Bukkit.getPlayer(runnerUuid);
                 if (runner != null) runner.setInvulnerable(false);
             }
 
@@ -217,11 +218,11 @@ public class GameManager {
     }
 
     /*
-     * Applies the HEADSTART freeze state: runner is unfrozen, hunters are frozen + invulnerable.
+     * Applies the HEADSTART freeze state: runners are unfrozen, hunters are frozen + invulnerable.
      */
     private void applyHeadstartFreezeState() {
-        if (match.getRunnerUuid() != null) {
-            Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+        for (UUID runnerUuid : match.getRunnerUuids()) {
+            Player runner = Bukkit.getPlayer(runnerUuid);
             if (runner != null) {
                 runner.setWalkSpeed(0.2f);
                 runner.setFlySpeed(0.1f);
@@ -286,9 +287,9 @@ public class GameManager {
                 }
             }
 
-            // Send remaining time to runner
-            if (match.getRunnerUuid() != null) {
-                Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+            // Send remaining time to all runners
+            for (UUID runnerUuid : match.getRunnerUuids()) {
+                Player runner = Bukkit.getPlayer(runnerUuid);
                 if (runner != null) {
                     showCountdownTitle(runner, "<yellow>" + current, "<gray>Head start remaining", 1250);
                 }
@@ -315,9 +316,9 @@ public class GameManager {
 
         unfreezeAllPlayers();
 
-        // Runner becomes vulnerable
-        if (match.getRunnerUuid() != null) {
-            Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+        // All runners become vulnerable
+        for (UUID runnerUuid : match.getRunnerUuids()) {
+            Player runner = Bukkit.getPlayer(runnerUuid);
             if (runner != null) runner.setInvulnerable(false);
         }
 
@@ -340,11 +341,11 @@ public class GameManager {
     }
 
     /*
-     * Sets runner & hunters to survival mode.
+     * Sets all runners and hunters to survival mode.
      */
     private void setAllPlayersSurvival() {
-        if (match.getRunnerUuid() != null) {
-            Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+        for (UUID runnerUuid : match.getRunnerUuids()) {
+            Player runner = Bukkit.getPlayer(runnerUuid);
             if (runner != null) runner.setGameMode(GameMode.SURVIVAL);
         }
         for (UUID uuid : match.getHunterUuids()) {
@@ -357,8 +358,8 @@ public class GameManager {
      * Fully heals all players. (health, hunger, saturation)
      */
     private void healAllPlayers() {
-        if (match.getRunnerUuid() != null) {
-            Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+        for (UUID runnerUuid : match.getRunnerUuids()) {
+            Player runner = Bukkit.getPlayer(runnerUuid);
             if (runner != null) healPlayer(runner);
         }
         for (UUID uuid : match.getHunterUuids()) {
@@ -392,9 +393,9 @@ public class GameManager {
 
         unfreezeAllPlayers(); // Allow movement
 
-        // Runner becomes vulnerable
-        if (match.getRunnerUuid() != null) {
-            Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+        // All runners become vulnerable
+        for (UUID runnerUuid : match.getRunnerUuids()) {
+            Player runner = Bukkit.getPlayer(runnerUuid);
             if (runner != null) runner.setInvulnerable(false);
         }
 
@@ -519,8 +520,8 @@ public class GameManager {
      * Freezes all players completely (no movement).
      */
     public void freezeAllPlayers() {
-        if (match.getRunnerUuid() != null) {
-            Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+        for (UUID runnerUuid : match.getRunnerUuids()) {
+            Player runner = Bukkit.getPlayer(runnerUuid);
             if (runner != null) {
                 runner.setWalkSpeed(0f);
                 runner.setFlySpeed(0f);
@@ -540,8 +541,8 @@ public class GameManager {
      * Clears inventory, armor, offhand, and all advancements.
      */
     private void clearPlayerState() {
-        if (match.getRunnerUuid() != null) {
-            Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+        for (UUID runnerUuid : match.getRunnerUuids()) {
+            Player runner = Bukkit.getPlayer(runnerUuid);
             if (runner != null) clearPlayerState(runner);
         }
 
@@ -566,12 +567,12 @@ public class GameManager {
     }
 
     /*
-     * Unfreezes hunters fully, runner partially (invulnerable & no horizontal movement).
+     * Unfreezes hunters fully, runners partially (invulnerable & no horizontal movement).
      * Used during PRE_HUNT.
      */
     public void unfreezeHorizontalAllPlayers() {
-        if (match.getRunnerUuid() != null) {
-            Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+        for (UUID runnerUuid : match.getRunnerUuids()) {
+            Player runner = Bukkit.getPlayer(runnerUuid);
             if (runner != null) {
                 runner.setWalkSpeed(0f);
                 runner.setFlySpeed(0f);
@@ -592,8 +593,8 @@ public class GameManager {
      * Fully unfreezes all players.
      */
     public void unfreezeAllPlayers() {
-        if (match.getRunnerUuid() != null) {
-            Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+        for (UUID runnerUuid : match.getRunnerUuids()) {
+            Player runner = Bukkit.getPlayer(runnerUuid);
             if (runner != null) {
                 runner.setWalkSpeed(0.2f);
                 runner.setFlySpeed(0.1f);
@@ -642,6 +643,24 @@ public class GameManager {
 
         pauseInternal();
         return true;
+    }
+
+    /*
+     * Infects a runner, converting them to a hunter permanently.
+     * Called when a runner dies in Infection mode.
+     */
+    public void infectPlayer(UUID runnerUuid) {
+        Match match = plugin.getGameManager().getMatch();
+        if (match.getGameMode() != GameMode.INFECTION) return;
+
+        plugin.getPlayerManager().infectRunnerToHunter(runnerUuid);
+        Player infectedPlayer = Bukkit.getPlayer(runnerUuid);
+        String name = infectedPlayer != null ? infectedPlayer.getName() : "Unknown";
+        plugin.getUiManager().sendToAll("<red>" + name + " <gray>has been infected and is now a Hunter!");
+
+        if (match.getRunnerUuids().isEmpty()) {
+            huntersWin();
+        }
     }
 
     /*
@@ -731,12 +750,12 @@ public class GameManager {
     }
 
     /*
-     * Sets all players (runner + hunters) to invulnerable or vulnerable.
+     * Sets all players (runners + hunters) to invulnerable or vulnerable.
      * Used during pause/resume transitions.
      */
     private void setAllPlayersInvulnerable(boolean invulnerable) {
-        if (match.getRunnerUuid() != null) {
-            Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+        for (UUID runnerUuid : match.getRunnerUuids()) {
+            Player runner = Bukkit.getPlayer(runnerUuid);
             if (runner != null) runner.setInvulnerable(invulnerable);
         }
         for (UUID uuid : match.getHunterUuids()) {

@@ -101,8 +101,8 @@ public class ChatManager implements Listener {
             Player p = Bukkit.getPlayer(uuid);
             if (p != null) p.sendMessage(message);
         }
-        if (match.getRunnerUuid() != null) {
-            Player p = Bukkit.getPlayer(match.getRunnerUuid());
+        for (UUID runnerUuid : match.getRunnerUuids()) {
+            Player p = Bukkit.getPlayer(runnerUuid);
             if (p != null) p.sendMessage(message);
         }
         for (UUID uuid : match.getSpectatorUuids()) {

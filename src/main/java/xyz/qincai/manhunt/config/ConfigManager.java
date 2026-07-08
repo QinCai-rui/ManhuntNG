@@ -98,6 +98,8 @@ public class ConfigManager {
         validateBoolean("scoreboard.enabled", true);
         validateBoolean("actionBar.enabled", true);
 
+        validateBoolean("runner.keepInventory", false);
+
         validateBoolean("hunters.keepInventory", false);
         validateBoolean("hunters.keepArmor", false);
         validateBoolean("hunters.keepOffhand", false);
@@ -317,6 +319,10 @@ public class ConfigManager {
 
     public int getRunnerLives() {
         return config.getInt("runner.lives", 1);
+    }
+
+    public boolean isRunnerKeepInventory() {
+        return config.getBoolean("runner.keepInventory", false);
     }
 
     public boolean isHunterInfiniteRespawns() {
