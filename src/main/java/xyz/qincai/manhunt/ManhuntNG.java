@@ -1,6 +1,8 @@
 package xyz.qincai.manhunt;
 
 import org.bukkit.plugin.java.JavaPlugin;
+import xyz.qincai.manhunt.chat.ChatManager;
+import xyz.qincai.manhunt.command.ChatCommand;
 import xyz.qincai.manhunt.command.CommandRegistrar;
 import xyz.qincai.manhunt.command.ManhuntCommand;
 import xyz.qincai.manhunt.config.ConfigManager;
@@ -25,6 +27,7 @@ public class ManhuntNG extends JavaPlugin {
     private WorldManager worldManager;
     private UIManager uiManager;
     private StatisticsManager statsManager;
+    private ChatManager chatManager;
     private GameListener gameListener;
     private CommandRegistrar commandRegistrar;
 
@@ -43,6 +46,7 @@ public class ManhuntNG extends JavaPlugin {
         worldManager = new WorldManager(this);
         uiManager = new UIManager(this);
         statsManager = new StatisticsManager(this);
+        chatManager = new ChatManager(this);
 
         trackerManager.init();
         uiManager.init();
@@ -53,6 +57,10 @@ public class ManhuntNG extends JavaPlugin {
 
         gameListener = new GameListener(this);
         getServer().getPluginManager().registerEvents(gameListener, this);
+        getServer().getPluginManager().registerEvents(chatManager, this);
+
+        commandRegistrar.register("g", "Send a global message", new ChatCommand(this, true), null);
+        commandRegistrar.register("t", "Send a team message", new ChatCommand(this, false), null);
 
         getLogger().info("ManhuntNG has been enabled!");
     }
@@ -106,6 +114,10 @@ public class ManhuntNG extends JavaPlugin {
 
     public StatisticsManager getStatsManager() {
         return statsManager;
+    }
+
+    public ChatManager getChatManager() {
+        return chatManager;
     }
 
     public GameListener getGameListener() {
