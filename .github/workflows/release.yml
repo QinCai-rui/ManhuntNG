@@ -60,6 +60,20 @@ jobs:
       - name: Build
         run: mvn -B -ntp -Drevision=${{ steps.version.outputs.version }} package
 
+      - name: Extract changelog for this version
+        if: steps.version.outputs.prerelease == 'false'
+        id: release_notes
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          awk "/^## ${VERSION}$/{flag=1; next} /^## /{flag=0} flag" CHANGELOG.md > changelog-snippet.md
+          if [ ! -s changelog-snippet.md ]; then
+            echo "Warning: No changelog entry found for version ${VERSION}" >&2
+            echo "No changelog provided." > changelog-snippet.md
+          fi
+          echo 'changelog<<EOF' >> "$GITHUB_OUTPUT"
+          cat changelog-snippet.md >> "$GITHUB_OUTPUT"
+          echo 'EOF' >> "$GITHUB_OUTPUT"
+
       - name: Create release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -69,5 +83,33 @@ jobs:
           if [ "${{ steps.version.outputs.prerelease }}" = "true" ]; then
             gh release create "$V" "$F" --title "$V" --generate-notes --prerelease
           else
-            gh release create "$V" "$F" --title "$V" --generate-notes
+            gh release create "$V" "$F" --title "$V" -F changelog-snippet.md
           fi
+
+      - name: Publish to Modrinth
+        if: steps.version.outputs.prerelease == 'false'
+        uses: cloudnode-pro/modrinth-publish@v2
+        with:
+          token: ${{ secrets.MODRINTH_TOKEN }}
+          project: ${{ vars.MODRINTH_ID }}
+          version: ${{ steps.version.outputs.version }}
+          name: ManhuntNG ${{ steps.version.outputs.version }}
+          changelog: ${{ steps.release_notes.outputs.changelog }}
+          loaders: |
+            bukkit
+            spigot
+            paper
+            purpur
+          game-versions: |
+            1.21.4
+            1.21.5
+            1.21.6
+            1.21.7
+            1.21.8
+            1.21.9
+            1.21.10
+            1.21.11
+            26.1
+            26.1.1
+            26.1.2
+          files: target/ManhuntNG-${{ steps.version.outputs.version }}.jar
