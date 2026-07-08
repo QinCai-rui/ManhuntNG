@@ -189,7 +189,7 @@ public class UIManager {
 
     private void updateActionBar() {
         Match match = plugin.getGameManager().getMatch();
-        if (match.getState() != GameState.RUNNING && match.getState() != GameState.PAUSED) return;
+        if (match.getState() != GameState.RUNNING && match.getState() != GameState.HEADSTART && match.getState() != GameState.PAUSED) return;
 
         if (match.getState() == GameState.PAUSED) {
             Component pausedBar = Component.text("\u23f8 PAUSED", NamedTextColor.GOLD);

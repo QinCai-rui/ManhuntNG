@@ -19,6 +19,8 @@ public class GameManager {
     private final ManhuntNG plugin;
     private final Match match;
     private int countdownTaskId = -1;
+    private int headstartTaskId = -1;
+    private java.util.concurrent.atomic.AtomicInteger headstartCounter;
     private boolean forceStart;
 
     public GameManager(ManhuntNG plugin) {
@@ -39,6 +41,7 @@ public class GameManager {
         match.setPausedAt(0);
         match.setTotalPausedDuration(0);
         match.setStartTime(0);
+        match.setHeadstartRemaining(-1);
     }
 
     /*
@@ -49,7 +52,7 @@ public class GameManager {
     }
 
     /*
-     * Starts the game normally (NOT force-start).
+     * Starts the game using the selected start mode (Dreamstart or Headstart).
      * Validates runner & hunters, then transitions to COUNTDOWN.
      */
     public void startGame(UUID ownerUuid) {
@@ -160,8 +163,14 @@ public class GameManager {
 
         resetMatchTiming();
 
-        // FORCE START skips PRE_HUNT entirely
-        if (forceStart) {
+        // HEADSTART -> runner gets a headstart, hunters frozen
+        if (match.getStartMode() == StartMode.HEADSTART) {
+            match.setState(GameState.HEADSTART);
+
+            applyHeadstartFreezeState();
+
+            startHeadstartTimer(plugin.getConfigManager().getHeadstartDuration());
+        } else if (forceStart) {
             forceStart = false;
             match.setState(GameState.RUNNING);
             match.setStartTime(System.currentTimeMillis());
@@ -190,6 +199,130 @@ public class GameManager {
             plugin.getUiManager().sendTitle("§6Pre-Hunt", "§7Runner must damage a hunter to start the hunt");
             plugin.getUiManager().sendToAll("§ePre-Hunt phase! The runner must punch any hunter to start the hunt.");
         }
+    }
+
+    /*
+     * Applies the HEADSTART freeze state: runner is unfrozen, hunters are frozen + invulnerable.
+     */
+    private void applyHeadstartFreezeState() {
+        if (match.getRunnerUuid() != null) {
+            Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+            if (runner != null) {
+                runner.setWalkSpeed(0.2f);
+                runner.setFlySpeed(0.1f);
+            }
+        }
+        for (UUID uuid : match.getHunterUuids()) {
+            Player player = Bukkit.getPlayer(uuid);
+            if (player != null) {
+                player.setWalkSpeed(0f);
+                player.setFlySpeed(0f);
+                player.setInvulnerable(true);
+            }
+        }
+    }
+
+    /*
+     * Runs the headstart countdown timer.
+     * Hunters remain frozen while the runner gets a headstart.
+     */
+    private void startHeadstartTimer(int initialDuration) {
+        headstartCounter = new java.util.concurrent.atomic.AtomicInteger(initialDuration);
+        match.setHeadstartRemaining(initialDuration);
+
+        // Show headstart title to everyone
+        plugin.getUiManager().sendTitle(
+            plugin.getConfigManager().getMessage("headstart.title"),
+            plugin.getConfigManager().getMessage("headstart.subtitle", "{duration}", String.valueOf(initialDuration))
+        );
+        for (UUID uuid : match.getHunterUuids()) {
+            Player player = Bukkit.getPlayer(uuid);
+            if (player != null) {
+                player.sendTitle(
+                    plugin.getConfigManager().getMessage("headstart.hunter-title"),
+                    plugin.getConfigManager().getMessage("headstart.hunter-subtitle", "{duration}", String.valueOf(initialDuration)),
+                    0, 40, 10
+                );
+            }
+        }
+        plugin.getUiManager().sendToAll("§eHead start! Runner has §c" + initialDuration + "§e seconds to run!");
+
+        headstartTaskId = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            if (match.getState() != GameState.HEADSTART) {
+                Bukkit.getScheduler().cancelTask(headstartTaskId);
+                headstartTaskId = -1;
+                return;
+            }
+
+            int current = headstartCounter.get();
+            match.setHeadstartRemaining(current);
+            if (current <= 0) {
+                Bukkit.getScheduler().cancelTask(headstartTaskId);
+                headstartTaskId = -1;
+                headstartCounter = null;
+                finishHeadstart();
+                return;
+            }
+
+            // Send countdown to hunters
+            for (UUID uuid : match.getHunterUuids()) {
+                Player player = Bukkit.getPlayer(uuid);
+                if (player != null) {
+                    player.sendTitle("§c" + current, "§7You are frozen!", 0, 25, 0);
+                }
+            }
+
+            // Send remaining time to runner
+            if (match.getRunnerUuid() != null) {
+                Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+                if (runner != null) {
+                    runner.sendTitle("§e" + current, "§7Head start remaining", 0, 25, 0);
+                }
+            }
+
+            headstartCounter.decrementAndGet();
+        }, 0L, 20L).getTaskId();
+    }
+
+    /*
+     * Called when headstart timer reaches zero.
+     * Unfreezes hunters, transitions to RUNNING, starts tracking.
+     */
+    private void finishHeadstart() {
+        match.setState(GameState.RUNNING);
+        resetMatchTiming();
+        match.setStartTime(System.currentTimeMillis());
+
+        // Reset progression flags
+        match.setStrongholdDiscovered(false);
+        match.setFortressDiscovered(false);
+        match.setBlazeRodObtained(false);
+        match.setBastionDiscovered(false);
+
+        unfreezeAllPlayers();
+
+        // Runner becomes vulnerable
+        if (match.getRunnerUuid() != null) {
+            Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+            if (runner != null) runner.setInvulnerable(false);
+        }
+
+        // Hunters no longer invulnerable
+        for (UUID uuid : match.getHunterUuids()) {
+            Player player = Bukkit.getPlayer(uuid);
+            if (player != null) player.setInvulnerable(false);
+        }
+
+        // Start tracking + UI + effects
+        if (plugin.getConfigManager().isHeadstartCompassEnabled()) {
+            plugin.getTrackerManager().giveCompassToAll();
+        }
+        plugin.getTrackerManager().startTracking();
+        plugin.getUiManager().startUIUpdates();
+        plugin.getPotionEffectManager().applyEffects();
+
+        plugin.getUiManager().sendTitle("§cThe Hunt Has Begun!", "§7Runner is on the loose!");
+        plugin.getUiManager().sendToAll(plugin.getConfigManager().getMessage("headstart.ended"));
     }
 
     /*
@@ -274,6 +407,13 @@ public class GameManager {
             Bukkit.getScheduler().cancelTask(countdownTaskId);
             countdownTaskId = -1;
         }
+
+        // Cancel headstart if running
+        if (headstartTaskId != -1) {
+            Bukkit.getScheduler().cancelTask(headstartTaskId);
+            headstartTaskId = -1;
+        }
+        headstartCounter = null;
 
         plugin.getTrackerManager().stopTracking();
         plugin.getUiManager().stopUIUpdates();
@@ -461,6 +601,7 @@ public class GameManager {
     public boolean isGameActive() {
         return match.getState() == GameState.RUNNING ||
                match.getState() == GameState.PRE_HUNT ||
+               match.getState() == GameState.HEADSTART ||
                match.getState() == GameState.PAUSED;
     }
 
@@ -468,7 +609,7 @@ public class GameManager {
      * Pauses the game without owner validation. Used for internal logic (right now, only when runner leaves the game)
      */
     public boolean pauseGame() {
-        if (match.getState() != GameState.RUNNING && match.getState() != GameState.PRE_HUNT) return false;
+        if (match.getState() != GameState.RUNNING && match.getState() != GameState.PRE_HUNT && match.getState() != GameState.HEADSTART) return false;
         pauseInternal();
         return true;
     }
@@ -477,7 +618,7 @@ public class GameManager {
      * Pauses the game with owner validation.
      */
     public boolean pauseGame(UUID ownerUuid) {
-        if (match.getState() != GameState.RUNNING && match.getState() != GameState.PRE_HUNT) return false;
+        if (match.getState() != GameState.RUNNING && match.getState() != GameState.PRE_HUNT && match.getState() != GameState.HEADSTART) return false;
 
         // Only owner or admin can pause
         if (!match.isOwner(ownerUuid)) {
@@ -496,6 +637,16 @@ public class GameManager {
         match.setPrePauseState(match.getState());
         match.setState(GameState.PAUSED);
         match.setPausedAt(System.currentTimeMillis());
+
+        // Cancel headstart timer if headstart was running
+        if (headstartTaskId != -1) {
+            if (headstartCounter != null) {
+                match.setHeadstartRemaining(headstartCounter.get());
+            }
+            Bukkit.getScheduler().cancelTask(headstartTaskId);
+            headstartTaskId = -1;
+            headstartCounter = null;
+        }
 
         freezeAllPlayers();
         plugin.getTrackerManager().stopTracking();
@@ -544,6 +695,11 @@ public class GameManager {
             plugin.getUiManager().startUIUpdates();
         } else if (previousState == GameState.PRE_HUNT) {
             unfreezeHorizontalAllPlayers();
+        } else if (previousState == GameState.HEADSTART) {
+            applyHeadstartFreezeState();
+            int remaining = match.getHeadstartRemaining();
+            if (remaining <= 0) remaining = plugin.getConfigManager().getHeadstartDuration();
+            startHeadstartTimer(remaining);
         }
 
         plugin.getUiManager().hidePauseTitle();

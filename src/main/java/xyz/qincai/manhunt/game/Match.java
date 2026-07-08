@@ -8,6 +8,7 @@ import java.util.UUID;
 
 public class Match {
     private GameState state = GameState.WAITING;
+    private StartMode startMode = StartMode.DREAMSTART;
     private UUID runnerUuid;
     private final java.util.Set<UUID> hunterUuids = new java.util.concurrent.ConcurrentHashMap<UUID, Boolean>().newKeySet();
     private final java.util.Set<UUID> spectatorUuids = new java.util.concurrent.ConcurrentHashMap<UUID, Boolean>().newKeySet();
@@ -27,6 +28,7 @@ public class Match {
     private boolean fortressDiscovered;
     private boolean blazeRodObtained;
     private boolean bastionDiscovered;
+    private int headstartRemaining = -1; // remaining headstart seconds, -1 = not set
     private Long seed;
     private String worldName;
 
@@ -36,6 +38,14 @@ public class Match {
 
     public void setState(GameState state) {
         this.state = state;
+    }
+
+    public StartMode getStartMode() {
+        return startMode;
+    }
+
+    public void setStartMode(StartMode startMode) {
+        this.startMode = startMode;
     }
 
     public UUID getRunnerUuid() {
@@ -222,6 +232,14 @@ public class Match {
 
     public void setBastionDiscovered(boolean bastionDiscovered) {
         this.bastionDiscovered = bastionDiscovered;
+    }
+
+    public int getHeadstartRemaining() {
+        return headstartRemaining;
+    }
+
+    public void setHeadstartRemaining(int headstartRemaining) {
+        this.headstartRemaining = headstartRemaining;
     }
 
     public boolean isPlayer(UUID uuid) {

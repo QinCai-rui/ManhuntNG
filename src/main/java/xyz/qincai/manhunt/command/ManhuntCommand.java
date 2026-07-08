@@ -16,6 +16,7 @@ import xyz.qincai.manhunt.ManhuntNG;
 import xyz.qincai.manhunt.chat.ChatMode;
 import xyz.qincai.manhunt.game.GameState;
 import xyz.qincai.manhunt.game.Match;
+import xyz.qincai.manhunt.game.StartMode;
 import xyz.qincai.manhunt.player.PlayerRole;
 
 import java.util.ArrayList;
@@ -47,6 +48,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             case "hunter" -> handleHunter(sender, args);
             case "remove" -> handleRemove(sender, args);
             case "forcestart" -> handleForceStart(sender, args);
+            case "mode" -> handleMode(sender, args);
             case "pause" -> handlePause(sender, args);
             case "resume" -> handleResume(sender, args);
             case "owner" -> handleOwner(sender, args);
@@ -208,6 +210,45 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    private boolean handleMode(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("manhunt.admin")) {
+            sender.sendMessage(Component.text("You don't have permission!", NamedTextColor.RED));
+            return true;
+        }
+
+        if (plugin.getGameManager().isGameActive()) {
+            sender.sendMessage(Component.text("Cannot change mode during an active game!", NamedTextColor.RED));
+            return true;
+        }
+
+        if (args.length < 2) {
+            StartMode current = plugin.getGameManager().getMatch().getStartMode();
+            sender.sendMessage(Component.text("Current mode: ", NamedTextColor.GRAY)
+                    .append(Component.text(current.getDisplayName(), NamedTextColor.AQUA)));
+            sender.sendMessage(Component.text("Usage: ", NamedTextColor.RED)
+                    .append(Component.text("/manhunt mode <dreamstart|headstart>", NamedTextColor.WHITE)));
+            return true;
+        }
+
+        switch (args[1].toLowerCase()) {
+            case "dreamstart" -> {
+                plugin.getGameManager().getMatch().setStartMode(StartMode.DREAMSTART);
+                sender.sendMessage(Component.text("Start mode set to ", NamedTextColor.GREEN)
+                        .append(Component.text("Dreamstart", NamedTextColor.AQUA)));
+                sender.sendMessage(Component.text("Runner must punch a hunter to start the hunt.", NamedTextColor.GRAY));
+            }
+            case "headstart" -> {
+                plugin.getGameManager().getMatch().setStartMode(StartMode.HEADSTART);
+                sender.sendMessage(Component.text("Start mode set to ", NamedTextColor.GREEN)
+                        .append(Component.text("Headstart", NamedTextColor.AQUA)));
+                sender.sendMessage(Component.text("Runner gets a headstart while hunters are frozen.", NamedTextColor.GRAY));
+            }
+            default -> sender.sendMessage(Component.text("Usage: ", NamedTextColor.RED)
+                    .append(Component.text("/manhunt mode <dreamstart|headstart>", NamedTextColor.WHITE)));
+        }
+        return true;
+    }
+
     private boolean handleRemove(CommandSender sender, String[] args) {
         if (!sender.hasPermission("manhunt.admin")) {
             sender.sendMessage(Component.text("You don't have permission!", NamedTextColor.RED));
@@ -259,7 +300,8 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
         }
 
         if (plugin.getGameManager().getMatch().getState() != GameState.RUNNING &&
-                plugin.getGameManager().getMatch().getState() != GameState.PRE_HUNT) {
+                plugin.getGameManager().getMatch().getState() != GameState.PRE_HUNT &&
+                plugin.getGameManager().getMatch().getState() != GameState.HEADSTART) {
             player.sendMessage(Component.text("No active game to pause!", NamedTextColor.RED));
             return true;
         }
@@ -458,6 +500,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
         String stateName = switch (state) {
             case WAITING -> "Waiting";
             case COUNTDOWN -> "Countdown";
+            case HEADSTART -> "Head Start";
             case PRE_HUNT -> "Pre-Hunt";
             case RUNNING -> "Running";
             case PAUSED -> "Paused";
@@ -492,7 +535,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage(Component.empty());
             sender.sendMessage(Component.text("  Admin", NamedTextColor.RED, TextDecoration.BOLD));
 
-            helpEntry(sender, "manhunt start", "Start the match",
+            helpEntry(sender, "manhunt start", "Start the match (uses selected mode)",
                     "Click to start", "manhunt.admin");
             helpEntry(sender, "manhunt stop", "Force stop the match",
                     "Click to stop", "manhunt.admin");
@@ -508,6 +551,8 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
                     "Click to set seed", "manhunt.admin");
             helpEntry(sender, "manhunt world [name]", "View/set existing world to use",
                     "Click to set world", "manhunt.admin");
+            helpEntry(sender, "manhunt mode <dreamstart|headstart>", "Set start mode",
+                    "Click to set mode", "manhunt.admin");
             helpEntry(sender, "manhunt forcestart", "Skip validation & start",
                     "Click to force start", "manhunt.admin");
             helpEntry(sender, "manhunt reload", "Reload configuration",
@@ -537,6 +582,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
         return switch (state) {
             case WAITING -> NamedTextColor.GREEN;
             case COUNTDOWN -> NamedTextColor.YELLOW;
+            case HEADSTART -> NamedTextColor.LIGHT_PURPLE;
             case PRE_HUNT -> NamedTextColor.GOLD;
             case RUNNING -> NamedTextColor.RED;
             case PAUSED -> NamedTextColor.AQUA;
@@ -560,6 +606,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
                 completions.add("hunter");
                 completions.add("remove");
                 completions.add("forcestart");
+                completions.add("mode");
                 completions.add("owner");
                 completions.add("seed");
                 completions.add("world");
@@ -592,6 +639,11 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             }
             if (sub.equals("debug")) {
                 completions.add("lastknown");
+                return filterPartial(args[1], completions);
+            }
+            if (sub.equals("mode")) {
+                completions.add("dreamstart");
+                completions.add("headstart");
                 return filterPartial(args[1], completions);
             }
         }

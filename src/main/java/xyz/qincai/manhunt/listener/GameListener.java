@@ -10,6 +10,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.Cancellable;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -80,6 +81,34 @@ public class GameListener implements Listener {
     }
 
     /*
+     * Cancels restricted actions during HEADSTART (hunter-only),
+     * and during PRE_HUNT / COUNTDOWN / PAUSED (runner + hunter).
+     */
+    private void cancelRestrictedAction(Cancellable event, Player player) {
+        UUID uuid = player.getUniqueId();
+        Match match = plugin.getGameManager().getMatch();
+
+        if (match.getState() == GameState.HEADSTART) {
+            if (plugin.getPlayerManager().isHunter(uuid)) {
+                event.setCancelled(true);
+            }
+            return;
+        }
+
+        if (match.getState() == GameState.PRE_HUNT ||
+            match.getState() == GameState.COUNTDOWN ||
+            match.getState() == GameState.PAUSED) {
+
+            if (plugin.getPlayerManager().isRunner(uuid) ||
+                plugin.getPlayerManager().isHunter(uuid)) {
+
+                event.setCancelled(true);
+                if (plugin.getGameManager().isGamePaused()) sendPauseBlockedMessage(player);
+            }
+        }
+    }
+
+    /*
      * Handles player joining the server.
      * If game is inactive -> they become spectator.
      * If hunter joins during RUNNING -> give compass after short delay.
@@ -127,7 +156,7 @@ public class GameListener implements Listener {
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         Match match = plugin.getGameManager().getMatch();
-        if (match.getState() != GameState.RUNNING) return;
+        if (match.getState() != GameState.RUNNING && match.getState() != GameState.HEADSTART) return;
         if (!event.getPlayer().getUniqueId().equals(match.getRunnerUuid())) return;
 
         plugin.getUiManager().sendToAll("§eRunner has disconnected — pausing game!");
@@ -145,7 +174,7 @@ public class GameListener implements Listener {
         UUID uuid = player.getUniqueId();
         Match match = plugin.getGameManager().getMatch();
 
-        if (match.getState() != GameState.RUNNING) return;
+        if (match.getState() != GameState.RUNNING && match.getState() != GameState.HEADSTART) return;
 
         destroyTrackingCompass(player, event);
 
@@ -233,7 +262,7 @@ public class GameListener implements Listener {
     /*
      * Handles hunter respawn logic:
      * - Restore armor/offhand if saved
-     * - Give compass
+     * - Give compass (only during RUNNING, not HEADSTART)
      * - Announce respawn
      */
     @EventHandler
@@ -242,7 +271,7 @@ public class GameListener implements Listener {
         UUID uuid = player.getUniqueId();
         Match match = plugin.getGameManager().getMatch();
 
-        if (match.getState() != GameState.RUNNING) return;
+        if (match.getState() != GameState.RUNNING && match.getState() != GameState.HEADSTART) return;
 
         if (plugin.getPlayerManager().isHunter(uuid)) {
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
@@ -256,7 +285,10 @@ public class GameListener implements Listener {
                 if (armor != null) player.getInventory().setArmorContents(armor);
                 if (offhand != null) player.getInventory().setItemInOffHand(offhand);
 
-                plugin.getTrackerManager().giveCompassToPlayer(player);
+                // Only give compass during RUNNING
+                if (match.getState() == GameState.RUNNING) {
+                    plugin.getTrackerManager().giveCompassToPlayer(player);
+                }
                 plugin.getUiManager().sendToAll("§e" + player.getName() + " has respawned!");
             }, 1L);
         }
@@ -265,6 +297,7 @@ public class GameListener implements Listener {
     /*
      * Handles PvP rules:
      * - PAUSED -> cancel
+     * - HEADSTART -> cancel (prep phase)
      * - PRE_HUNT -> runner hitting hunter starts hunt
      * - RUNNING -> allow
      */
@@ -279,6 +312,12 @@ public class GameListener implements Listener {
         if (match.getState() == GameState.PAUSED) {
             event.setCancelled(true);
             sendPauseBlockedMessage(damager);
+            return;
+        }
+
+        // HEADSTART: no combat
+        if (match.getState() == GameState.HEADSTART) {
+            event.setCancelled(true);
             return;
         }
 
@@ -302,6 +341,7 @@ public class GameListener implements Listener {
     /*
      * Movement restrictions:
      * - PAUSED -> freeze
+     * - HEADSTART -> hunters freeze, runner free
      * - PRE_HUNT -> freeze
      * - COUNTDOWN -> freeze
      * - RUNNING -> allow, but track runner world changes
@@ -316,6 +356,15 @@ public class GameListener implements Listener {
         if (match.getState() == GameState.PAUSED) {
             if (event.getTo() == null) return;
             if (plugin.getPlayerManager().isRunner(uuid) || plugin.getPlayerManager().isHunter(uuid)) {
+                event.setTo(event.getFrom());
+            }
+            return;
+        }
+
+        // HEADSTART: hunters are frozen, runner can move freely
+        if (match.getState() == GameState.HEADSTART) {
+            if (event.getTo() == null) return;
+            if (plugin.getPlayerManager().isHunter(uuid)) {
                 event.setTo(event.getFrom());
             }
             return;
@@ -354,66 +403,30 @@ public class GameListener implements Listener {
     }
 
     /*
-     * Prevent interaction during PAUSED, PRE_HUNT, COUNTDOWN.
+     * Prevent interaction during restricted phases.
+     * HEADSTART: runners can interact, hunters cannot.
      */
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
-        Player player = event.getPlayer();
-        Match match = plugin.getGameManager().getMatch();
-
-        if (match.getState() == GameState.PRE_HUNT ||
-            match.getState() == GameState.COUNTDOWN ||
-            match.getState() == GameState.PAUSED) {
-
-            if (plugin.getPlayerManager().isRunner(player.getUniqueId()) ||
-                plugin.getPlayerManager().isHunter(player.getUniqueId())) {
-
-                event.setCancelled(true);
-                if (plugin.getGameManager().isGamePaused()) sendPauseBlockedMessage(player);
-            }
-        }
+        cancelRestrictedAction(event, event.getPlayer());
     }
 
     /*
      * Prevent block breaking during restricted phases.
+     * HEADSTART: runners can break blocks, hunters cannot.
      */
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
-        Player player = event.getPlayer();
-        Match match = plugin.getGameManager().getMatch();
-
-        if (match.getState() == GameState.PRE_HUNT ||
-            match.getState() == GameState.COUNTDOWN ||
-            match.getState() == GameState.PAUSED) {
-
-            if (plugin.getPlayerManager().isRunner(player.getUniqueId()) ||
-                plugin.getPlayerManager().isHunter(player.getUniqueId())) {
-
-                event.setCancelled(true);
-                if (plugin.getGameManager().isGamePaused()) sendPauseBlockedMessage(player);
-            }
-        }
+        cancelRestrictedAction(event, event.getPlayer());
     }
 
     /*
      * Prevent block placing during restricted phases.
+     * HEADSTART: runners can place blocks, hunters cannot.
      */
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
-        Player player = event.getPlayer();
-        Match match = plugin.getGameManager().getMatch();
-
-        if (match.getState() == GameState.PRE_HUNT ||
-            match.getState() == GameState.COUNTDOWN ||
-            match.getState() == GameState.PAUSED) {
-
-            if (plugin.getPlayerManager().isRunner(player.getUniqueId()) ||
-                plugin.getPlayerManager().isHunter(player.getUniqueId())) {
-
-                event.setCancelled(true);
-                if (plugin.getGameManager().isGamePaused()) sendPauseBlockedMessage(player);
-            }
-        }
+        cancelRestrictedAction(event, event.getPlayer());
     }
 
     /*
@@ -432,23 +445,11 @@ public class GameListener implements Listener {
 
     /*
      * Prevent entity interaction during restricted phases.
+     * HEADSTART: runners can interact with entities, hunters cannot.
      */
     @EventHandler
     public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
-        Player player = event.getPlayer();
-        Match match = plugin.getGameManager().getMatch();
-
-        if (match.getState() == GameState.PRE_HUNT ||
-            match.getState() == GameState.COUNTDOWN ||
-            match.getState() == GameState.PAUSED) {
-
-            if (plugin.getPlayerManager().isRunner(player.getUniqueId()) ||
-                plugin.getPlayerManager().isHunter(player.getUniqueId())) {
-
-                event.setCancelled(true);
-                if (plugin.getGameManager().isGamePaused()) sendPauseBlockedMessage(player);
-            }
-        }
+        cancelRestrictedAction(event, event.getPlayer());
     }
 
     /*
