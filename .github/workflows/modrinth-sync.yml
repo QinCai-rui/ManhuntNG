@@ -1,0 +1,51 @@
+name: Sync Modrinth Project
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - README.md
+      - assets/modrinth/**
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update project description
+        run: |
+          jq -n --rawfile body README.md '{body: $body}' \
+            | curl -fsS -X PATCH "https://api.modrinth.com/v2/project/${{ vars.MODRINTH_ID }}" \
+              -H "Authorization: Bearer ${{ secrets.MODRINTH_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              -d @- \
+            && echo "Description updated"
+
+      - name: Upload gallery images
+        run: |
+          GALLERY=$(curl -sf "https://api.modrinth.com/v2/project/${{ vars.MODRINTH_ID }}" \
+            -H "Authorization: Bearer ${{ secrets.MODRINTH_TOKEN }}" \
+            | jq '.gallery // []')
+
+          for img in assets/modrinth/*.{png,jpg,jpeg,gif,webp,svg}; do
+            [ -f "$img" ] || continue
+            TITLE="$(basename "${img%.*}")"
+
+            if echo "$GALLERY" | jq -e --arg t "$TITLE" 'any(.title == $t)' > /dev/null 2>&1; then
+              echo "Skipping $(basename "$img") — already in gallery"
+            else
+              echo "Uploading $(basename "$img")..."
+              curl -fsS -X POST "https://api.modrinth.com/v2/project/${{ vars.MODRINTH_ID }}/gallery" \
+                -H "Authorization: Bearer ${{ secrets.MODRINTH_TOKEN }}" \
+                -F "file=@$img" \
+                -F "title=$TITLE" \
+                -F "featured=false" \
+                && echo "Uploaded $(basename "$img")"
+            fi
+          done
