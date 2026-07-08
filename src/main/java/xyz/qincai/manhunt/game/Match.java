@@ -28,6 +28,7 @@ public class Match {
     private boolean fortressDiscovered;
     private boolean blazeRodObtained;
     private boolean bastionDiscovered;
+    private int headstartRemaining = -1; // remaining headstart seconds, -1 = not set
     private Long seed;
     private String worldName;
 
@@ -231,6 +232,14 @@ public class Match {
 
     public void setBastionDiscovered(boolean bastionDiscovered) {
         this.bastionDiscovered = bastionDiscovered;
+    }
+
+    public int getHeadstartRemaining() {
+        return headstartRemaining;
+    }
+
+    public void setHeadstartRemaining(int headstartRemaining) {
+        this.headstartRemaining = headstartRemaining;
     }
 
     public boolean isPlayer(UUID uuid) {

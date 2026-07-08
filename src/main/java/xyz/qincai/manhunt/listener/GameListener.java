@@ -10,6 +10,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.Cancellable;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -76,6 +77,34 @@ public class GameListener implements Listener {
         if (now - pauseMessageCooldowns.getOrDefault(uuid, 0L) > 5000) {
             player.sendMessage(Component.text("The game is paused — action blocked", NamedTextColor.GRAY));
             pauseMessageCooldowns.put(uuid, now);
+        }
+    }
+
+    /*
+     * Cancels restricted actions during HEADSTART (hunter-only),
+     * and during PRE_HUNT / COUNTDOWN / PAUSED (runner + hunter).
+     */
+    private void cancelRestrictedAction(Cancellable event, Player player) {
+        UUID uuid = player.getUniqueId();
+        Match match = plugin.getGameManager().getMatch();
+
+        if (match.getState() == GameState.HEADSTART) {
+            if (plugin.getPlayerManager().isHunter(uuid)) {
+                event.setCancelled(true);
+            }
+            return;
+        }
+
+        if (match.getState() == GameState.PRE_HUNT ||
+            match.getState() == GameState.COUNTDOWN ||
+            match.getState() == GameState.PAUSED) {
+
+            if (plugin.getPlayerManager().isRunner(uuid) ||
+                plugin.getPlayerManager().isHunter(uuid)) {
+
+                event.setCancelled(true);
+                if (plugin.getGameManager().isGamePaused()) sendPauseBlockedMessage(player);
+            }
         }
     }
 
@@ -379,28 +408,7 @@ public class GameListener implements Listener {
      */
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
-        Player player = event.getPlayer();
-        UUID uuid = player.getUniqueId();
-        Match match = plugin.getGameManager().getMatch();
-
-        if (match.getState() == GameState.HEADSTART) {
-            if (plugin.getPlayerManager().isHunter(uuid)) {
-                event.setCancelled(true);
-            }
-            return;
-        }
-
-        if (match.getState() == GameState.PRE_HUNT ||
-            match.getState() == GameState.COUNTDOWN ||
-            match.getState() == GameState.PAUSED) {
-
-            if (plugin.getPlayerManager().isRunner(uuid) ||
-                plugin.getPlayerManager().isHunter(uuid)) {
-
-                event.setCancelled(true);
-                if (plugin.getGameManager().isGamePaused()) sendPauseBlockedMessage(player);
-            }
-        }
+        cancelRestrictedAction(event, event.getPlayer());
     }
 
     /*
@@ -409,28 +417,7 @@ public class GameListener implements Listener {
      */
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
-        Player player = event.getPlayer();
-        UUID uuid = player.getUniqueId();
-        Match match = plugin.getGameManager().getMatch();
-
-        if (match.getState() == GameState.HEADSTART) {
-            if (plugin.getPlayerManager().isHunter(uuid)) {
-                event.setCancelled(true);
-            }
-            return;
-        }
-
-        if (match.getState() == GameState.PRE_HUNT ||
-            match.getState() == GameState.COUNTDOWN ||
-            match.getState() == GameState.PAUSED) {
-
-            if (plugin.getPlayerManager().isRunner(uuid) ||
-                plugin.getPlayerManager().isHunter(uuid)) {
-
-                event.setCancelled(true);
-                if (plugin.getGameManager().isGamePaused()) sendPauseBlockedMessage(player);
-            }
-        }
+        cancelRestrictedAction(event, event.getPlayer());
     }
 
     /*
@@ -439,28 +426,7 @@ public class GameListener implements Listener {
      */
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
-        Player player = event.getPlayer();
-        UUID uuid = player.getUniqueId();
-        Match match = plugin.getGameManager().getMatch();
-
-        if (match.getState() == GameState.HEADSTART) {
-            if (plugin.getPlayerManager().isHunter(uuid)) {
-                event.setCancelled(true);
-            }
-            return;
-        }
-
-        if (match.getState() == GameState.PRE_HUNT ||
-            match.getState() == GameState.COUNTDOWN ||
-            match.getState() == GameState.PAUSED) {
-
-            if (plugin.getPlayerManager().isRunner(uuid) ||
-                plugin.getPlayerManager().isHunter(uuid)) {
-
-                event.setCancelled(true);
-                if (plugin.getGameManager().isGamePaused()) sendPauseBlockedMessage(player);
-            }
-        }
+        cancelRestrictedAction(event, event.getPlayer());
     }
 
     /*
@@ -483,28 +449,7 @@ public class GameListener implements Listener {
      */
     @EventHandler
     public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
-        Player player = event.getPlayer();
-        UUID uuid = player.getUniqueId();
-        Match match = plugin.getGameManager().getMatch();
-
-        if (match.getState() == GameState.HEADSTART) {
-            if (plugin.getPlayerManager().isHunter(uuid)) {
-                event.setCancelled(true);
-            }
-            return;
-        }
-
-        if (match.getState() == GameState.PRE_HUNT ||
-            match.getState() == GameState.COUNTDOWN ||
-            match.getState() == GameState.PAUSED) {
-
-            if (plugin.getPlayerManager().isRunner(uuid) ||
-                plugin.getPlayerManager().isHunter(uuid)) {
-
-                event.setCancelled(true);
-                if (plugin.getGameManager().isGamePaused()) sendPauseBlockedMessage(player);
-            }
-        }
+        cancelRestrictedAction(event, event.getPlayer());
     }
 
     /*
