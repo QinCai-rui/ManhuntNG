@@ -79,6 +79,9 @@ public class ConfigManager {
     private void validateConfig() {
         plugin.getLogger().info("[Config] Validating configuration...");
 
+        validateInt("headstart.duration", 10);
+        validateBoolean("headstart.compassEnabled", false);
+
         validateInt("preHunt.countdown", 5);
         validateDouble("preHunt.hunterCircleRadius", 3.0);
         validateInt("preHunt.formationSearchRadius", 20);
@@ -280,6 +283,14 @@ public class ConfigManager {
     }
 
     // -------- Config getters --------
+    public int getHeadstartDuration() {
+        return config.getInt("headstart.duration", 10);
+    }
+
+    public boolean isHeadstartCompassEnabled() {
+        return config.getBoolean("headstart.compassEnabled", false);
+    }
+
     public int getPreHuntCountdown() {
         return config.getInt("preHunt.countdown", 5);
     }

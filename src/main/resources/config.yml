@@ -16,6 +16,11 @@ tracking:
   updateTicks: 5
   showDistance: true
 
+headstart:
+  duration: 10
+  # whether hunters can use their compass during headstart
+  compassEnabled: false
+
 preHunt:
   countdown: 5
   hunterCircleRadius: 3.0

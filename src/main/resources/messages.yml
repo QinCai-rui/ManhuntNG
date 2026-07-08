@@ -30,6 +30,13 @@ player.eliminated: '&c{player} has been eliminated!'
 countdown.title: '&e{seconds}'
 countdown.subtitle: '&7Game starting in...'
 
+# Headstart
+headstart.title: '&eHead Start!'
+headstart.subtitle: '&7Run! Hunters frozen for &c{duration}&7 seconds'
+headstart.hunter-title: '&cFrozen!'
+headstart.hunter-subtitle: '&7Runner has a &c{duration}&7 second head start'
+headstart.ended: '&cHunters are now free! The hunt begins!'
+
 # Pre-Hunt
 prehunt.title: '&6The Hunt Begins!'
 prehunt.subtitle: '&7Damage a hunter to start'
