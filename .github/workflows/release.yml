@@ -6,6 +6,12 @@ env:
 on:
   push:
     branches: ["main"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., 1.0.0). Leave empty for automatic pre-release.'
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -27,26 +33,36 @@ jobs:
           java-version: '21'
           cache: maven
 
-      - name: Stamp build version
+      - name: Determine version
         id: version
         shell: bash
         run: |
-          DATE="$(date -u +%y.%m.%d)"
-          SHORT_SHA="${GITHUB_SHA::7}"
-          VERSION="${DATE}-dev.${GITHUB_RUN_NUMBER}.${SHORT_SHA}"
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> "$GITHUB_OUTPUT"
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          else
+            SHORT_SHA="${GITHUB_SHA::7}"
+            LATEST_TAG="$(gh release view --json tagName --jq .tagName 2>/dev/null || echo 'v0.0.0')"
+            LATEST_TAG="${LATEST_TAG#v}"
+            IFS='.' read -r X Y Z <<< "$LATEST_TAG"
+            Z=$((Z + 1))
+            echo "version=${X}.${Y}.${Z}-SNAPSHOT+${{ github.run_number }}-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-          echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
-          echo "Build version: ${VERSION}"
-
-      - name: Build package
+      - name: Build
         run: mvn -B -ntp -Drevision=${{ steps.version.outputs.version }} package
 
-      - name: Create GitHub release
+      - name: Create release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          gh release create "${VERSION}" \
-            target/ManhuntNG-${VERSION}.jar \
-            --title "${VERSION}" \
-            --generate-notes
+          V="${{ steps.version.outputs.version }}"
+          F="target/ManhuntNG-${V}.jar"
+          if [ "${{ steps.version.outputs.prerelease }}" = "true" ]; then
+            gh release create "$V" "$F" --title "$V" --generate-notes --prerelease
+          else
+            gh release create "$V" "$F" --title "$V" --generate-notes
+          fi
