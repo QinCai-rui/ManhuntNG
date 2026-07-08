@@ -2,6 +2,7 @@ package xyz.qincai.manhunt.ui;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -290,8 +291,8 @@ public class UIManager {
 
     public void sendTitle(String title, String subtitle) {
         Match match = plugin.getGameManager().getMatch();
-        Component titleComp = Component.text(title, NamedTextColor.GOLD);
-        Component subtitleComp = subtitle != null ? Component.text(subtitle, NamedTextColor.YELLOW) : Component.empty();
+        Component titleComp = MiniMessage.miniMessage().deserialize(title);
+        Component subtitleComp = subtitle != null ? MiniMessage.miniMessage().deserialize(subtitle) : Component.empty();
 
         Title titleObj = Title.title(titleComp, subtitleComp, Title.Times.times(
                 Duration.ofMillis(500), Duration.ofSeconds(3), Duration.ofMillis(500)));
@@ -308,7 +309,7 @@ public class UIManager {
 
     public void sendToAll(String message) {
         Match match = plugin.getGameManager().getMatch();
-        Component msg = Component.text(message, NamedTextColor.WHITE);
+        Component msg = MiniMessage.miniMessage().deserialize(message);
 
         for (UUID uuid : match.getHunterUuids()) {
             Player player = Bukkit.getPlayer(uuid);
@@ -321,7 +322,7 @@ public class UIManager {
     }
 
     public void broadcastMessage(String message) {
-        Component msg = Component.text(message, NamedTextColor.WHITE);
+        Component msg = MiniMessage.miniMessage().deserialize(message);
         Bukkit.getServer().sendMessage(msg);
     }
 }

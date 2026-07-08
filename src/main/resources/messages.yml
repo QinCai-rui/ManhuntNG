@@ -1,55 +1,55 @@
 # ManhuntNG Messages
-config-version: 1
+config-version: 2
 
 # General
-prefix: '&6[Manhunt] &r'
+prefix: '<gold>[Manhunt] <reset>'
 
 # Game States
-game.starting: '&eGame is starting...'
-game.started: '&aThe hunt has begun!'
-game.stopped: '&cGame has been stopped.'
-game.runner-wins: '&6&lRunner Wins! The Ender Dragon has been defeated!'
-game.hunters-win: '&c&lHunters Win! The Runner has been eliminated!'
+game.starting: '<yellow>Game is starting...'
+game.started: '<green>The hunt has begun!'
+game.stopped: '<red>Game has been stopped.'
+game.runner-wins: '<gold><bold>Runner Wins! The Ender Dragon has been defeated!'
+game.hunters-win: '<red><bold>Hunters Win! The Runner has been eliminated!'
 
 # Player Messages
-player.joined: '&aYou joined the manhunt lobby!'
-player.left: '&eYou left the manhunt lobby.'
-player.is-runner: '&aYou are now the Runner!'
-player.is-hunter: '&aYou are now a Hunter!'
-player.not-found: '&cPlayer not found!'
-player.no-permission: '&cYou don''t have permission!'
-player.game-in-progress: '&cA game is already in progress!'
-player.cannot-leave: '&cCannot leave during an active game!'
-player.cannot-change: '&cCannot change roles during an active game!'
-player.no-runner: '&cNo runner selected!'
-player.no-hunters: '&cNo hunters selected!'
-player.respawned: '&e{player} has respawned!'
-player.eliminated: '&c{player} has been eliminated!'
+player.joined: '<green>You joined the manhunt lobby!'
+player.left: '<yellow>You left the manhunt lobby.'
+player.is-runner: '<green>You are now the Runner!'
+player.is-hunter: '<green>You are now a Hunter!'
+player.not-found: '<red>Player not found!'
+player.no-permission: '<red>You don''t have permission!'
+player.game-in-progress: '<red>A game is already in progress!'
+player.cannot-leave: '<red>Cannot leave during an active game!'
+player.cannot-change: '<red>Cannot change roles during an active game!'
+player.no-runner: '<red>No runner selected!'
+player.no-hunters: '<red>No hunters selected!'
+player.respawned: '<yellow>{player} has respawned!'
+player.eliminated: '<red>{player} has been eliminated!'
 
 # Countdown
-countdown.title: '&e{seconds}'
-countdown.subtitle: '&7Game starting in...'
+countdown.title: '<yellow>{seconds}'
+countdown.subtitle: '<gray>Game starting in...'
 
 # Headstart
-headstart.title: '&eHead Start!'
-headstart.subtitle: '&7Run! Hunters frozen for &c{duration}&7 seconds'
-headstart.hunter-title: '&cFrozen!'
-headstart.hunter-subtitle: '&7Runner has a &c{duration}&7 second head start'
-headstart.ended: '&cHunters are now free! The hunt begins!'
+headstart.title: '<yellow>Head Start!'
+headstart.subtitle: '<gray>Run! Hunters frozen for <red>{duration}<gray> seconds'
+headstart.hunter-title: '<red>Frozen!'
+headstart.hunter-subtitle: '<gray>Runner has a <red>{duration}<gray> second head start'
+headstart.ended: '<red>Hunters are now free! The hunt begins!'
 
 # Pre-Hunt
-prehunt.title: '&6The Hunt Begins!'
-prehunt.subtitle: '&7Damage a hunter to start'
+prehunt.title: '<gold>The Hunt Begins!'
+prehunt.subtitle: '<gray>Damage a hunter to start'
 
 # Scoreboard
-scoreboard.title: '&6Manhunt'
-scoreboard.runner: '&cRunner: '
-scoreboard.hunters: '&aHunters: '
-scoreboard.time: '&eTime: '
-scoreboard.dimension: '&bDimension: '
-scoreboard.dragon: '&5Dragon: '
+scoreboard.title: '<gold>Manhunt'
+scoreboard.runner: '<red>Runner: '
+scoreboard.hunters: '<green>Hunters: '
+scoreboard.time: '<yellow>Time: '
+scoreboard.dimension: '<aqua>Dimension: '
+scoreboard.dragon: '<dark_purple>Dragon: '
 scoreboard.dragon-alive: 'Alive'
 scoreboard.dragon-dead: 'Dead'
 
 # Action Bar
-actionbar.format: '&6{phase}'
+actionbar.format: '<gold>{phase}'

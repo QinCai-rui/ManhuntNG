@@ -1,5 +1,6 @@
 package xyz.qincai.manhunt.command;
 
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.World;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
@@ -28,12 +29,12 @@ public class ManhuntDebugCommand implements CommandExecutor {
 
         // subcommand: lastknown
         if (args.length == 0 || !args[0].equalsIgnoreCase("lastknown")) {
-            player.sendMessage("§eUsage: §f/manhunt debug lastknown");
+            player.sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Usage: <white>/manhunt debug lastknown"));
             return true;
         }
 
         TrackerManager tracker = plugin.getTrackerManager();
-        player.sendMessage("§6§lLast Known Runner Locations:");
+        player.sendMessage(MiniMessage.miniMessage().deserialize("<gold><bold>Last Known Runner Locations:"));
 
         for (World.Environment env : World.Environment.values()) {
 
@@ -41,14 +42,14 @@ public class ManhuntDebugCommand implements CommandExecutor {
             String envName = env.toString();
 
             if (loc == null) {
-                player.sendMessage("§c" + envName + ": No data yet (runner has not entered this dimension)");
+                player.sendMessage(MiniMessage.miniMessage().deserialize("<red>" + envName + ": No data yet (runner has not entered this dimension)"));
             } else {
-                player.sendMessage(String.format(
-                        "§a%s: §f(%.1f, %.1f, %.1f) in world '%s'",
+                player.sendMessage(MiniMessage.miniMessage().deserialize(String.format(
+                        "<green>%s: <white>(%.1f, %.1f, %.1f) in world '%s'",
                         envName,
                         loc.getX(), loc.getY(), loc.getZ(),
                         loc.getWorld().getName()
-                ));
+                )));
             }
         }
 

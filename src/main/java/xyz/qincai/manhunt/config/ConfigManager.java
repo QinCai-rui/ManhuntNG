@@ -1,6 +1,5 @@
 package xyz.qincai.manhunt.config;
 
-import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -280,7 +279,7 @@ public class ConfigManager {
         for (int i = 0; i < replacements.length - 1; i += 2) {
             msg = msg.replace(replacements[i], replacements[i + 1]);
         }
-        return ChatColor.translateAlternateColorCodes('&', msg);
+        return msg;
     }
 
     // -------- Config getters --------

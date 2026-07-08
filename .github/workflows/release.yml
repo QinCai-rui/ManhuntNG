@@ -60,9 +60,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build
-        run: mvn -B -ntp -Drevision=${{ steps.version.outputs.version }} package
-
       - name: Extract changelog for this version
         if: steps.version.outputs.prerelease == 'false'
         id: release_notes
@@ -71,12 +68,17 @@ jobs:
           awk "/^## ${VERSION}$/{flag=1; next} /^## /{flag=0} flag" CHANGELOG.md > changelog-snippet.md
           if [ ! -s changelog-snippet.md ]; then
             echo "found=false" >> "$GITHUB_OUTPUT"
+            echo "No changelog found for version ${VERSION} in CHANGELOG.md"
+            exit 1
           else
             echo "found=true" >> "$GITHUB_OUTPUT"
             echo 'changelog<<EOF' >> "$GITHUB_OUTPUT"
             cat changelog-snippet.md >> "$GITHUB_OUTPUT"
             echo 'EOF' >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Build
+        run: mvn -B -ntp -Drevision=${{ steps.version.outputs.version }} package
 
       - name: Create release
         id: create_release

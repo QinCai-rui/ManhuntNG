@@ -159,7 +159,7 @@ public class GameListener implements Listener {
         if (match.getState() != GameState.RUNNING && match.getState() != GameState.HEADSTART) return;
         if (!event.getPlayer().getUniqueId().equals(match.getRunnerUuid())) return;
 
-        plugin.getUiManager().sendToAll("§eRunner has disconnected — pausing game!");
+        plugin.getUiManager().sendToAll("<yellow>Runner has disconnected — pausing game!");
         plugin.getGameManager().pauseGame();
     }
 
@@ -289,7 +289,7 @@ public class GameListener implements Listener {
                 if (match.getState() == GameState.RUNNING) {
                     plugin.getTrackerManager().giveCompassToPlayer(player);
                 }
-                plugin.getUiManager().sendToAll("§e" + player.getName() + " has respawned!");
+                plugin.getUiManager().sendToAll("<yellow>" + player.getName() + " has respawned!");
             }, 1L);
         }
     }
