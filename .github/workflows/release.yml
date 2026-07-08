@@ -45,7 +45,7 @@ jobs:
             LATEST_TAG="$(gh release view --json tagName --jq .tagName 2>/dev/null || echo 'v0.0.0')"
             LATEST_TAG="${LATEST_TAG#v}"
             IFS='.' read -r X Y Z <<< "$LATEST_TAG"
-            Z=$((Z + 1))
+            Z=$((10#$Z + 1))
             echo "version=${X}.${Y}.${Z}-SNAPSHOT+${{ github.run_number }}-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
             echo "prerelease=true" >> "$GITHUB_OUTPUT"
           fi
