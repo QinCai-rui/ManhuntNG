@@ -340,12 +340,6 @@ public class GameListener implements Listener {
             }
             return;
         }
-            if (event.getTo() == null) return;
-            if (plugin.getPlayerManager().isRunner(uuid) || plugin.getPlayerManager().isHunter(uuid)) {
-                event.setTo(event.getFrom());
-            }
-            return;
-        }
 
         // Freeze movement during PRE_HUNT
         if (match.getState() == GameState.PRE_HUNT) {
