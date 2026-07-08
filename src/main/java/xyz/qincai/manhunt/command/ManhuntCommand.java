@@ -460,6 +460,8 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
                     "Click to force start", "manhunt.admin");
             helpEntry(sender, "manhunt reload", "Reload configuration",
                     "Click to reload", "manhunt.admin");
+            helpEntry(sender, "manhunt debug", "Show debug information",
+                    "Click to show debug info", "manhunt.admin");
         }
 
         sender.sendMessage(Component.empty());
