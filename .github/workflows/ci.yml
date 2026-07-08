@@ -6,7 +6,13 @@ env:
 on:
   push:
     branches: ["**"]
+    paths-ignore:
+      - "assets/**"
+      - "README.md"
   pull_request:
+    paths-ignore:
+      - "assets/**"
+      - "README.md"
 
 permissions:
   contents: read

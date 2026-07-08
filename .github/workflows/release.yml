@@ -6,6 +6,9 @@ env:
 on:
   push:
     branches: ["main"]
+    paths-ignore:
+      - "assets/**"
+      - "README.md"
   workflow_dispatch:
     inputs:
       version:
