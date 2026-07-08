@@ -1,5 +1,7 @@
 package xyz.qincai.manhunt.game;
 
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.GameRule;
@@ -11,6 +13,7 @@ import org.bukkit.entity.Player;
 import xyz.qincai.manhunt.ManhuntNG;
 import xyz.qincai.manhunt.player.PlayerRole;
 
+import java.time.Duration;
 import java.util.Iterator;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -60,11 +63,11 @@ public class GameManager {
 
         // Must have runner + hunters selected
         if (match.getRunnerUuid() == null) {
-            plugin.getUiManager().broadcastMessage("§cNo runner selected!");
+            plugin.getUiManager().broadcastMessage("<red>No runner selected!");
             return;
         }
         if (match.getHunterUuids().isEmpty()) {
-            plugin.getUiManager().broadcastMessage("§cNo hunters selected!");
+            plugin.getUiManager().broadcastMessage("<red>No hunters selected!");
             return;
         }
 
@@ -118,7 +121,11 @@ public class GameManager {
             for (UUID uuid : match.getHunterUuids()) {
                 Player player = Bukkit.getPlayer(uuid);
                 if (player != null) {
-                    player.sendTitle("§e" + current, "§7Game starting in...", 0, 25, 0);
+                    player.showTitle(Title.title(
+                        MiniMessage.miniMessage().deserialize("<yellow>" + current),
+                        MiniMessage.miniMessage().deserialize("<gray>Game starting in..."),
+                        Title.Times.times(Duration.ZERO, Duration.ofMillis(1250), Duration.ZERO)
+                    ));
                 }
             }
 
@@ -126,7 +133,11 @@ public class GameManager {
             if (match.getRunnerUuid() != null) {
                 Player runner = Bukkit.getPlayer(match.getRunnerUuid());
                 if (runner != null) {
-                    runner.sendTitle("§e" + current, "§7Game starting in...", 0, 25, 0);
+                    runner.showTitle(Title.title(
+                        MiniMessage.miniMessage().deserialize("<yellow>" + current),
+                        MiniMessage.miniMessage().deserialize("<gray>Game starting in..."),
+                        Title.Times.times(Duration.ZERO, Duration.ofMillis(1250), Duration.ZERO)
+                    ));
                 }
             }
 
@@ -144,7 +155,7 @@ public class GameManager {
         World gameWorld = match.getGameWorld();
         if (gameWorld == null) {
             // World creation failed -> abort
-            plugin.getUiManager().broadcastMessage("§cFailed to create game world!");
+            plugin.getUiManager().broadcastMessage("<red>Failed to create game world!");
             match.setState(GameState.WAITING);
             return;
         }
@@ -189,15 +200,15 @@ public class GameManager {
             plugin.getUiManager().startUIUpdates();
             plugin.getPotionEffectManager().applyEffects();
 
-            plugin.getUiManager().sendTitle("§cThe Hunt Has Begun!", "§7Runner is on the loose!");
-            plugin.getUiManager().sendToAll("§aThe hunt has started! (Force started)");
+            plugin.getUiManager().sendTitle("<red>The Hunt Has Begun!", "<gray>Runner is on the loose!");
+            plugin.getUiManager().sendToAll("<green>The hunt has started! (Force started)");
         } else {
             // Normal start -> PRE_HUNT phase
             match.setState(GameState.PRE_HUNT);
             unfreezeHorizontalAllPlayers(); // Runner & hunters frozen horizontally but invulnerable
 
-            plugin.getUiManager().sendTitle("§6Pre-Hunt", "§7Runner must damage a hunter to start the hunt");
-            plugin.getUiManager().sendToAll("§ePre-Hunt phase! The runner must punch any hunter to start the hunt.");
+            plugin.getUiManager().sendTitle("<gold>Pre-Hunt", "<gray>Runner must damage a hunter to start the hunt");
+            plugin.getUiManager().sendToAll("<yellow>Pre-Hunt phase! The runner must punch any hunter to start the hunt.");
         }
     }
 
@@ -238,14 +249,14 @@ public class GameManager {
         for (UUID uuid : match.getHunterUuids()) {
             Player player = Bukkit.getPlayer(uuid);
             if (player != null) {
-                player.sendTitle(
-                    plugin.getConfigManager().getMessage("headstart.hunter-title"),
-                    plugin.getConfigManager().getMessage("headstart.hunter-subtitle", "{duration}", String.valueOf(initialDuration)),
-                    0, 40, 10
-                );
+                player.showTitle(Title.title(
+                    MiniMessage.miniMessage().deserialize(plugin.getConfigManager().getMessage("headstart.hunter-title")),
+                    MiniMessage.miniMessage().deserialize(plugin.getConfigManager().getMessage("headstart.hunter-subtitle", "{duration}", String.valueOf(initialDuration))),
+                    Title.Times.times(Duration.ZERO, Duration.ofMillis(2000), Duration.ofMillis(500))
+                ));
             }
         }
-        plugin.getUiManager().sendToAll("§eHead start! Runner has §c" + initialDuration + "§e seconds to run!");
+        plugin.getUiManager().sendToAll("<yellow>Head start! Runner has <red>" + initialDuration + "<yellow> seconds to run!");
 
         headstartTaskId = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             if (match.getState() != GameState.HEADSTART) {
@@ -268,7 +279,11 @@ public class GameManager {
             for (UUID uuid : match.getHunterUuids()) {
                 Player player = Bukkit.getPlayer(uuid);
                 if (player != null) {
-                    player.sendTitle("§c" + current, "§7You are frozen!", 0, 25, 0);
+                    player.showTitle(Title.title(
+                        MiniMessage.miniMessage().deserialize("<red>" + current),
+                        MiniMessage.miniMessage().deserialize("<gray>You are frozen!"),
+                        Title.Times.times(Duration.ZERO, Duration.ofMillis(1250), Duration.ZERO)
+                    ));
                 }
             }
 
@@ -276,7 +291,11 @@ public class GameManager {
             if (match.getRunnerUuid() != null) {
                 Player runner = Bukkit.getPlayer(match.getRunnerUuid());
                 if (runner != null) {
-                    runner.sendTitle("§e" + current, "§7Head start remaining", 0, 25, 0);
+                    runner.showTitle(Title.title(
+                        MiniMessage.miniMessage().deserialize("<yellow>" + current),
+                        MiniMessage.miniMessage().deserialize("<gray>Head start remaining"),
+                        Title.Times.times(Duration.ZERO, Duration.ofMillis(1250), Duration.ZERO)
+                    ));
                 }
             }
 
@@ -321,7 +340,7 @@ public class GameManager {
         plugin.getUiManager().startUIUpdates();
         plugin.getPotionEffectManager().applyEffects();
 
-        plugin.getUiManager().sendTitle("§cThe Hunt Has Begun!", "§7Runner is on the loose!");
+        plugin.getUiManager().sendTitle("<red>The Hunt Has Begun!", "<gray>Runner is on the loose!");
         plugin.getUiManager().sendToAll(plugin.getConfigManager().getMessage("headstart.ended"));
     }
 
@@ -390,8 +409,8 @@ public class GameManager {
         plugin.getUiManager().startUIUpdates();
         plugin.getPotionEffectManager().applyEffects();
 
-        plugin.getUiManager().sendTitle("§cThe Hunt Has Begun!", "§7Runner is on the loose!");
-        plugin.getUiManager().sendToAll("§aThe hunt has started!");
+        plugin.getUiManager().sendTitle("<red>The Hunt Has Begun!", "<gray>Runner is on the loose!");
+        plugin.getUiManager().sendToAll("<green>The hunt has started!");
     }
 
     /*
@@ -444,8 +463,8 @@ public class GameManager {
         plugin.getUiManager().stopUIUpdates();
         plugin.getPotionEffectManager().clearEffects();
 
-        plugin.getUiManager().sendTitle("§6Runner Wins!", "§7The Ender Dragon has been defeated!");
-        plugin.getUiManager().broadcastMessage("§6§lThe Runner has won the game!");
+        plugin.getUiManager().sendTitle("<gold>Runner Wins!", "<gray>The Ender Dragon has been defeated!");
+        plugin.getUiManager().broadcastMessage("<gold><bold>The Runner has won the game!");
 
         unfreezeAllPlayers();
         plugin.getWorldManager().teleportToMainWorld();
@@ -474,8 +493,8 @@ public class GameManager {
         plugin.getUiManager().stopUIUpdates();
         plugin.getPotionEffectManager().clearEffects();
         
-        plugin.getUiManager().sendTitle("§cHunters Win!", "§7The Runner has been eliminated!");
-        plugin.getUiManager().broadcastMessage("§c§lThe Hunters have won the game!");
+        plugin.getUiManager().sendTitle("<red>Hunters Win!", "<gray>The Runner has been eliminated!");
+        plugin.getUiManager().broadcastMessage("<red><bold>The Hunters have won the game!");
 
         unfreezeAllPlayers();
         plugin.getWorldManager().teleportToMainWorld();
@@ -660,7 +679,7 @@ public class GameManager {
         clearMobTargets();
 
         plugin.getUiManager().showPauseTitle();
-        plugin.getUiManager().sendToAll("§eGame has been paused!");
+        plugin.getUiManager().sendToAll("<yellow>Game has been paused!");
     }
 
     /*
@@ -703,8 +722,8 @@ public class GameManager {
         }
 
         plugin.getUiManager().hidePauseTitle();
-        plugin.getUiManager().sendTitle("§aGame Resumed", "§7The game has been resumed");
-        plugin.getUiManager().sendToAll("§aGame has been resumed!");
+        plugin.getUiManager().sendTitle("<green>Game Resumed", "<gray>The game has been resumed");
+        plugin.getUiManager().sendToAll("<green>Game has been resumed!");
 
         return true;
     }

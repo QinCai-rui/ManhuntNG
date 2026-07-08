@@ -1,5 +1,6 @@
 package xyz.qincai.manhunt.tracker;
 
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -154,8 +155,8 @@ public class TrackerManager {
                         + envName + ". Compass for " + hunter.getName() + " will not update.");
 
                 // Send message to hunter
-                hunter.sendMessage("§cTracking unavailable: Runner has not entered the "
-                        + envName + " yet. Check server console for more info.");
+                hunter.sendMessage(MiniMessage.miniMessage().deserialize("<red>Tracking unavailable: Runner has not entered the "
+                        + envName + " yet. Check server console for more info."));
 
                 // Disable compass target
                 CompassMeta meta = (CompassMeta) compass.getItemMeta();
