@@ -113,7 +113,7 @@ By default, your messages are only visible to your teammates, unless you are a r
 
 Runner tracking is live within the same dimension, updates last‑known locations correctly across dimensions, and automatically disables the compass when data isn’t available.
 
-### Match Lifecycle
+### Match Pausing
 
 The pause/resume system freezes movement (including camera angle), world time, block & entity interactions, furnace activity, and crafting (mob AI freeze: TODO). Matches also pause automatically whenever the runner disconnects.
 
