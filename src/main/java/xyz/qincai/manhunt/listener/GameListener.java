@@ -203,13 +203,13 @@ public class GameListener implements Listener {
                             event.getDrops().remove(item);
                         }
                     }
+                }
 
-                    if (plugin.getConfigManager().isHunterKeepOffhand()) {
-                        ItemStack offhand = player.getInventory().getItemInOffHand();
-                        if (offhand != null && offhand.getType() != Material.AIR) {
-                            savedOffhand.put(uuid, offhand.clone());
-                            event.getDrops().remove(offhand);
-                        }
+                if (plugin.getConfigManager().isHunterKeepOffhand()) {
+                    ItemStack offhand = player.getInventory().getItemInOffHand();
+                    if (offhand != null && offhand.getType() != Material.AIR) {
+                        savedOffhand.put(uuid, offhand.clone());
+                        event.getDrops().remove(offhand);
                     }
                 }
             }
