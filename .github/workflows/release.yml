@@ -65,7 +65,7 @@ jobs:
         id: release_notes
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          awk "/^## ${VERSION}$/{flag=1; next} /^## /{flag=0} flag" CHANGELOG.md > changelog-snippet.md
+          awk "/^## \\[${VERSION}\\]/{flag=1; next} /^## /{flag=0} flag" CHANGELOG.md > changelog-snippet.md
           if [ ! -s changelog-snippet.md ]; then
             echo "found=false" >> "$GITHUB_OUTPUT"
             echo "No changelog found for version ${VERSION} in CHANGELOG.md"
