@@ -17,7 +17,7 @@ A (n *almost*) feature complete Minecraft Manhunt plugin for PaperMC. ManhuntNG 
 
 ## Screenshots
 
-![ManhuntNG help message (`/manhunt help`)](assets/screenshots/help-page.png)
+![ManhuntNG help message (`/manhunt help`)](https://raw.githubusercontent.com/QinCai-rui/ManhuntNG/refs/heads/main/assets/screenshots/help-page.png)
 
 ---
 
