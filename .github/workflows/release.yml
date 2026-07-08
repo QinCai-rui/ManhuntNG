@@ -67,12 +67,13 @@ jobs:
           VERSION="${{ steps.version.outputs.version }}"
           awk "/^## ${VERSION}$/{flag=1; next} /^## /{flag=0} flag" CHANGELOG.md > changelog-snippet.md
           if [ ! -s changelog-snippet.md ]; then
-            echo "Warning: No changelog entry found for version ${VERSION}" >&2
-            echo "No changelog provided." > changelog-snippet.md
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=true" >> "$GITHUB_OUTPUT"
+            echo 'changelog<<EOF' >> "$GITHUB_OUTPUT"
+            cat changelog-snippet.md >> "$GITHUB_OUTPUT"
+            echo 'EOF' >> "$GITHUB_OUTPUT"
           fi
-          echo 'changelog<<EOF' >> "$GITHUB_OUTPUT"
-          cat changelog-snippet.md >> "$GITHUB_OUTPUT"
-          echo 'EOF' >> "$GITHUB_OUTPUT"
 
       - name: Create release
         env:
@@ -82,12 +83,14 @@ jobs:
           F="target/ManhuntNG-${V}.jar"
           if [ "${{ steps.version.outputs.prerelease }}" = "true" ]; then
             gh release create "$V" "$F" --title "$V" --generate-notes --prerelease
-          else
+          elif [ -f changelog-snippet.md ]; then
             gh release create "$V" "$F" --title "$V" -F changelog-snippet.md
+          else
+            gh release create "$V" "$F" --title "$V" --generate-notes
           fi
 
       - name: Publish to Modrinth
-        if: steps.version.outputs.prerelease == 'false'
+        if: steps.version.outputs.prerelease == 'false' && steps.release_notes.outputs.found == 'true'
         uses: cloudnode-pro/modrinth-publish@v2
         with:
           token: ${{ secrets.MODRINTH_TOKEN }}
