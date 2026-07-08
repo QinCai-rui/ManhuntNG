@@ -24,6 +24,11 @@ public class ChatCommand implements CommandExecutor {
             return true;
         }
 
+        if (!player.hasPermission("manhunt.play")) {
+            player.sendMessage(Component.text("You don't have permission!", NamedTextColor.RED));
+            return true;
+        }
+
         if (args.length == 0) {
             sender.sendMessage(Component.text("Usage: /" + label + " <message>", NamedTextColor.RED));
             return true;
@@ -35,6 +40,10 @@ public class ChatCommand implements CommandExecutor {
         }
 
         String message = String.join(" ", args);
+        if (message.trim().isEmpty()) {
+            player.sendMessage(Component.text("Message cannot be empty!", NamedTextColor.RED));
+            return true;
+        }
 
         if (global) {
             plugin.getChatManager().sendGlobalMessage(player, message);

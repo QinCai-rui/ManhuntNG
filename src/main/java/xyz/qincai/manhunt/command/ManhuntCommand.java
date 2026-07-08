@@ -437,11 +437,15 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
                         .append(Component.text("GLOBAL", NamedTextColor.GOLD)));
             }
             case "team", "t" -> {
-                plugin.getChatManager().setChatMode(player.getUniqueId(), ChatMode.TEAM);
-                player.sendMessage(Component.text("Chat mode set to ", NamedTextColor.GRAY)
-                        .append(Component.text("TEAM", NamedTextColor.GREEN)));
                 if (plugin.getChatManager().isTeamSinglePlayer(player.getUniqueId())) {
-                    player.sendMessage(Component.text("Note: your messages will go to global since you're the only one on your team.", NamedTextColor.YELLOW));
+                    plugin.getChatManager().setChatMode(player.getUniqueId(), ChatMode.GLOBAL);
+                    player.sendMessage(Component.text("Chat mode set to ", NamedTextColor.GRAY)
+                            .append(Component.text("GLOBAL", NamedTextColor.GOLD)));
+                    player.sendMessage(Component.text("Cannot use team chat - you're the only one on your team.", NamedTextColor.YELLOW));
+                } else {
+                    plugin.getChatManager().setChatMode(player.getUniqueId(), ChatMode.TEAM);
+                    player.sendMessage(Component.text("Chat mode set to ", NamedTextColor.GRAY)
+                            .append(Component.text("TEAM", NamedTextColor.GREEN)));
                 }
             }
             default -> player.sendMessage(Component.text("Usage: /manhunt chat <global|team>", NamedTextColor.RED));
