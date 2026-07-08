@@ -154,7 +154,7 @@ public class GameListener implements Listener {
             Component vanilla = event.deathMessage();
             if (vanilla != null) {
                 event.deathMessage(Component.text()
-                        .append(Component.text(player.getName() + " (Runner) ", NamedTextColor.RED))
+                        .append(Component.text("(Runner) ", NamedTextColor.RED))
                         .append(vanilla.colorIfAbsent(NamedTextColor.WHITE))
                         .build());
             }
