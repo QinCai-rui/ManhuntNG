@@ -36,16 +36,23 @@ jobs:
           for img in assets/modrinth/*.{png,jpg,jpeg,gif,webp,svg}; do
             [ -f "$img" ] || continue
             TITLE="$(basename "${img%.*}")"
+            EXT="${img##*.}"
 
             if echo "$GALLERY" | jq -e --arg t "$TITLE" 'any(.title == $t)' > /dev/null 2>&1; then
               echo "Skipping $(basename "$img") — already in gallery"
             else
               echo "Uploading $(basename "$img")..."
-              curl -fsS -X POST "https://api.modrinth.com/v2/project/${{ vars.MODRINTH_ID }}/gallery" \
+              case "$EXT" in
+                jpg|jpeg) CT="image/jpeg" ;;
+                png)      CT="image/png" ;;
+                gif)      CT="image/gif" ;;
+                webp)     CT="image/webp" ;;
+                svg)      CT="image/svg+xml" ;;
+              esac
+              curl -fsS -X POST "https://api.modrinth.com/v2/project/${{ vars.MODRINTH_ID }}/gallery?ext=${EXT}&featured=false&title=${TITLE}" \
                 -H "Authorization: Bearer ${{ secrets.MODRINTH_TOKEN }}" \
-                -F "file=@$img" \
-                -F "title=$TITLE" \
-                -F "featured=false" \
+                -H "Content-Type: ${CT}" \
+                --data-binary "@$img" \
                 && echo "Uploaded $(basename "$img")"
             fi
           done
