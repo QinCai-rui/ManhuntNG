@@ -35,6 +35,18 @@ public class GameManager {
         return match;
     }
 
+    private void showCountdownTitle(Player player, String title, String subtitle, long stayMs) {
+        showCountdownTitle(player, title, subtitle, stayMs, 0);
+    }
+
+    private void showCountdownTitle(Player player, String title, String subtitle, long stayMs, long fadeOutMs) {
+        player.showTitle(Title.title(
+            MiniMessage.miniMessage().deserialize(title),
+            MiniMessage.miniMessage().deserialize(subtitle),
+            Title.Times.times(Duration.ZERO, Duration.ofMillis(stayMs), Duration.ofMillis(fadeOutMs))
+        ));
+    }
+
     /*
      * Resets all timing-related fields for a new match.
      * Called when starting or force-starting a game.
@@ -121,11 +133,7 @@ public class GameManager {
             for (UUID uuid : match.getHunterUuids()) {
                 Player player = Bukkit.getPlayer(uuid);
                 if (player != null) {
-                    player.showTitle(Title.title(
-                        MiniMessage.miniMessage().deserialize("<yellow>" + current),
-                        MiniMessage.miniMessage().deserialize("<gray>Game starting in..."),
-                        Title.Times.times(Duration.ZERO, Duration.ofMillis(1250), Duration.ZERO)
-                    ));
+                    showCountdownTitle(player, "<yellow>" + current, "<gray>Game starting in...", 1250);
                 }
             }
 
@@ -133,11 +141,7 @@ public class GameManager {
             if (match.getRunnerUuid() != null) {
                 Player runner = Bukkit.getPlayer(match.getRunnerUuid());
                 if (runner != null) {
-                    runner.showTitle(Title.title(
-                        MiniMessage.miniMessage().deserialize("<yellow>" + current),
-                        MiniMessage.miniMessage().deserialize("<gray>Game starting in..."),
-                        Title.Times.times(Duration.ZERO, Duration.ofMillis(1250), Duration.ZERO)
-                    ));
+                    showCountdownTitle(runner, "<yellow>" + current, "<gray>Game starting in...", 1250);
                 }
             }
 
@@ -249,11 +253,10 @@ public class GameManager {
         for (UUID uuid : match.getHunterUuids()) {
             Player player = Bukkit.getPlayer(uuid);
             if (player != null) {
-                player.showTitle(Title.title(
-                    MiniMessage.miniMessage().deserialize(plugin.getConfigManager().getMessage("headstart.hunter-title")),
-                    MiniMessage.miniMessage().deserialize(plugin.getConfigManager().getMessage("headstart.hunter-subtitle", "{duration}", String.valueOf(initialDuration))),
-                    Title.Times.times(Duration.ZERO, Duration.ofMillis(2000), Duration.ofMillis(500))
-                ));
+                showCountdownTitle(player,
+                    plugin.getConfigManager().getMessage("headstart.hunter-title"),
+                    plugin.getConfigManager().getMessage("headstart.hunter-subtitle", "{duration}", String.valueOf(initialDuration)),
+                    2000, 500);
             }
         }
         plugin.getUiManager().sendToAll("<yellow>Head start! Runner has <red>" + initialDuration + "<yellow> seconds to run!");
@@ -279,11 +282,7 @@ public class GameManager {
             for (UUID uuid : match.getHunterUuids()) {
                 Player player = Bukkit.getPlayer(uuid);
                 if (player != null) {
-                    player.showTitle(Title.title(
-                        MiniMessage.miniMessage().deserialize("<red>" + current),
-                        MiniMessage.miniMessage().deserialize("<gray>You are frozen!"),
-                        Title.Times.times(Duration.ZERO, Duration.ofMillis(1250), Duration.ZERO)
-                    ));
+                    showCountdownTitle(player, "<red>" + current, "<gray>You are frozen!", 1250);
                 }
             }
 
@@ -291,11 +290,7 @@ public class GameManager {
             if (match.getRunnerUuid() != null) {
                 Player runner = Bukkit.getPlayer(match.getRunnerUuid());
                 if (runner != null) {
-                    runner.showTitle(Title.title(
-                        MiniMessage.miniMessage().deserialize("<yellow>" + current),
-                        MiniMessage.miniMessage().deserialize("<gray>Head start remaining"),
-                        Title.Times.times(Duration.ZERO, Duration.ofMillis(1250), Duration.ZERO)
-                    ));
+                    showCountdownTitle(runner, "<yellow>" + current, "<gray>Head start remaining", 1250);
                 }
             }
 
