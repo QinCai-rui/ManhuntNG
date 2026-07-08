@@ -34,6 +34,7 @@ A (n *almost*) feature complete Minecraft Manhunt plugin for PaperMC. ManhuntNG 
 ### Gameplay
 
 - Fully automated match (`"lobby"` -> `countdown` -> `pre‑hunt` -> `running` -> `finish`)
+- Team/Global chat toggle. By default, hunters' messages are only visible by other hunters.
 - Runner/hunter role assignment
 - Automatic respawn handling for hunters
 - Configurable inventory restoration (keepinventory, or keeparmour & keepoffhand) on respawn
@@ -104,7 +105,9 @@ I made this plugin because I wanted a more accurate tracking system for Minecraf
 
 ManhuntNG is designed to be simple to set up and use, and also having advanced features for those who want more control over their Manhunt games.
 
-TODO: add teamchat support
+### Team Chat
+
+By default, your messages are only visible to your teammates, unless you are a runner (because as of right now there is no multi runner support)
 
 ### Better Tracking
 
