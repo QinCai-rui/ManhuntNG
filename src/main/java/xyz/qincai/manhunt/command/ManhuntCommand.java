@@ -13,6 +13,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import xyz.qincai.manhunt.ManhuntNG;
+import xyz.qincai.manhunt.chat.ChatMode;
 import xyz.qincai.manhunt.game.GameState;
 import xyz.qincai.manhunt.game.Match;
 import xyz.qincai.manhunt.player.PlayerRole;
@@ -51,6 +52,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             case "owner" -> handleOwner(sender, args);
             case "seed" -> handleSeed(sender, args);
             case "world" -> handleWorld(sender, args);
+            case "chat" -> handleChat(sender, args);
             case "debug" -> new ManhuntDebugCommand(plugin).onCommand(sender, null, null, args);
             default -> {
                 sendHelp(sender);
@@ -407,6 +409,50 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    private boolean handleChat(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(Component.text("Only players can use this command!", NamedTextColor.RED));
+            return true;
+        }
+
+        if (args.length < 2) {
+            ChatMode mode = plugin.getChatManager().getChatMode(player.getUniqueId());
+            player.sendMessage(Component.text("Current chat mode: ", NamedTextColor.GRAY)
+                    .append(Component.text(mode.name(),
+                            mode == ChatMode.GLOBAL ? NamedTextColor.GOLD : NamedTextColor.GREEN)));
+            player.sendMessage(Component.text("Usage: /manhunt chat <global|team>", NamedTextColor.GRAY));
+            return true;
+        }
+
+        PlayerRole role = plugin.getPlayerManager().getRole(player.getUniqueId());
+        if (role == PlayerRole.SPECTATOR) {
+            player.sendMessage(Component.text("Spectators can only use global chat!", NamedTextColor.RED));
+            return true;
+        }
+
+        switch (args[1].toLowerCase()) {
+            case "global", "g" -> {
+                plugin.getChatManager().setChatMode(player.getUniqueId(), ChatMode.GLOBAL);
+                player.sendMessage(Component.text("Chat mode set to ", NamedTextColor.GRAY)
+                        .append(Component.text("GLOBAL", NamedTextColor.GOLD)));
+            }
+            case "team", "t" -> {
+                if (plugin.getChatManager().isTeamSinglePlayer(player.getUniqueId())) {
+                    plugin.getChatManager().setChatMode(player.getUniqueId(), ChatMode.GLOBAL);
+                    player.sendMessage(Component.text("Chat mode set to ", NamedTextColor.GRAY)
+                            .append(Component.text("GLOBAL", NamedTextColor.GOLD)));
+                    player.sendMessage(Component.text("Cannot use team chat - you're the only one on your team.", NamedTextColor.YELLOW));
+                } else {
+                    plugin.getChatManager().setChatMode(player.getUniqueId(), ChatMode.TEAM);
+                    player.sendMessage(Component.text("Chat mode set to ", NamedTextColor.GRAY)
+                            .append(Component.text("TEAM", NamedTextColor.GREEN)));
+                }
+            }
+            default -> player.sendMessage(Component.text("Usage: /manhunt chat <global|team>", NamedTextColor.RED));
+        }
+        return true;
+    }
+
     private void sendHelp(CommandSender sender) {
         GameState state = plugin.getGameManager().getMatch().getState();
         String stateName = switch (state) {
@@ -435,6 +481,12 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
                 "Click to pause", "manhunt.play");
         helpEntry(sender, "manhunt resume", "Resume the game (owner only)",
                 "Click to resume", "manhunt.play");
+        helpEntry(sender, "manhunt chat <global|team>", "Switch chat mode",
+                "Click to switch chat mode", "manhunt.play");
+        helpEntry(sender, "g <message>", "Send a global message",
+                "Click to send global message", "manhunt.play");
+        helpEntry(sender, "t <message>", "Send a team message",
+                "Click to send team message", "manhunt.play");
 
         if (sender.hasPermission("manhunt.admin")) {
             sender.sendMessage(Component.empty());
@@ -499,6 +551,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
         if (args.length == 1) {
             completions.add("join");
             completions.add("leave");
+            completions.add("chat");
             if (sender.hasPermission("manhunt.admin")) {
                 completions.add("start");
                 completions.add("stop");
@@ -519,6 +572,11 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
 
         if (args.length == 2) {
             String sub = args[0].toLowerCase();
+            if (sub.equals("chat")) {
+                completions.add("global");
+                completions.add("team");
+                return filterPartial(args[1], completions);
+            }
             if (sub.equals("runner") || sub.equals("hunter") || sub.equals("owner") || sub.equals("remove")) {
                 for (Player player : Bukkit.getOnlinePlayers()) {
                     completions.add(player.getName());
