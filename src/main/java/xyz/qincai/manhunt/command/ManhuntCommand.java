@@ -75,14 +75,26 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        if (plugin.getGameManager().isGameActive()) {
-            player.sendMessage(Component.text("A game is already in progress!", NamedTextColor.RED));
+        Match match = plugin.getGameManager().getMatch();
+
+        if (match.isParticipant(player.getUniqueId())) {
+            player.sendMessage(Component.text("You have already joined!", NamedTextColor.RED));
             return true;
         }
 
         plugin.getPlayerManager().setRole(player.getUniqueId(), PlayerRole.SPECTATOR);
-        plugin.getGameManager().getMatch().addSpectator(player.getUniqueId());
-        player.sendMessage(Component.text("You joined the manhunt lobby!", NamedTextColor.GREEN));
+        match.addSpectator(player.getUniqueId());
+
+        if (plugin.getGameManager().isGameActive()) {
+            org.bukkit.World gameWorld = match.getGameWorld();
+            if (gameWorld != null) {
+                player.teleport(gameWorld.getSpawnLocation());
+            }
+            plugin.getUiManager().sendToAll("<green>" + player.getName() + " has joined the game!");
+            player.sendMessage(Component.text("You joined as a spectator!", NamedTextColor.GREEN));
+        } else {
+            player.sendMessage(Component.text("You joined the manhunt lobby!", NamedTextColor.GREEN));
+        }
         return true;
     }
 
@@ -92,12 +104,21 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        if (plugin.getGameManager().isGameActive()) {
-            player.sendMessage(Component.text("Cannot leave during an active game!", NamedTextColor.RED));
+        Match match = plugin.getGameManager().getMatch();
+
+        if (!match.isParticipant(player.getUniqueId())) {
+            player.sendMessage(Component.text("You are not in the game!", NamedTextColor.RED));
             return true;
         }
 
         plugin.getPlayerManager().removePlayerFromGame(player.getUniqueId());
+
+        if (plugin.getGameManager().isGameActive()) {
+            org.bukkit.World mainWorld = org.bukkit.Bukkit.getWorlds().get(0);
+            player.teleport(mainWorld.getSpawnLocation());
+            plugin.getUiManager().sendToAll("<yellow>" + player.getName() + " has left the game!");
+        }
+
         player.sendMessage(Component.text("You left the manhunt lobby.", NamedTextColor.YELLOW));
         return true;
     }
@@ -154,6 +175,12 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
         }
 
         Match match = plugin.getGameManager().getMatch();
+
+        if (!match.isParticipant(target.getUniqueId())) {
+            sender.sendMessage(Component.text(target.getName() + " has not joined the game!", NamedTextColor.RED));
+            return true;
+        }
+
         ManhuntGameMode gameMode = match.getGameMode();
         if (gameMode == ManhuntGameMode.NORMAL) {
             if (!match.getRunnerUuids().isEmpty()) {
@@ -167,9 +194,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        plugin.getPlayerManager().removePlayerFromGame(target.getUniqueId());
-        plugin.getPlayerManager().setRole(target.getUniqueId(), PlayerRole.RUNNER);
-        match.addRunner(target.getUniqueId());
+        plugin.getPlayerManager().applyRoleToPlayer(target, PlayerRole.RUNNER);
         sender.sendMessage(Component.text(target.getName(), NamedTextColor.AQUA)
                 .append(Component.text(" is now a Runner!", NamedTextColor.GREEN)));
         target.sendMessage(Component.text("You are now a Runner!", NamedTextColor.GREEN));
@@ -194,14 +219,19 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
+        Match match = plugin.getGameManager().getMatch();
+
+        if (!match.isParticipant(target.getUniqueId())) {
+            sender.sendMessage(Component.text(target.getName() + " has not joined the game!", NamedTextColor.RED));
+            return true;
+        }
+
         if (plugin.getGameManager().isGameActive()) {
             sender.sendMessage(Component.text("Cannot change roles during an active game!", NamedTextColor.RED));
             return true;
         }
 
-        plugin.getPlayerManager().removePlayerFromGame(target.getUniqueId());
-        plugin.getPlayerManager().setRole(target.getUniqueId(), PlayerRole.HUNTER);
-        plugin.getGameManager().getMatch().addHunter(target.getUniqueId());
+        plugin.getPlayerManager().applyRoleToPlayer(target, PlayerRole.HUNTER);
         sender.sendMessage(Component.text(target.getName(), NamedTextColor.AQUA)
                 .append(Component.text(" is now a Hunter!", NamedTextColor.GREEN)));
         target.sendMessage(Component.text("You are now a Hunter!", NamedTextColor.GREEN));
