@@ -8,6 +8,9 @@ import org.bukkit.potion.PotionEffectType;
 import xyz.qincai.manhunt.ManhuntNG;
 import xyz.qincai.manhunt.player.PlayerRole;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,7 +50,7 @@ public class ConfigManager {
         config = YamlConfiguration.loadConfiguration(configFile);
         messages = YamlConfiguration.loadConfiguration(messagesFile);
 
-        // merge missing keys from defaults (so that updates don't break old configs)
+        // Merge missing keys from defaults when version is bumped
         mergeWithDefaults("config.yml", config, configFile);
         mergeWithDefaults("messages.yml", messages, messagesFile);
 
@@ -304,6 +307,25 @@ public class ConfigManager {
             msg = msg.replace(replacements[i], replacements[i + 1]);
         }
         return msg;
+    }
+
+    /*
+     * Retrieves a message as a MiniMessage-deserialized Component.
+     */
+    public Component getMessageComponent(String key) {
+        return MiniMessage.miniMessage().deserialize(getMessage(key));
+    }
+
+    /*
+     * Retrieves a message as a Component with placeholder replacements.
+     */
+    public Component getMessageComponent(String key, String... replacements) {
+        String msg = messages.getString(key, key);
+        for (int i = 0; i < replacements.length - 1; i += 2) {
+            String escapedValue = MiniMessage.miniMessage().escapeTags(replacements[i + 1]);
+            msg = msg.replace(replacements[i], escapedValue);
+        }
+        return MiniMessage.miniMessage().deserialize(msg);
     }
 
     // -------- Config getters --------

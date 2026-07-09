@@ -81,7 +81,7 @@ public class GameListener implements Listener {
 
         UUID uuid = player.getUniqueId();
         if (now - pauseMessageCooldowns.getOrDefault(uuid, 0L) > 5000) {
-            player.sendMessage(Component.text("The game is paused — action blocked", NamedTextColor.GRAY));
+            player.sendMessage(plugin.getConfigManager().getMessageComponent("pause.blocked"));
             pauseMessageCooldowns.put(uuid, now);
         }
     }
@@ -208,10 +208,10 @@ public class GameListener implements Listener {
 
         // Only pause when EVERY runner or EVERY hunter has disconnected
         if (!anyRunnerOnline) {
-            plugin.getUiManager().sendToAll("<yellow>All runners have disconnected — pausing game!");
+            plugin.getUiManager().sendToAll(plugin.getConfigManager().getMessage("pause.runners-disconnected"));
             plugin.getGameManager().pauseGame();
         } else if (!anyHunterOnline) {
-            plugin.getUiManager().sendToAll("<yellow>All hunters have disconnected — pausing game!");
+            plugin.getUiManager().sendToAll(plugin.getConfigManager().getMessage("pause.hunters-disconnected"));
             plugin.getGameManager().pauseGame();
         }
     }
@@ -236,7 +236,7 @@ public class GameListener implements Listener {
             Component vanilla = event.deathMessage();
             if (vanilla != null) {
                 event.deathMessage(Component.text()
-                        .append(Component.text("(Runner) ", NamedTextColor.RED))
+                        .append(plugin.getConfigManager().getMessageComponent("death.runner-prefix"))
                         .append(vanilla.colorIfAbsent(NamedTextColor.WHITE))
                         .build());
             }
@@ -278,7 +278,7 @@ public class GameListener implements Listener {
             Component vanilla = event.deathMessage();
             if (vanilla != null) {
                 event.deathMessage(Component.text()
-                        .append(Component.text("(Hunter) ", NamedTextColor.GOLD))
+                        .append(plugin.getConfigManager().getMessageComponent("death.hunter-prefix"))
                         .append(vanilla.colorIfAbsent(NamedTextColor.WHITE))
                         .build());
             }
@@ -368,7 +368,7 @@ public class GameListener implements Listener {
                 if (match.getState() == GameState.RUNNING) {
                     plugin.getTrackerManager().giveCompassToPlayer(player);
                 }
-                plugin.getUiManager().sendToAll("<yellow>" + player.getName() + " has respawned!");
+                plugin.getUiManager().sendToAll(plugin.getConfigManager().getMessage("respawn.broadcast", "{player}", player.getName()));
             }, 1L);
         }
     }

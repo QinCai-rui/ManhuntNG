@@ -219,8 +219,10 @@ public class TrackerManager {
                         + ". Compass for " + hunter.getName() + " will not update.");
 
                 // Send message to hunter
-                hunter.sendMessage(MiniMessage.miniMessage().deserialize("<red>Tracking unavailable: " + runner.getName()
-                        + " has not entered the " + envName + " yet."));
+                hunter.sendMessage(MiniMessage.miniMessage().deserialize(
+                        plugin.getConfigManager().getMessage("tracker.unavailable",
+                                "{player}", runner.getName(),
+                                "{dimension}", envName)));
 
                 // Disable compass target
                 CompassMeta meta = (CompassMeta) compass.getItemMeta();

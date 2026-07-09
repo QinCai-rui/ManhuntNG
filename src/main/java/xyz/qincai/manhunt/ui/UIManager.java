@@ -2,6 +2,7 @@ package xyz.qincai.manhunt.ui;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
@@ -17,6 +18,7 @@ import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Score;
 import org.bukkit.scoreboard.Scoreboard;
 import xyz.qincai.manhunt.ManhuntNG;
+import xyz.qincai.manhunt.config.ConfigManager;
 import xyz.qincai.manhunt.game.GameState;
 import xyz.qincai.manhunt.game.Match;
 
@@ -35,6 +37,10 @@ public class UIManager {
 
     public UIManager(ManhuntNG plugin) {
         this.plugin = plugin;
+    }
+
+    private ConfigManager cfg() {
+        return plugin.getConfigManager();
     }
 
     public void init() {
@@ -95,10 +101,10 @@ public class UIManager {
     public void startUIUpdates() {
         stopUIUpdates();
         setupScoreboard();
-        if (plugin.getConfigManager().isActionBarEnabled()) {
+        if (cfg().isActionBarEnabled()) {
             actionBarTaskId = Bukkit.getScheduler().runTaskTimer(plugin, this::updateActionBar, 0L, 20L).getTaskId();
         }
-        if (plugin.getConfigManager().isScoreboardEnabled()) {
+        if (cfg().isScoreboardEnabled()) {
             scoreboardTaskId = Bukkit.getScheduler().runTaskTimer(plugin, this::updateScoreboard, 0L, 20L).getTaskId();
         }
     }
@@ -123,7 +129,8 @@ public class UIManager {
 
     private void setupScoreboard() {
         if (objective != null) return;
-        objective = scoreboard.registerNewObjective("manhunt", Criteria.DUMMY, Component.text("Manhunt", NamedTextColor.GOLD));
+        objective = scoreboard.registerNewObjective("manhunt", Criteria.DUMMY,
+                MiniMessage.miniMessage().deserialize(cfg().getMessage("scoreboard.title")));
         objective.setDisplaySlot(DisplaySlot.SIDEBAR);
     }
 
@@ -134,19 +141,19 @@ public class UIManager {
         int runnerCount = match.getRunnerUuids().size();
         if (runnerCount > 0) {
             if (runnerCount == 1) {
-                updateLine(0, "Runner: " + getRunnerName(match));
+                updateLine(0, cfg().getMessage("scoreboard.runner") + getRunnerName(match));
             } else {
-                updateLine(0, "Runners: " + runnerCount);
+                updateLine(0, cfg().getMessage("scoreboard.runners") + runnerCount);
             }
         } else {
-            updateLine(0, "Runner: None");
+            updateLine(0, cfg().getMessage("scoreboard.runner-none"));
         }
         updateLine(1, "");
-        updateLine(2, "Hunters: " + plugin.getPlayerManager().getAliveHunterCount());
+        updateLine(2, cfg().getMessage("scoreboard.hunters") + plugin.getPlayerManager().getAliveHunterCount());
         updateLine(3, " ");
-        updateLine(4, "Time: " + formatTime(match.getElapsedSeconds()));
+        updateLine(4, cfg().getMessage("scoreboard.time") + formatTime(match.getElapsedSeconds()));
         updateLine(5, "  ");
-        updateLine(6, "Dimension: " + getDimension(match));
+        updateLine(6, cfg().getMessage("scoreboard.dimension") + getDimension(match));
 
         for (UUID uuid : match.getHunterUuids()) {
             Player player = Bukkit.getPlayer(uuid);
@@ -185,13 +192,13 @@ public class UIManager {
     }
 
     private String getDimension(Match match) {
-        if (match.getRunnerUuid() == null) return "Overworld";
+        if (match.getRunnerUuid() == null) return cfg().getMessage("scoreboard.dim-overworld");
         Player runner = Bukkit.getPlayer(match.getRunnerUuid());
-        if (runner == null) return "Overworld";
+        if (runner == null) return cfg().getMessage("scoreboard.dim-overworld");
         return switch (runner.getWorld().getEnvironment()) {
-            case NETHER -> "Nether";
-            case THE_END -> "End";
-            default -> "Overworld";
+            case NETHER -> cfg().getMessage("scoreboard.dim-nether");
+            case THE_END -> cfg().getMessage("scoreboard.dim-end");
+            default -> cfg().getMessage("scoreboard.dim-overworld");
         };
     }
 
@@ -200,15 +207,19 @@ public class UIManager {
         if (match.getState() != GameState.RUNNING && match.getState() != GameState.HEADSTART && match.getState() != GameState.PAUSED) return;
 
         if (match.getState() == GameState.PAUSED) {
-            Component pausedBar = Component.text("\u23f8 PAUSED", NamedTextColor.GOLD);
+            Component pausedBar = MiniMessage.miniMessage().deserialize(cfg().getMessage("pause.action-bar"));
 
             // Show the pause-timeout countdown and who wins if it expires
-            if (plugin.getConfigManager().isPauseTimeoutEnabled()) {
+            if (cfg().isPauseTimeoutEnabled()) {
                 int remaining = match.getPauseTimeoutRemaining();
                 if (remaining >= 0) {
-                    String winner = match.isPauseTimeoutHuntersWin() ? "Hunters" : "Runner";
-                    pausedBar = pausedBar.append(Component.text(
-                            " — " + winner + " win in " + formatTime(remaining), NamedTextColor.RED));
+                    String winner = match.isPauseTimeoutHuntersWin()
+                            ? cfg().getMessage("pause.winner-hunters")
+                            : cfg().getMessage("pause.winner-runner");
+                    pausedBar = pausedBar.append(MiniMessage.miniMessage().deserialize(
+                            cfg().getMessage("pause.action-bar-timeout",
+                                    "{winner}", winner,
+                                    "{time}", formatTime(remaining))));
                 }
             }
 
@@ -225,9 +236,9 @@ public class UIManager {
 
         updatePhase();
 
-        Component actionBar = Component.text(currentPhase.getDisplay(), NamedTextColor.GOLD);
+        Component actionBar = Component.text(currentPhase.getDisplay(cfg()), NamedTextColor.GOLD);
 
-        boolean showDistance = plugin.getConfigManager().isTrackingShowDistance();
+        boolean showDistance = cfg().isTrackingShowDistance();
 
         for (UUID uuid : match.getHunterUuids()) {
             Player player = Bukkit.getPlayer(uuid);
@@ -240,32 +251,28 @@ public class UIManager {
                     if (trackedRunner != null) {
                         if (player.getWorld().equals(trackedRunner.getWorld())) {
                             int dist = (int) Math.round(player.getLocation().distance(trackedRunner.getLocation()));
-                            player.sendActionBar(
-                                    Component.text("Runner \u2014 ", NamedTextColor.GOLD)
-                                            .append(Component.text(dist + "m", NamedTextColor.WHITE))
-                            );
+                            player.sendActionBar(MiniMessage.miniMessage().deserialize(
+                                    cfg().getMessage("actionbar.runner-distance",
+                                            "{distance}", String.valueOf(dist))));
                         } else {
                             String portal = switch (trackedRunner.getWorld().getEnvironment()) {
-                                case NETHER -> "Nether Portal";
-                                case THE_END -> "End Portal";
-                                default -> "Nether Portal";
+                                case NETHER -> cfg().getMessage("actionbar.portal-nether");
+                                case THE_END -> cfg().getMessage("actionbar.portal-end");
+                                default -> cfg().getMessage("actionbar.portal-default");
                             };
                             Location lastLoc = plugin.getTrackerManager().getRunnerLastKnownLocation(
                                     trackedRunner.getUniqueId(),
                                     player.getWorld().getEnvironment());
                             if (lastLoc != null) {
                                 int dist = (int) Math.round(player.getLocation().distance(lastLoc));
-                                player.sendActionBar(
-                                        Component.text("Tracking ", NamedTextColor.GOLD)
-                                                .append(Component.text(portal, NamedTextColor.WHITE))
-                                                .append(Component.text(" \u2014 ", NamedTextColor.GOLD))
-                                                .append(Component.text(dist + "m", NamedTextColor.WHITE))
-                                );
+                                player.sendActionBar(MiniMessage.miniMessage().deserialize(
+                                        cfg().getMessage("actionbar.tracking",
+                                                "{portal}", portal,
+                                                "{distance}", String.valueOf(dist))));
                             } else {
-                                player.sendActionBar(
-                                        Component.text("Tracking ", NamedTextColor.GOLD)
-                                                .append(Component.text(portal, NamedTextColor.WHITE))
-                                );
+                                player.sendActionBar(MiniMessage.miniMessage().deserialize(
+                                        cfg().getMessage("actionbar.tracking-no-distance",
+                                                "{portal}", portal)));
                             }
                         }
                         continue;
@@ -285,8 +292,9 @@ public class UIManager {
 
     public void showPauseTitle() {
         Match match = plugin.getGameManager().getMatch();
-        Component titleComp = Component.text("GAME PAUSED", NamedTextColor.GOLD, net.kyori.adventure.text.format.TextDecoration.BOLD);
-        Component subtitleComp = Component.text("Use /manhunt resume to continue", NamedTextColor.GRAY);
+        Component titleComp = MiniMessage.miniMessage().deserialize(cfg().getMessage("pause.title"))
+                .decoration(TextDecoration.BOLD, true);
+        Component subtitleComp = MiniMessage.miniMessage().deserialize(cfg().getMessage("pause.subtitle"));
         Title titleObj = Title.title(titleComp, subtitleComp, Title.Times.times(
                 Duration.ofMillis(500), Duration.ofHours(24), Duration.ofMillis(500)));
 

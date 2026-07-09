@@ -20,28 +20,29 @@ public class ChatCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(Component.text("Only players can use this command!", NamedTextColor.RED));
+            sender.sendMessage(plugin.getConfigManager().getMessageComponent("error.only-players"));
             return true;
         }
 
         if (!player.hasPermission("manhunt.play")) {
-            player.sendMessage(Component.text("You don't have permission!", NamedTextColor.RED));
+            player.sendMessage(plugin.getConfigManager().getMessageComponent("error.no-permission"));
             return true;
         }
 
         if (args.length == 0) {
-            sender.sendMessage(Component.text("Usage: /" + label + " <message>", NamedTextColor.RED));
+            sender.sendMessage(plugin.getConfigManager().getMessageComponent("usage.chat-command",
+                    "{label}", label));
             return true;
         }
 
         if (!plugin.getGameManager().isGameActive()) {
-            player.sendMessage(Component.text("No active game!", NamedTextColor.RED));
+            player.sendMessage(plugin.getConfigManager().getMessageComponent("error.no-active-game"));
             return true;
         }
 
         String message = String.join(" ", args);
         if (message.trim().isEmpty()) {
-            player.sendMessage(Component.text("Message cannot be empty!", NamedTextColor.RED));
+            player.sendMessage(plugin.getConfigManager().getMessageComponent("error.message-empty"));
             return true;
         }
 
