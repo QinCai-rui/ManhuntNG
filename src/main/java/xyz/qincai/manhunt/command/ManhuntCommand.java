@@ -182,14 +182,6 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        ManhuntGameMode gameMode = match.getGameMode();
-        if (gameMode == ManhuntGameMode.NORMAL) {
-            if (!match.getRunnerUuids().isEmpty()) {
-                sender.sendMessage(Component.text("Only one runner is allowed in Normal mode!", NamedTextColor.RED));
-                return true;
-            }
-        }
-
         if (plugin.getGameManager().isGameActive()) {
             sender.sendMessage(Component.text("Cannot change roles during an active game!", NamedTextColor.RED));
             return true;
@@ -301,14 +293,6 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
         }
 
         Match match = plugin.getGameManager().getMatch();
-
-        // Prevent switching to Normal mode when multiple runners are selected
-        if (gameMode == ManhuntGameMode.NORMAL) {
-            if (match.getRunnerUuids().size() > 1) {
-                sender.sendMessage(Component.text("Cannot switch to Normal mode with multiple runners! Remove runners first.", NamedTextColor.RED));
-                return true;
-            }
-        }
 
         match.setGameMode(gameMode);
         match.setStartMode(startMode);

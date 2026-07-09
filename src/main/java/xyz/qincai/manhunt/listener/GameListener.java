@@ -212,11 +212,13 @@ public class GameListener implements Listener {
                 return;
             }
 
-            // Normal mode: runner is eliminated, hunters win
+            // Normal mode: runner is eliminated, hunters win when all runners are dead
             plugin.getPlayerManager().addHunterRespawn(uuid);
             plugin.getStatsManager().recordDeath(uuid);
             plugin.getPlayerManager().eliminateRunner(uuid);
-            plugin.getGameManager().huntersWin();
+            if (match.getRunnerUuids().isEmpty()) {
+                plugin.getGameManager().huntersWin();
+            }
             return;
         }
 

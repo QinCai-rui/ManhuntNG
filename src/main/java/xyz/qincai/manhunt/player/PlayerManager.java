@@ -126,6 +126,7 @@ public class PlayerManager {
         if (player != null) {
             player.setGameMode(GameMode.SPECTATOR);
             Match match = plugin.getGameManager().getMatch();
+            match.removeRunner(uuid);
             match.addSpectator(uuid);
         }
     }
