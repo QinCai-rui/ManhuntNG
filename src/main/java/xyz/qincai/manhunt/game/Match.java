@@ -31,6 +31,8 @@ public class Match {
     private boolean blazeRodObtained;
     private boolean bastionDiscovered;
     private int headstartRemaining = -1; // remaining headstart seconds, -1 = not set
+    private int pauseTimeoutRemaining = -1; // remaining pause-timeout seconds, -1 = not set / disabled
+    private boolean pauseTimeoutHuntersWin; // if true, hunters win when the pause timeout fires (runners left); else runners win (hunters left)
     private Long seed;
     private String worldName;
 
@@ -263,8 +265,31 @@ public class Match {
         return headstartRemaining;
     }
 
+    public int getPauseTimeoutRemaining() {
+        return pauseTimeoutRemaining;
+    }
+
+    public void setPauseTimeoutRemaining(int pauseTimeoutRemaining) {
+        this.pauseTimeoutRemaining = pauseTimeoutRemaining;
+    }
+
+    public boolean isPauseTimeoutHuntersWin() {
+        return pauseTimeoutHuntersWin;
+    }
+
+    public void setPauseTimeoutHuntersWin(boolean pauseTimeoutHuntersWin) {
+        this.pauseTimeoutHuntersWin = pauseTimeoutHuntersWin;
+    }
+
     public void setHeadstartRemaining(int headstartRemaining) {
         this.headstartRemaining = headstartRemaining;
+    }
+
+    public void clearAllPlayers() {
+        runnerUuids.clear();
+        hunterUuids.clear();
+        spectatorUuids.clear();
+        previousRoles.clear();
     }
 
     public boolean isPlayer(UUID uuid) {

@@ -125,15 +125,23 @@ public class PlayerManager {
     }
 
     public void eliminateRunner(UUID uuid) {
+        Match match = plugin.getGameManager().getMatch();
+        match.removeRunner(uuid);
+        match.addSpectator(uuid);
+        setRole(uuid, PlayerRole.SPECTATOR);
+
         Player player = Bukkit.getPlayer(uuid);
         if (player != null) {
             player.setGameMode(GameMode.SPECTATOR);
-            Match match = plugin.getGameManager().getMatch();
-            match.addSpectator(uuid);
         }
     }
 
     public void eliminateHunter(UUID uuid) {
+        Match match = plugin.getGameManager().getMatch();
+        match.removeHunter(uuid);
+        match.addSpectator(uuid);
+        setRole(uuid, PlayerRole.SPECTATOR);
+
         Player player = Bukkit.getPlayer(uuid);
         if (player != null) {
             player.setGameMode(GameMode.SPECTATOR);

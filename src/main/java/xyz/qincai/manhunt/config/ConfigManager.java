@@ -104,6 +104,8 @@ public class ConfigManager {
         validateBoolean("nameTags.tabList", true);
         validateString("nameTags.hunters.suffix", "<red>[H]</red>");
         validateString("nameTags.runners.suffix", "<green>[R]</green>");
+        validateBoolean("pauseTimeout.enabled", false);
+        validateInt("pauseTimeout.duration", 60);
 
         validateBoolean("runner.keepInventory", false);
 
@@ -383,6 +385,14 @@ public class ConfigManager {
         };
     }
 
+
+    public boolean isPauseTimeoutEnabled() {
+        return config.getBoolean("pauseTimeout.enabled", false);
+    }
+
+    public int getPauseTimeoutDuration() {
+        return config.getInt("pauseTimeout.duration", 60);
+    }
 
     public boolean isHunterKeepInventory() {
         return config.getBoolean("hunters.keepInventory", false);

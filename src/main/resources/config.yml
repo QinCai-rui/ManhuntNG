@@ -9,7 +9,7 @@ hunters:
   infiniteRespawns: true
   respawnLimit: -1
   keepInventory: false
-  keepArmor: true
+  keepArmor: false
   keepOffhand: false
 
 tracking:
@@ -64,3 +64,10 @@ potionEffects:
       # 1 minute (60x20=1200 ticks)
       duration: 1200
       ambient: true
+
+# Pause timeout. When the game is paused because an entire team disconnected,
+# the OPPOSING team automatically wins after `duration` seconds of being paused.
+# The countdown is shown in the pause action bar. Set enabled: false to disable.
+pauseTimeout:
+  enabled: false
+  duration: 120

@@ -201,6 +201,17 @@ public class UIManager {
 
         if (match.getState() == GameState.PAUSED) {
             Component pausedBar = Component.text("\u23f8 PAUSED", NamedTextColor.GOLD);
+
+            // Show the pause-timeout countdown and who wins if it expires
+            if (plugin.getConfigManager().isPauseTimeoutEnabled()) {
+                int remaining = match.getPauseTimeoutRemaining();
+                if (remaining >= 0) {
+                    String winner = match.isPauseTimeoutHuntersWin() ? "Hunters" : "Runner";
+                    pausedBar = pausedBar.append(Component.text(
+                            " — " + winner + " win in " + formatTime(remaining), NamedTextColor.RED));
+                }
+            }
+
             for (UUID uuid : match.getHunterUuids()) {
                 Player player = Bukkit.getPlayer(uuid);
                 if (player != null) player.sendActionBar(pausedBar);
