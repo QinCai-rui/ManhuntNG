@@ -141,56 +141,11 @@ public class FormationManager {
             }
 
             // Make the outer member face the center
-            outerLoc.setDirection(center.toVector().subtract(outerLoc.toVector()).setY(0).normalize());
+            // Guard against zero-length vector when outerLoc equals center
+            if (!outerLoc.toVector().equals(center.toVector())) {
+                outerLoc.setDirection(center.toVector().subtract(outerLoc.toVector()).setY(0).normalize());
+            }
             outer.teleport(outerLoc);
-        }
-    }
-                }
-            }
-        }
-
-        // If still no safe center found, fall back to guaranteed safe location
-        if (center == null || !isSafeForPlayer(center)) {
-            center = findSafeLocationGuaranteed(gameWorld, spawnLoc);
-        }
-
-        // Teleport all runners to the center
-        for (UUID runnerUuid : match.getRunnerUuids()) {
-            Player runner = org.bukkit.Bukkit.getPlayer(runnerUuid);
-            if (runner != null) {
-                runner.teleport(center.clone().add(0, 0.5, 0));
-            }
-        }
-
-        if (hunterCount == 0) return; // No hunters -> formation ends here
-
-        // Compute hunter positions in a CIRCLE around the center
-        double y = center.getY();
-        double angleStep = 2 * Math.PI / hunterCount;
-
-        for (int i = 0; i < hunterCount; i++) {
-            UUID hunterUuid = hunterUuids.get(i);
-            Player hunter = org.bukkit.Bukkit.getPlayer(hunterUuid);
-            if (hunter == null) continue; // Skip offline hunters
-
-            double angle = angleStep * i;
-            double x = center.getX() + radius * Math.cos(angle);
-            double z = center.getZ() + radius * Math.sin(angle);
-
-            Location hunterLoc;
-
-            if (formationFound) {
-                // Use exact circle position if formation center is safe
-                hunterLoc = new Location(gameWorld, x, y, z);
-            } else {
-                // Otherwise try to find safe ground near the circle position
-                Location ground = findSafeSurfaceLocation(new Location(gameWorld, x, center.getY(), z));
-                hunterLoc = ground != null ? ground : center; // Fallback to center if needed
-            }
-
-            // Make hunter face the center
-            hunterLoc.setDirection(center.toVector().subtract(hunterLoc.toVector()).setY(0).normalize());
-            hunter.teleport(hunterLoc);
         }
     }
 
@@ -232,11 +187,11 @@ public class FormationManager {
 
     // All outer-ring positions must be on the same surface level as the center.
     private boolean areOuterPositionsSafe(Location center, double radius, int outerCount, World world) {
-        double angleStep = 2 * Math.PI / hunterCount;
+        double angleStep = 2 * Math.PI / outerCount;
         double y = center.getY();
 
-        // Check each hunter’s circle position for safety
-        for (int i = 0; i < hunterCount; i++) {
+        // Check each outer ring member's circle position for safety
+        for (int i = 0; i < outerCount; i++) {
             double angle = angleStep * i;
             double x = center.getX() + radius * Math.cos(angle);
             double z = center.getZ() + radius * Math.sin(angle);
