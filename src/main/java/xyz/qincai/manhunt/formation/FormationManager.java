@@ -88,6 +88,9 @@ public class FormationManager {
             center = findSafeLocationGuaranteed(gameWorld, spawnLoc);
         }
 
+        // Set world spawn to the formation center so players without a bed respawn here
+        gameWorld.setSpawnLocation(center);
+
         // Teleport the center group. The first member stands exactly at the center;
         // any remaining members cluster tightly around it (the inner ring).
         for (int i = 0; i < centerGroup.size(); i++) {

@@ -267,6 +267,13 @@ public class Match {
         this.headstartRemaining = headstartRemaining;
     }
 
+    public void clearAllPlayers() {
+        runnerUuids.clear();
+        hunterUuids.clear();
+        spectatorUuids.clear();
+        previousRoles.clear();
+    }
+
     public boolean isPlayer(UUID uuid) {
         return runnerUuids.contains(uuid) || hunterUuids.contains(uuid);
     }

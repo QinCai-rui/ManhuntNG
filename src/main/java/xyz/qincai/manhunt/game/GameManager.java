@@ -440,6 +440,7 @@ public class GameManager {
         match.setState(GameState.WAITING);
         match.setSeed(null);
         match.setWorldName(null);
+        match.clearAllPlayers();
         plugin.getPlayerManager().reset();
         plugin.getStatsManager().reset();
         plugin.getGameListener().clearSavedItems();
@@ -470,6 +471,7 @@ public class GameManager {
             match.setState(GameState.WAITING);
             match.setSeed(null);
             match.setWorldName(null);
+            match.clearAllPlayers();
             plugin.getPlayerManager().reset();
             plugin.getGameListener().clearSavedItems();
             plugin.getChatManager().resetDefaults();
@@ -499,6 +501,7 @@ public class GameManager {
             match.setState(GameState.WAITING);
             match.setSeed(null);
             match.setWorldName(null);
+            match.clearAllPlayers();
             plugin.getPlayerManager().reset();
             plugin.getGameListener().clearSavedItems();
             plugin.getChatManager().resetDefaults();
