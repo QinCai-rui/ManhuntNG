@@ -16,12 +16,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   into hunters
 - Added a runner keepInventory option
 - Added the ability to have late joiners in a match
+- Players who disconnect during an active game now have their location saved and
+  are teleported back to that exact spot on rejoin (fixes players being stranded
+  in the main world after a disconnect)
 
 ### Changed
 
 - Refactored join flow. Now players need to run `/manhunt join` to join a match.
 - In Normal mode, hunters now win only when the last runner is eliminated
   (previously any runner death ended the game)
+- The game now only auto-pauses when **all** runners or **all** hunters have
+  disconnected (previously any single runner disconnect paused the game); a game
+  with remaining runners/hunters keeps running
 
 ### Fixed
 
@@ -29,6 +35,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed stale hunter and runner uuid entries after game end
 - Fixed a bug where player would respawn in the lobby after death instead of the
   current game's world spawn
+- Fixed a crash on game start caused by `setArmorContents(null)` (now clears armor
+  with an empty array) in `GameManager.clearPlayerState`
+- `eliminateRunner` and `eliminateHunter` now keep `playerRoles` and the match's
+  runner/hunter/spectator sets in sync, so chat routing, combat/movement checks
+  and team-chat logic no longer use a stale role after a player is eliminated
+- Eliminated hunters are now removed from the hunter set and moved to spectators
+  (previously they lingered in the hunter set and kept receiving game broadcasts)
+- Runner deaths no longer incorrectly increment the hunter respawn counter
 
 ## [1.2.1] - 2026-07-08
 
