@@ -557,7 +557,7 @@ public class GameManager {
 
     private void clearPlayerState(Player player) {
         player.getInventory().clear();
-        player.getInventory().setArmorContents(null);
+        player.getInventory().setArmorContents(new ItemStack[player.getInventory().getArmorContents().length]);
         player.getInventory().setItemInMainHand(null);
         player.getInventory().setItemInOffHand(null);
 

@@ -2,6 +2,7 @@ package xyz.qincai.manhunt.listener;
 
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
@@ -51,6 +52,10 @@ public class GameListener implements Listener {
     private final Map<UUID, ItemStack[]> savedArmor = new HashMap<>();
     private final Map<UUID, ItemStack> savedOffhand = new HashMap<>();
 
+    // Saved location for participants who disconnect mid-game, so they can be
+    // teleported back to where they left when they reconnect
+    private final Map<UUID, Location> savedLocations = new HashMap<>();
+
     public GameListener(ManhuntNG plugin) {
         this.plugin = plugin;
     }
@@ -62,6 +67,7 @@ public class GameListener implements Listener {
     public void clearSavedItems() {
         savedArmor.clear();
         savedOffhand.clear();
+        savedLocations.clear();
     }
 
     /*
@@ -124,6 +130,16 @@ public class GameListener implements Listener {
             return;
         }
 
+        // Reconnecting participant: teleport back to where they left the game
+        Location savedLocation = savedLocations.remove(player.getUniqueId());
+        if (savedLocation != null && savedLocation.getWorld() != null) {
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                if (player.isOnline()) {
+                    player.teleport(savedLocation);
+                }
+            }, 5L);
+        }
+
         // Hunters joining mid-game get a compass
         if (plugin.getPlayerManager().isHunter(player.getUniqueId())) {
             if (match.getState() == GameState.RUNNING) {
@@ -155,9 +171,18 @@ public class GameListener implements Listener {
      */
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
+        Player player = event.getPlayer();
+        UUID uuid = player.getUniqueId();
         Match match = plugin.getGameManager().getMatch();
+
+        // Save location of any participant leaving an active game so they can be
+        // teleported back to where they left when they reconnect
+        if (plugin.getGameManager().isGameActive() && match.isParticipant(uuid)) {
+            savedLocations.put(uuid, player.getLocation());
+        }
+
         if (match.getState() != GameState.RUNNING && match.getState() != GameState.HEADSTART) return;
-        if (!match.isRunner(event.getPlayer().getUniqueId())) return;
+        if (!match.isRunner(uuid)) return;
 
         plugin.getUiManager().sendToAll("<yellow>A runner has disconnected — pausing game!");
         plugin.getGameManager().pauseGame();
@@ -206,14 +231,12 @@ public class GameListener implements Listener {
                 }
 
                 // For HEADSTART or other states, handle as normal elimination
-                plugin.getPlayerManager().addHunterRespawn(uuid);
                 plugin.getPlayerManager().eliminateRunner(uuid);
                 plugin.getGameManager().huntersWin();
                 return;
             }
 
             // Normal mode: runner is eliminated, hunters win when all runners are dead
-            plugin.getPlayerManager().addHunterRespawn(uuid);
             plugin.getStatsManager().recordDeath(uuid);
             plugin.getPlayerManager().eliminateRunner(uuid);
             if (match.getRunnerUuids().isEmpty()) {
