@@ -20,20 +20,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.2.1] - 2026-07-08
 
 ### Deprecated
+
 - Legacy bukkit chat formatting
 
 ### Changed 
+
 - Updated in-game messages, titles, countdowns, and broadcasts to use Adventure's Minimessages
 - `messages.yml` is changed to the new formatting style
 
 ## [1.2.0] - 2026-07-08
 
 ### Added
+
 - Added a new way to start the game. `/manhunt mode headstart`
 
 ### Changed
-- THe old start method is now identified as `dreamStart`
 
+- THe old start method is now identified as `dreamStart`
 
 ## [1.1.0] - 2026-07-08
 
