@@ -43,10 +43,15 @@ public class NameTagManager {
         if (plugin.getConfigManager().isNameTagsOverheadEnabled()) {
             player.customName(tag);
             player.setCustomNameVisible(true);
+        } else {
+            player.customName(null);
+            player.setCustomNameVisible(false);
         }
 
         if (plugin.getConfigManager().isNameTagsTabListEnabled()) {
             player.displayName(tag);
+        } else {
+            player.displayName(null);
         }
     }
 
