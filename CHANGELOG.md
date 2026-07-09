@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Players who disconnect during an active game now have their location saved and
   are teleported back to that exact spot on rejoin (fixes players being stranded
   in the main world after a disconnect)
+- Added a configurable pause timeout: when the game is paused because an entire
+  team disconnected, the **opposing** team automatically wins after
+  `pauseTimeout.duration` seconds. The countdown is shown in the pause action bar
+  (`pauseTimeout.enabled` / `pauseTimeout.duration` in `config.yml`)
 
 ### Changed
 
