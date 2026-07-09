@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- All hardcoded messages now read from `messages.yml`, making every
+  message configurable and translatable (bumped `config-version` to 3)
+  
+### Added
+
+- Added `getMessageComponent()` helpers to `ConfigManager` to return
+  Minimessage-deserialised `Component` objects
+- Externalised enum display names (`GamePhase`, `ManhuntGameMode`, `StartMode`,
+`PlayerRole`) to the `advanced` section of `messages.yml`
+
+## [1.4.0] - 2026-07-09
+
 ### Added
 
 - Added configurable role name tag suffixes (red `[H]` for hunters, green `[R]` for runners) using MiniMessage
