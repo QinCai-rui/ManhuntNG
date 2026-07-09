@@ -182,10 +182,35 @@ public class GameListener implements Listener {
         }
 
         if (match.getState() != GameState.RUNNING && match.getState() != GameState.HEADSTART) return;
-        if (!match.isRunner(uuid)) return;
 
-        plugin.getUiManager().sendToAll("<yellow>A runner has disconnected — pausing game!");
-        plugin.getGameManager().pauseGame();
+        // No participants of a kind left -> nothing to pause for
+        if (match.getRunnerUuids().isEmpty() || match.getHunterUuids().isEmpty()) return;
+
+        // Check if any runner/hunter (other than the one quitting) is still online.
+        // The quitting player is excluded because they are no longer part of the
+        // active game even if the server still reports them as present.
+        boolean anyRunnerOnline = match.getRunnerUuids().stream()
+                .filter(id -> !id.equals(uuid))
+                .anyMatch(id -> {
+                    Player p = Bukkit.getPlayer(id);
+                    return p != null && p.isOnline();
+                });
+
+        boolean anyHunterOnline = match.getHunterUuids().stream()
+                .filter(id -> !id.equals(uuid))
+                .anyMatch(id -> {
+                    Player p = Bukkit.getPlayer(id);
+                    return p != null && p.isOnline();
+                });
+
+        // Only pause when EVERY runner or EVERY hunter has disconnected
+        if (!anyRunnerOnline) {
+            plugin.getUiManager().sendToAll("<yellow>All runners have disconnected — pausing game!");
+            plugin.getGameManager().pauseGame();
+        } else if (!anyHunterOnline) {
+            plugin.getUiManager().sendToAll("<yellow>All hunters have disconnected — pausing game!");
+            plugin.getGameManager().pauseGame();
+        }
     }
 
     /*
