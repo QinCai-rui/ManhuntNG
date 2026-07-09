@@ -10,21 +10,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added support for multiple runners in a match
+- Added multi-runner support to Normal mode (runners spawn in a center circle
+  with hunters surrounding them in a larger ring)
 - Added a new Infection gamemode, where hunters can infect runners and turn them
- into hunters
+  into hunters
 - Added a runner keepInventory option
 - Added the ability to have late joiners in a match
 
 ### Changed
 
 - Refactored join flow. Now players need to run `/manhunt join` to join a match.
+- In Normal mode, hunters now win only when the last runner is eliminated
+  (previously any runner death ended the game)
 
 ### Fixed
 
 - Tracking compass now works properly by tracking nearest runners
 - Fixed stale hunter and runner uuid entries after game end
 - Fixed a bug where player would respawn in the lobby after death instead of the
- current game's world spawn
+  current game's world spawn
 
 ## [1.2.1] - 2026-07-08
 
@@ -35,7 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Updated in-game messages, titles, countdowns, and broadcasts to use Adventure'
-s Minimessages
+  s Minimessages
 - `messages.yml` is changed to the new formatting style
 
 ## [1.2.0] - 2026-07-08
