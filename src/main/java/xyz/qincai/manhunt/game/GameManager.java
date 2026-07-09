@@ -650,8 +650,8 @@ public class GameManager {
      * Called when a runner dies in Infection mode.
      */
     public void infectPlayer(UUID runnerUuid) {
-        Match match = plugin.getGameManager().getMatch();
         if (match.getGameMode() != xyz.qincai.manhunt.game.ManhuntGameMode.INFECTION) return;
+        if (match.getState() != GameState.RUNNING) return;
 
         plugin.getPlayerManager().infectRunnerToHunter(runnerUuid);
         Player infectedPlayer = Bukkit.getPlayer(runnerUuid);

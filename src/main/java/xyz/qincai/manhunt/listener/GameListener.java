@@ -188,11 +188,10 @@ public class GameListener implements Listener {
                         .build());
             }
 
-            plugin.getPlayerManager().addHunterRespawn(uuid);
-            plugin.getStatsManager().recordDeath(uuid);
-
-            // Infection mode: runner becomes a hunter
+            // Infection mode: runner becomes a hunter (only during RUNNING)
             if (match.getGameMode() == xyz.qincai.manhunt.game.ManhuntGameMode.INFECTION) {
+                if (match.getState() != GameState.RUNNING) return;
+
                 if (plugin.getConfigManager().isRunnerKeepInventory()) {
                     event.setKeepInventory(true);
                     event.getDrops().clear();
@@ -204,6 +203,8 @@ public class GameListener implements Listener {
             }
 
             // Normal mode: runner is eliminated, hunters win
+            plugin.getPlayerManager().addHunterRespawn(uuid);
+            plugin.getStatsManager().recordDeath(uuid);
             plugin.getPlayerManager().eliminateRunner(uuid);
             plugin.getGameManager().huntersWin();
             return;
