@@ -10,7 +10,7 @@ import java.util.UUID;
 public class Match {
     private GameState state = GameState.WAITING;
     private StartMode startMode = StartMode.DREAMSTART;
-    private GameMode gameMode = GameMode.NORMAL;
+    private ManhuntGameMode gameMode = ManhuntGameMode.NORMAL;
     private final Set<UUID> runnerUuids = new java.util.concurrent.ConcurrentHashMap<UUID, Boolean>().newKeySet();
     private final Set<UUID> hunterUuids = new java.util.concurrent.ConcurrentHashMap<UUID, Boolean>().newKeySet();
     private final Set<UUID> spectatorUuids = new java.util.concurrent.ConcurrentHashMap<UUID, Boolean>().newKeySet();
@@ -50,11 +50,11 @@ public class Match {
         this.startMode = startMode;
     }
 
-    public GameMode getGameMode() {
+    public ManhuntGameMode getGameMode() {
         return gameMode;
     }
 
-    public void setGameMode(GameMode gameMode) {
+    public void setGameMode(ManhuntGameMode gameMode) {
         this.gameMode = gameMode;
     }
 

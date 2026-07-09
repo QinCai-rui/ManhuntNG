@@ -651,7 +651,7 @@ public class GameManager {
      */
     public void infectPlayer(UUID runnerUuid) {
         Match match = plugin.getGameManager().getMatch();
-        if (match.getGameMode() != GameMode.INFECTION) return;
+        if (match.getGameMode() != xyz.qincai.manhunt.game.ManhuntGameMode.INFECTION) return;
 
         plugin.getPlayerManager().infectRunnerToHunter(runnerUuid);
         Player infectedPlayer = Bukkit.getPlayer(runnerUuid);

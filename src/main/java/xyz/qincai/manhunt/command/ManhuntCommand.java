@@ -14,6 +14,7 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import xyz.qincai.manhunt.ManhuntNG;
 import xyz.qincai.manhunt.chat.ChatMode;
+import xyz.qincai.manhunt.game.ManhuntGameMode;
 import xyz.qincai.manhunt.game.GameState;
 import xyz.qincai.manhunt.game.Match;
 import xyz.qincai.manhunt.game.StartMode;
@@ -153,8 +154,8 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
         }
 
         Match match = plugin.getGameManager().getMatch();
-        GameMode gameMode = match.getGameMode();
-        if (gameMode == GameMode.NORMAL) {
+        ManhuntGameMode gameMode = match.getGameMode();
+        if (gameMode == ManhuntGameMode.NORMAL) {
             if (!match.getRunnerUuids().isEmpty()) {
                 sender.sendMessage(Component.text("Only one runner is allowed in Normal mode!", NamedTextColor.RED));
                 return true;
@@ -231,7 +232,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
         }
 
         if (args.length == 0) {
-            GameMode currentGameMode = plugin.getGameManager().getMatch().getGameMode();
+            ManhuntGameMode currentGameMode = plugin.getGameManager().getMatch().getGameMode();
             StartMode currentStartMode = plugin.getGameManager().getMatch().getStartMode();
             sender.sendMessage(Component.text("Current game mode: ", NamedTextColor.GRAY)
                     .append(Component.text(currentGameMode.getDisplayName(), NamedTextColor.AQUA)));
@@ -248,11 +249,11 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        GameMode gameMode;
+        ManhuntGameMode gameMode;
         if (args[1].toLowerCase().equals("infection")) {
-            gameMode = GameMode.INFECTION;
+            gameMode = ManhuntGameMode.INFECTION;
         } else if (args[1].toLowerCase().equals("normal")) {
-            gameMode = GameMode.NORMAL;
+            gameMode = ManhuntGameMode.NORMAL;
         } else {
             sender.sendMessage(Component.text("Invalid game mode! Must be 'normal' or 'infection'.", NamedTextColor.RED));
             return true;
@@ -277,7 +278,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage(Component.text("Start mode set to ", NamedTextColor.GREEN)
                 .append(Component.text(startMode.getDisplayName(), NamedTextColor.AQUA)));
 
-        if (gameMode == GameMode.INFECTION) {
+        if (gameMode == ManhuntGameMode.INFECTION) {
             sender.sendMessage(Component.text("Infection mode: Runners are permanently converted to hunters when killed.", NamedTextColor.GRAY));
         }
         return true;

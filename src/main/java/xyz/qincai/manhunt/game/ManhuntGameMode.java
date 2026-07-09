@@ -1,12 +1,12 @@
 package xyz.qincai.manhunt.game;
 
-public enum GameMode {
+public enum ManhuntGameMode {
     NORMAL("Normal"),
     INFECTION("Infection");
 
     private final String displayName;
 
-    GameMode(String displayName) {
+    ManhuntGameMode(String displayName) {
         this.displayName = displayName;
     }
 

@@ -192,7 +192,7 @@ public class GameListener implements Listener {
             plugin.getStatsManager().recordDeath(uuid);
 
             // Infection mode: runner becomes a hunter
-            if (match.getGameMode() == xyz.qincai.manhunt.game.GameMode.INFECTION) {
+            if (match.getGameMode() == xyz.qincai.manhunt.game.ManhuntGameMode.INFECTION) {
                 if (plugin.getConfigManager().isRunnerKeepInventory()) {
                     event.setKeepInventory(true);
                     event.getDrops().clear();

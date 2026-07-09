@@ -161,6 +161,18 @@ public class TrackerManager {
         return loc == null ? null : loc.clone();
     }
 
+    /*
+     * Returns the last-known location for any runner in a given dimension.
+     * Used by the debug command to show last-known runner positions per environment.
+     */
+    public Location getLastRunnerLocation(World.Environment environment) {
+        for (Map<World.Environment, Location> runnerLocs : allRunnerLastKnownLocations.values()) {
+            Location loc = runnerLocs.get(environment);
+            if (loc != null) return loc.clone();
+        }
+        return null;
+    }
+
     /**
      * Updates a hunter's tracking compass to point to the correct location.
      * - Same dimension -> direct runner location.
