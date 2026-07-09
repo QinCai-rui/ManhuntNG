@@ -48,6 +48,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             case "runner" -> handleRunner(sender, args);
             case "hunter" -> handleHunter(sender, args);
             case "remove" -> handleRemove(sender, args);
+            case "kick" -> handleKick(sender, args);
             case "forcestart" -> handleForceStart(sender, args);
             case "mode" -> handleMode(sender, args);
             case "pause" -> handlePause(sender, args);
@@ -341,28 +342,61 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
+        Match match = plugin.getGameManager().getMatch();
+
+        if (!match.isParticipant(target.getUniqueId())) {
+            sender.sendMessage(Component.text(target.getName() + " is not in the game!", NamedTextColor.RED));
+            return true;
+        }
+
         if (plugin.getGameManager().isGameActive()) {
             sender.sendMessage(Component.text("Cannot change roles during an active game!", NamedTextColor.RED));
             return true;
         }
 
-        UUID targetUuid = target.getUniqueId();
+        plugin.getPlayerManager().applyRoleToPlayer(target, PlayerRole.SPECTATOR);
+        sender.sendMessage(Component.text(target.getName(), NamedTextColor.AQUA)
+                .append(Component.text("'s role has been removed!", NamedTextColor.YELLOW)));
+        target.sendMessage(Component.text("Your role has been removed!", NamedTextColor.YELLOW));
+        return true;
+    }
+
+    private boolean handleKick(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("manhunt.admin")) {
+            sender.sendMessage(Component.text("You don't have permission!", NamedTextColor.RED));
+            return true;
+        }
+
+        if (args.length < 2) {
+            sender.sendMessage(Component.text("Usage: ", NamedTextColor.RED)
+                    .append(Component.text("/manhunt kick <player>", NamedTextColor.WHITE)));
+            return true;
+        }
+
+        Player target = Bukkit.getPlayer(args[1]);
+        if (target == null) {
+            sender.sendMessage(Component.text("Player not found!", NamedTextColor.RED));
+            return true;
+        }
+
         Match match = plugin.getGameManager().getMatch();
 
-        if (plugin.getPlayerManager().isRunner(targetUuid)) {
-            plugin.getPlayerManager().removePlayerFromGame(targetUuid);
-            sender.sendMessage(Component.text(target.getName(), NamedTextColor.AQUA)
-                    .append(Component.text(" is no longer a Runner!", NamedTextColor.YELLOW)));
-            target.sendMessage(Component.text("You are no longer a Runner!", NamedTextColor.YELLOW));
-        } else if (plugin.getPlayerManager().isHunter(targetUuid)) {
-            plugin.getPlayerManager().removePlayerFromGame(targetUuid);
-            sender.sendMessage(Component.text(target.getName(), NamedTextColor.AQUA)
-                    .append(Component.text(" has been removed from Hunters!", NamedTextColor.YELLOW)));
-            target.sendMessage(Component.text("You have been removed from Hunters!", NamedTextColor.YELLOW));
-        } else {
-            sender.sendMessage(Component.text(target.getName(), NamedTextColor.AQUA)
-                    .append(Component.text(" is not in the game!", NamedTextColor.RED)));
+        if (!match.isParticipant(target.getUniqueId())) {
+            sender.sendMessage(Component.text(target.getName() + " is not in the game!", NamedTextColor.RED));
+            return true;
         }
+
+        plugin.getPlayerManager().removePlayerFromGame(target.getUniqueId());
+
+        if (plugin.getGameManager().isGameActive()) {
+            org.bukkit.World mainWorld = org.bukkit.Bukkit.getWorlds().get(0);
+            target.teleport(mainWorld.getSpawnLocation());
+            plugin.getUiManager().sendToAll("<red>" + target.getName() + " has been kicked from the game!");
+        }
+
+        sender.sendMessage(Component.text(target.getName(), NamedTextColor.AQUA)
+                .append(Component.text(" has been kicked from the game!", NamedTextColor.RED)));
+        target.sendMessage(Component.text("You have been kicked from the game!", NamedTextColor.RED));
         return true;
     }
 
@@ -616,8 +650,10 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
                     "Click to set runner", "manhunt.admin");
             helpEntry(sender, "manhunt hunter <player>", "Add a Hunter",
                     "Click to set hunter", "manhunt.admin");
-            helpEntry(sender, "manhunt remove <player>", "Remove a player from game",
-                    "Click to remove player", "manhunt.admin");
+            helpEntry(sender, "manhunt remove <player>", "Remove a player's role",
+                    "Click to remove role", "manhunt.admin");
+            helpEntry(sender, "manhunt kick <player>", "Kick a player from the game",
+                    "Click to kick player", "manhunt.admin");
             helpEntry(sender, "manhunt owner [player]", "View/set game owner",
                     "Click to set owner", "manhunt.admin");
             helpEntry(sender, "manhunt seed [value]", "View/set world seed",
@@ -696,6 +732,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
                 completions.add("runner");
                 completions.add("hunter");
                 completions.add("remove");
+                completions.add("kick");
                 completions.add("forcestart");
                 completions.add("mode");
                 completions.add("owner");
@@ -715,7 +752,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
                 completions.add("team");
                 return filterPartial(args[1], completions);
             }
-            if (sub.equals("runner") || sub.equals("hunter") || sub.equals("owner") || sub.equals("remove")) {
+            if (sub.equals("runner") || sub.equals("hunter") || sub.equals("owner") || sub.equals("remove") || sub.equals("kick")) {
                 for (Player player : Bukkit.getOnlinePlayers()) {
                     completions.add(player.getName());
                 }
