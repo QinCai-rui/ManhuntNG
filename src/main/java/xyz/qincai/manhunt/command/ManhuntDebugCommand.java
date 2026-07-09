@@ -23,7 +23,8 @@ public class ManhuntDebugCommand implements CommandExecutor {
 
         // Only players can use this debug command
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(plugin.getConfigManager().getMessage("debug.only-in-game"));
+            sender.sendMessage(MiniMessage.miniMessage().deserialize(
+                    plugin.getConfigManager().getMessage("debug.only-in-game")));
             return true;
         }
 

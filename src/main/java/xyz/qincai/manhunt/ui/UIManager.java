@@ -214,8 +214,8 @@ public class UIManager {
                 int remaining = match.getPauseTimeoutRemaining();
                 if (remaining >= 0) {
                     String winner = match.isPauseTimeoutHuntersWin()
-                            ? cfg().getMessage("game.hunters-win-broadcast")
-                            : cfg().getMessage("game.runner-wins-broadcast");
+                            ? cfg().getMessage("pause.winner-hunters")
+                            : cfg().getMessage("pause.winner-runner");
                     pausedBar = pausedBar.append(MiniMessage.miniMessage().deserialize(
                             cfg().getMessage("pause.action-bar-timeout",
                                     "{winner}", winner,

@@ -166,9 +166,11 @@ infection.broadcast: '<red>{player} <gray>has been infected and is now a Hunter!
 pause.broadcast: '<yellow>Game has been paused!'
 pause.title: 'GAME PAUSED'
 pause.subtitle: 'Use /manhunt resume to continue'
-pause.action-bar: '\u23f8 PAUSED'
-pause.action-bar-timeout: ' \u2014 {winner} win in {time}'
-pause.blocked: '<gray>The game is paused \u2014 action blocked'
+pause.action-bar: "\u23f8 PAUSED"
+pause.action-bar-timeout: " \u2014 {winner} win in {time}"
+pause.winner-hunters: 'Hunters'
+pause.winner-runner: 'Runner'
+pause.blocked: "<gray>The game is paused \u2014 action blocked"
 pause.runners-disconnected: '<yellow>All runners have disconnected \u2014 pausing game!'
 pause.hunters-disconnected: '<yellow>All hunters have disconnected \u2014 pausing game!'
 pause.timeout-hunters-win: '<red><bold>Time is up! The Hunters win (opposition by timeout)!'
@@ -204,8 +206,8 @@ scoreboard.dim-end: 'End'
 # ============================================================================
 # Action Bar
 # ============================================================================
-actionbar.runner-distance: 'Runner \u2014 {distance}m'
-actionbar.tracking: 'Tracking {portal} \u2014 {distance}m'
+actionbar.runner-distance: "Runner \u2014 {distance}m"
+actionbar.tracking: "Tracking {portal} \u2014 {distance}m"
 actionbar.tracking-no-distance: 'Tracking {portal}'
 actionbar.portal-nether: 'Nether Portal'
 actionbar.portal-end: 'End Portal'
@@ -241,8 +243,8 @@ debug.location: '<green>{dimension}: <white>({x}, {y}, {z}) in world ''{world}''
 # Help Menu
 # ============================================================================
 help.title: '<gold><bold>ManhuntNG'
-help.separator: ' \u2014 '
-help.divider: '  \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500'
+help.separator: " \u2014 "
+help.divider: "  \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
 help.section-player: '  Player'
 help.section-admin: '  Admin'
 help.permission: 'Permission: '

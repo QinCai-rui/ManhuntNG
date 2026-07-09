@@ -313,14 +313,19 @@ public class ConfigManager {
      * Retrieves a message as a MiniMessage-deserialized Component.
      */
     public Component getMessageComponent(String key) {
-        return MiniMessage.miniMessage().deserialize(messages.getString(key, key));
+        return MiniMessage.miniMessage().deserialize(getMessage(key));
     }
 
     /*
      * Retrieves a message as a Component with placeholder replacements.
      */
     public Component getMessageComponent(String key, String... replacements) {
-        return MiniMessage.miniMessage().deserialize(getMessage(key, replacements));
+        String msg = messages.getString(key, key);
+        for (int i = 0; i < replacements.length - 1; i += 2) {
+            String escapedValue = MiniMessage.miniMessage().escapeTags(replacements[i + 1]);
+            msg = msg.replace(replacements[i], escapedValue);
+        }
+        return MiniMessage.miniMessage().deserialize(msg);
     }
 
     // -------- Config getters --------
