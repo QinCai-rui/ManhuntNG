@@ -22,10 +22,12 @@ public class PlayerManager {
     public void reset() {
         playerRoles.clear();
         hunterRespawns.clear();
+        plugin.getNameTagManager().clearAll();
     }
 
     public void setRole(UUID uuid, PlayerRole role) {
         playerRoles.put(uuid, role);
+        plugin.getNameTagManager().applyTag(uuid, role);
     }
 
     public PlayerRole getRole(UUID uuid) {
@@ -119,6 +121,7 @@ public class PlayerManager {
         match.removeRunner(uuid);
         playerRoles.remove(uuid);
         hunterRespawns.remove(uuid);
+        plugin.getNameTagManager().clearTag(Bukkit.getPlayer(uuid));
     }
 
     public void eliminateRunner(UUID uuid) {

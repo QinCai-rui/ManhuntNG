@@ -6,6 +6,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import xyz.qincai.manhunt.ManhuntNG;
+import xyz.qincai.manhunt.player.PlayerRole;
 
 import java.io.File;
 import java.io.IOException;
@@ -98,6 +99,12 @@ public class ConfigManager {
         validateBoolean("scoreboard.enabled", true);
         validateBoolean("actionBar.enabled", true);
 
+        validateBoolean("nameTags.enabled", true);
+        validateBoolean("nameTags.overhead", true);
+        validateBoolean("nameTags.tabList", true);
+        validateString("nameTags.hunters.suffix", "<red>[H]</red>");
+        validateString("nameTags.runners.suffix", "<green>[R]</green>");
+
         validateBoolean("runner.keepInventory", false);
 
         validateBoolean("hunters.keepInventory", false);
@@ -145,6 +152,19 @@ public class ConfigManager {
         if (!(raw instanceof Boolean)) {
             plugin.getLogger().warning("[Config] Invalid type for '" + path +
                     "'. Expected boolean, got " + raw.getClass().getSimpleName() +
+                    ". Using fallback: " + fallback);
+        }
+    }
+
+    private void validateString(String path, String fallback) {
+        if (!config.contains(path)) {
+            plugin.getLogger().warning("[Config] Missing '" + path + "'. Using fallback: " + fallback);
+            return;
+        }
+        Object raw = config.get(path);
+        if (!(raw instanceof String)) {
+            plugin.getLogger().warning("[Config] Invalid type for '" + path +
+                    "'. Expected string, got " + raw.getClass().getSimpleName() +
                     ". Using fallback: " + fallback);
         }
     }
@@ -340,6 +360,29 @@ public class ConfigManager {
     public boolean isActionBarEnabled() {
         return config.getBoolean("actionBar.enabled", true);
     }
+
+    // -------- Name tag suffix config --------
+
+    public boolean isNameTagsEnabled() {
+        return config.getBoolean("nameTags.enabled", true);
+    }
+
+    public boolean isNameTagsOverheadEnabled() {
+        return config.getBoolean("nameTags.overhead", true);
+    }
+
+    public boolean isNameTagsTabListEnabled() {
+        return config.getBoolean("nameTags.tabList", true);
+    }
+
+    public String getNameTagSuffix(PlayerRole role) {
+        return switch (role) {
+            case HUNTER -> config.getString("nameTags.hunters.suffix", "<red>[H]</red>");
+            case RUNNER -> config.getString("nameTags.runners.suffix", "<green>[R]</green>");
+            case SPECTATOR -> "";
+        };
+    }
+
 
     public boolean isHunterKeepInventory() {
         return config.getBoolean("hunters.keepInventory", false);

@@ -1,5 +1,5 @@
 # ManhuntNG Configuration
-config-version: 2
+config-version: 3
 
 runner:
   keepInventory: false
@@ -32,6 +32,19 @@ scoreboard:
 
 actionBar:
   enabled: true
+
+nameTags:
+  # Master toggle for role suffixes ([H] for hunters, [R] for runners)
+  enabled: true
+  # Show the suffix on the floating nametag above each player's head
+  overhead: true
+  # Show the suffix on the player's tab list entry
+  tabList: true
+  hunters:
+    # MiniMessage format (no deprecated & colour codes)
+    suffix: "<red>[H]</red>"
+  runners:
+    suffix: "<green>[R]</green>"
 
 potionEffects:
   runner:
