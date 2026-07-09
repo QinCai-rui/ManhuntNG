@@ -261,6 +261,10 @@ public class Match {
         this.bastionDiscovered = bastionDiscovered;
     }
 
+    public int getHeadstartRemaining() {
+        return headstartRemaining;
+    }
+
     public int getPauseTimeoutRemaining() {
         return pauseTimeoutRemaining;
     }
