@@ -150,6 +150,9 @@ public class GameListener implements Listener {
                 }, 20L);
             }
         }
+
+        // Re-apply the role nametag (covers mid-game rejoins where the role is retained)
+        plugin.getNameTagManager().applyTag(player, plugin.getPlayerManager().getRole(player.getUniqueId()));
     }
 
     /*

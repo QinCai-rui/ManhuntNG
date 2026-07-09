@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added configurable role name tag suffixes (red `[H]` for hunters, green `[R]` for runners) using MiniMessage
+- toggleable for the overhead nametag and tab list via `nameTags` in `config.yml`
+
 ## [1.3.0] - 2026-07-09
 
 ### Added
