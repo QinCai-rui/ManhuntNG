@@ -103,6 +103,11 @@ public class PlayerManager {
         setRole(runnerUuid, PlayerRole.HUNTER);
         player.setGameMode(GameMode.SURVIVAL);
 
+        // Clear runner potion effects before applying hunter effects
+        for (org.bukkit.potion.PotionEffect effect : plugin.getConfigManager().getRunnerPotionEffects()) {
+            player.removePotionEffect(effect.getType());
+        }
+
         plugin.getTrackerManager().giveCompassToPlayer(player);
         plugin.getPotionEffectManager().applyHunterEffects(runnerUuid);
     }

@@ -117,13 +117,20 @@ public class TrackerManager {
             }
         }
 
-        // If no runner is in the same dimension, just return the first runner
+        // If no runner is in the same dimension, find the nearest by last-known location
         if (nearest == null) {
+            World.Environment hunterEnv = hunter.getWorld().getEnvironment();
             for (UUID runnerUuid : match.getRunnerUuids()) {
                 Player runner = Bukkit.getPlayer(runnerUuid);
-                if (runner != null && runner.getGameMode() != org.bukkit.GameMode.SPECTATOR) {
+                if (runner == null || runner.getGameMode() == org.bukkit.GameMode.SPECTATOR) continue;
+
+                Location lastKnown = getRunnerLastKnownLocation(runnerUuid, hunterEnv);
+                if (lastKnown == null) continue;
+
+                double distance = hunter.getLocation().distanceSquared(lastKnown);
+                if (distance < nearestDistance) {
+                    nearestDistance = distance;
                     nearest = runner;
-                    break;
                 }
             }
         }

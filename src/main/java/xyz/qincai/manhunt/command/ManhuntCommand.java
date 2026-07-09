@@ -231,7 +231,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        if (args.length == 0) {
+        if (args.length == 1) {
             ManhuntGameMode currentGameMode = plugin.getGameManager().getMatch().getGameMode();
             StartMode currentStartMode = plugin.getGameManager().getMatch().getStartMode();
             sender.sendMessage(Component.text("Current game mode: ", NamedTextColor.GRAY)
@@ -243,7 +243,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        if (args.length < 2) {
+        if (args.length < 3) {
             sender.sendMessage(Component.text("Usage: ", NamedTextColor.RED)
                     .append(Component.text("/manhunt mode <normal|infection> <dreamstart|headstart>", NamedTextColor.WHITE)));
             return true;
@@ -270,6 +270,15 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
         }
 
         Match match = plugin.getGameManager().getMatch();
+
+        // Prevent switching to Normal mode when multiple runners are selected
+        if (gameMode == ManhuntGameMode.NORMAL) {
+            if (match.getRunnerUuids().size() > 1) {
+                sender.sendMessage(Component.text("Cannot switch to Normal mode with multiple runners! Remove runners first.", NamedTextColor.RED));
+                return true;
+            }
+        }
+
         match.setGameMode(gameMode);
         match.setStartMode(startMode);
 
@@ -694,8 +703,6 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
                 return filterPartial(args[1], completions);
             }
             if (sub.equals("mode")) {
-                completions.add("dreamstart");
-                completions.add("headstart");
                 completions.add("normal");
                 completions.add("infection");
                 return filterPartial(args[1], completions);
