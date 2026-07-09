@@ -9,7 +9,7 @@ hunters:
   infiniteRespawns: true
   respawnLimit: -1
   keepInventory: false
-  keepArmor: true
+  keepArmor: false
   keepOffhand: false
 
 tracking:
