@@ -23,18 +23,20 @@ public class ManhuntDebugCommand implements CommandExecutor {
 
         // Only players can use this debug command
         if (!(sender instanceof Player player)) {
-            sender.sendMessage("This command can only be used in-game.");
+            sender.sendMessage(plugin.getConfigManager().getMessage("debug.only-in-game"));
             return true;
         }
 
         // subcommand: lastknown
         if (args.length == 0 || !args[0].equalsIgnoreCase("lastknown")) {
-            player.sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Usage: <white>/manhunt debug lastknown"));
+            player.sendMessage(MiniMessage.miniMessage().deserialize(
+                    plugin.getConfigManager().getMessage("debug.usage")));
             return true;
         }
 
         TrackerManager tracker = plugin.getTrackerManager();
-        player.sendMessage(MiniMessage.miniMessage().deserialize("<gold><bold>Last Known Runner Locations:"));
+        player.sendMessage(MiniMessage.miniMessage().deserialize(
+                plugin.getConfigManager().getMessage("debug.header")));
 
         for (World.Environment env : World.Environment.values()) {
 
@@ -42,14 +44,16 @@ public class ManhuntDebugCommand implements CommandExecutor {
             String envName = env.toString();
 
             if (loc == null) {
-                player.sendMessage(MiniMessage.miniMessage().deserialize("<red>" + envName + ": No data yet (runner has not entered this dimension)"));
+                player.sendMessage(MiniMessage.miniMessage().deserialize(
+                        plugin.getConfigManager().getMessage("debug.no-data", "{dimension}", envName)));
             } else {
-                player.sendMessage(MiniMessage.miniMessage().deserialize(String.format(
-                        "<green>%s: <white>(%.1f, %.1f, %.1f) in world '%s'",
-                        envName,
-                        loc.getX(), loc.getY(), loc.getZ(),
-                        loc.getWorld().getName()
-                )));
+                player.sendMessage(MiniMessage.miniMessage().deserialize(
+                        plugin.getConfigManager().getMessage("debug.location",
+                                "{dimension}", envName,
+                                "{x}", String.format("%.1f", loc.getX()),
+                                "{y}", String.format("%.1f", loc.getY()),
+                                "{z}", String.format("%.1f", loc.getZ()),
+                                "{world}", loc.getWorld().getName())));
             }
         }
 

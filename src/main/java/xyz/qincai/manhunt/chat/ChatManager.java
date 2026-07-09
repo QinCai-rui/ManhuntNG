@@ -58,9 +58,9 @@ public class ChatManager implements Listener {
 
     public void sendGlobalMessage(Player sender, String message) {
         Component msg = Component.text()
-                .append(Component.text("[Global] ", NamedTextColor.GOLD))
+                .append(plugin.getConfigManager().getMessageComponent("chat.global-prefix"))
                 .append(Component.text(sender.getName(), NamedTextColor.WHITE))
-                .append(Component.text(": ", NamedTextColor.GRAY))
+                .append(plugin.getConfigManager().getMessageComponent("chat.separator"))
                 .append(Component.text(message, NamedTextColor.WHITE))
                 .build();
         sendToAllGameParticipants(msg);
@@ -69,9 +69,9 @@ public class ChatManager implements Listener {
     public void sendTeamMessage(Player sender, String message) {
         PlayerRole role = plugin.getPlayerManager().getRole(sender.getUniqueId());
         Component msg = Component.text()
-                .append(Component.text("[Team] ", NamedTextColor.DARK_GREEN))
+                .append(plugin.getConfigManager().getMessageComponent("chat.team-prefix"))
                 .append(Component.text(sender.getName(), NamedTextColor.WHITE))
-                .append(Component.text(": ", NamedTextColor.GRAY))
+                .append(plugin.getConfigManager().getMessageComponent("chat.separator"))
                 .append(Component.text(message, NamedTextColor.WHITE))
                 .build();
 
@@ -91,7 +91,7 @@ public class ChatManager implements Listener {
                 }
             }
             case SPECTATOR ->
-                sender.sendMessage(Component.text("You can only use global chat!", NamedTextColor.RED));
+                sender.sendMessage(plugin.getConfigManager().getMessageComponent("error.spectator-global-only"));
         }
     }
 

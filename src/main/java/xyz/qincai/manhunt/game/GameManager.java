@@ -12,6 +12,7 @@ import org.bukkit.advancement.AdvancementProgress;
 import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.Player;
 import xyz.qincai.manhunt.ManhuntNG;
+import xyz.qincai.manhunt.config.ConfigManager;
 import xyz.qincai.manhunt.player.PlayerRole;
 
 import java.time.Duration;
@@ -36,6 +37,10 @@ public class GameManager {
 
     public Match getMatch() {
         return match;
+    }
+
+    private ConfigManager cfg() {
+        return plugin.getConfigManager();
     }
 
     private void showCountdownTitle(Player player, String title, String subtitle, long stayMs) {
@@ -78,11 +83,11 @@ public class GameManager {
 
         // Must have runners + hunters selected
         if (match.getRunnerUuids().isEmpty()) {
-            plugin.getUiManager().broadcastMessage("<red>No runners selected!");
+            plugin.getUiManager().broadcastMessage(cfg().getMessage("game.no-runners"));
             return;
         }
         if (match.getHunterUuids().isEmpty()) {
-            plugin.getUiManager().broadcastMessage("<red>No hunters selected!");
+            plugin.getUiManager().broadcastMessage(cfg().getMessage("game.no-hunters"));
             return;
         }
 
@@ -109,7 +114,7 @@ public class GameManager {
      * Freezes all players, shows titles, and transitions to finishCountdown().
      */
     private void startCountdown() {
-        int initialCountdown = plugin.getConfigManager().getPreHuntCountdown();
+        int initialCountdown = cfg().getPreHuntCountdown();
         match.setState(GameState.COUNTDOWN);
 
         freezeAllPlayers(); // Prevent movement during countdown
@@ -136,7 +141,9 @@ public class GameManager {
             for (UUID uuid : match.getHunterUuids()) {
                 Player player = Bukkit.getPlayer(uuid);
                 if (player != null) {
-                    showCountdownTitle(player, "<yellow>" + current, "<gray>Game starting in...", 1250);
+                    showCountdownTitle(player,
+                            cfg().getMessage("countdown.title", "{seconds}", String.valueOf(current)),
+                            cfg().getMessage("countdown.subtitle"), 1250);
                 }
             }
 
@@ -144,7 +151,9 @@ public class GameManager {
             for (UUID runnerUuid : match.getRunnerUuids()) {
                 Player runner = Bukkit.getPlayer(runnerUuid);
                 if (runner != null) {
-                    showCountdownTitle(runner, "<yellow>" + current, "<gray>Game starting in...", 1250);
+                    showCountdownTitle(runner,
+                            cfg().getMessage("countdown.title", "{seconds}", String.valueOf(current)),
+                            cfg().getMessage("countdown.subtitle"), 1250);
                 }
             }
 
@@ -162,7 +171,7 @@ public class GameManager {
         World gameWorld = match.getGameWorld();
         if (gameWorld == null) {
             // World creation failed -> abort
-            plugin.getUiManager().broadcastMessage("<red>Failed to create game world!");
+            plugin.getUiManager().broadcastMessage(cfg().getMessage("game.world-failed"));
             match.setState(GameState.WAITING);
             return;
         }
@@ -187,7 +196,7 @@ public class GameManager {
 
             applyHeadstartFreezeState();
 
-            startHeadstartTimer(plugin.getConfigManager().getHeadstartDuration());
+            startHeadstartTimer(cfg().getHeadstartDuration());
         } else if (forceStart) {
             forceStart = false;
             match.setState(GameState.RUNNING);
@@ -207,15 +216,19 @@ public class GameManager {
             plugin.getUiManager().startUIUpdates();
             plugin.getPotionEffectManager().applyEffects();
 
-            plugin.getUiManager().sendTitle("<red>The Hunt Has Begun!", "<gray>Runner is on the loose!");
-            plugin.getUiManager().sendToAll("<green>The hunt has started! (Force started)");
+            plugin.getUiManager().sendTitle(
+                    cfg().getMessage("forcestart.title"),
+                    cfg().getMessage("forcestart.subtitle"));
+            plugin.getUiManager().sendToAll(cfg().getMessage("forcestart.broadcast"));
         } else {
             // Normal start -> PRE_HUNT phase
             match.setState(GameState.PRE_HUNT);
             unfreezeHorizontalAllPlayers(); // Runner & hunters frozen horizontally but invulnerable
 
-            plugin.getUiManager().sendTitle("<gold>Pre-Hunt", "<gray>Runner must damage a hunter to start the hunt");
-            plugin.getUiManager().sendToAll("<yellow>Pre-Hunt phase! The runner must punch any hunter to start the hunt.");
+            plugin.getUiManager().sendTitle(
+                    cfg().getMessage("prehunt.title"),
+                    cfg().getMessage("prehunt.subtitle"));
+            plugin.getUiManager().sendToAll(cfg().getMessage("prehunt.broadcast"));
         }
     }
 
@@ -250,19 +263,19 @@ public class GameManager {
 
         // Show headstart title to everyone
         plugin.getUiManager().sendTitle(
-            plugin.getConfigManager().getMessage("headstart.title"),
-            plugin.getConfigManager().getMessage("headstart.subtitle", "{duration}", String.valueOf(initialDuration))
+            cfg().getMessage("headstart.title"),
+            cfg().getMessage("headstart.subtitle", "{duration}", String.valueOf(initialDuration))
         );
         for (UUID uuid : match.getHunterUuids()) {
             Player player = Bukkit.getPlayer(uuid);
             if (player != null) {
                 showCountdownTitle(player,
-                    plugin.getConfigManager().getMessage("headstart.hunter-title"),
-                    plugin.getConfigManager().getMessage("headstart.hunter-subtitle", "{duration}", String.valueOf(initialDuration)),
+                    cfg().getMessage("headstart.hunter-title"),
+                    cfg().getMessage("headstart.hunter-subtitle", "{duration}", String.valueOf(initialDuration)),
                     2000, 500);
             }
         }
-        plugin.getUiManager().sendToAll("<yellow>Head start! Runner has <red>" + initialDuration + "<yellow> seconds to run!");
+        plugin.getUiManager().sendToAll(cfg().getMessage("headstart.broadcast", "{duration}", String.valueOf(initialDuration)));
 
         headstartTaskId = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             if (match.getState() != GameState.HEADSTART) {
@@ -285,7 +298,9 @@ public class GameManager {
             for (UUID uuid : match.getHunterUuids()) {
                 Player player = Bukkit.getPlayer(uuid);
                 if (player != null) {
-                    showCountdownTitle(player, "<red>" + current, "<gray>You are frozen!", 1250);
+                    showCountdownTitle(player,
+                            cfg().getMessage("headstart.countdown-hunter-title", "{seconds}", String.valueOf(current)),
+                            cfg().getMessage("headstart.countdown-hunter-subtitle"), 1250);
                 }
             }
 
@@ -293,7 +308,9 @@ public class GameManager {
             for (UUID runnerUuid : match.getRunnerUuids()) {
                 Player runner = Bukkit.getPlayer(runnerUuid);
                 if (runner != null) {
-                    showCountdownTitle(runner, "<yellow>" + current, "<gray>Head start remaining", 1250);
+                    showCountdownTitle(runner,
+                            cfg().getMessage("headstart.countdown-runner-title", "{seconds}", String.valueOf(current)),
+                            cfg().getMessage("headstart.countdown-runner-subtitle"), 1250);
                 }
             }
 
@@ -331,15 +348,17 @@ public class GameManager {
         }
 
         // Start tracking + UI + effects
-        if (plugin.getConfigManager().isHeadstartCompassEnabled()) {
+        if (cfg().isHeadstartCompassEnabled()) {
             plugin.getTrackerManager().giveCompassToAll();
         }
         plugin.getTrackerManager().startTracking();
         plugin.getUiManager().startUIUpdates();
         plugin.getPotionEffectManager().applyEffects();
 
-        plugin.getUiManager().sendTitle("<red>The Hunt Has Begun!", "<gray>Runner is on the loose!");
-        plugin.getUiManager().sendToAll(plugin.getConfigManager().getMessage("headstart.ended"));
+        plugin.getUiManager().sendTitle(
+                cfg().getMessage("prehunt.hunt-begun-title"),
+                cfg().getMessage("prehunt.hunt-begun-subtitle"));
+        plugin.getUiManager().sendToAll(cfg().getMessage("headstart.ended"));
     }
 
     /*
@@ -407,8 +426,10 @@ public class GameManager {
         plugin.getUiManager().startUIUpdates();
         plugin.getPotionEffectManager().applyEffects();
 
-        plugin.getUiManager().sendTitle("<red>The Hunt Has Begun!", "<gray>Runner is on the loose!");
-        plugin.getUiManager().sendToAll("<green>The hunt has started!");
+        plugin.getUiManager().sendTitle(
+                cfg().getMessage("prehunt.hunt-begun-title"),
+                cfg().getMessage("prehunt.hunt-begun-subtitle"));
+        plugin.getUiManager().sendToAll(cfg().getMessage("prehunt.hunt-begun-broadcast"));
     }
 
     /*
@@ -463,8 +484,10 @@ public class GameManager {
         plugin.getUiManager().stopUIUpdates();
         plugin.getPotionEffectManager().clearEffects();
 
-        plugin.getUiManager().sendTitle("<gold>Runner Wins!", "<gray>The Ender Dragon has been defeated!");
-        plugin.getUiManager().broadcastMessage("<gold><bold>The Runner has won the game!");
+        plugin.getUiManager().sendTitle(
+                cfg().getMessage("game.runner-wins-title"),
+                cfg().getMessage("game.runner-wins-subtitle"));
+        plugin.getUiManager().broadcastMessage(cfg().getMessage("game.runner-wins-broadcast"));
 
         unfreezeAllPlayers();
         plugin.getWorldManager().teleportToMainWorld();
@@ -494,8 +517,10 @@ public class GameManager {
         plugin.getUiManager().stopUIUpdates();
         plugin.getPotionEffectManager().clearEffects();
         
-        plugin.getUiManager().sendTitle("<red>Hunters Win!", "<gray>The Runner has been eliminated!");
-        plugin.getUiManager().broadcastMessage("<red><bold>The Hunters have won the game!");
+        plugin.getUiManager().sendTitle(
+                cfg().getMessage("game.hunters-win-title"),
+                cfg().getMessage("game.hunters-win-subtitle"));
+        plugin.getUiManager().broadcastMessage(cfg().getMessage("game.hunters-win-broadcast"));
 
         unfreezeAllPlayers();
         plugin.getWorldManager().teleportToMainWorld();
@@ -662,7 +687,7 @@ public class GameManager {
         plugin.getPlayerManager().infectRunnerToHunter(runnerUuid);
         Player infectedPlayer = Bukkit.getPlayer(runnerUuid);
         String name = infectedPlayer != null ? infectedPlayer.getName() : "Unknown";
-        plugin.getUiManager().sendToAll("<red>" + name + " <gray>has been infected and is now a Hunter!");
+        plugin.getUiManager().sendToAll(cfg().getMessage("infection.broadcast", "{player}", name));
 
         if (match.getRunnerUuids().isEmpty()) {
             huntersWin();
@@ -699,13 +724,13 @@ public class GameManager {
         clearMobTargets();
 
         plugin.getUiManager().showPauseTitle();
-        plugin.getUiManager().sendToAll("<yellow>Game has been paused!");
+        plugin.getUiManager().sendToAll(cfg().getMessage("pause.broadcast"));
 
         // If a whole team disconnected (causing this pause), start the pause-timeout.
         // When it expires the OPPOSING team wins (e.g. all runners gone -> hunters win).
         boolean runnersOffline = isTeamFullyOffline(match.getRunnerUuids());
         boolean huntersOffline = isTeamFullyOffline(match.getHunterUuids());
-        if (plugin.getConfigManager().isPauseTimeoutEnabled() && (runnersOffline || huntersOffline)) {
+        if (cfg().isPauseTimeoutEnabled() && (runnersOffline || huntersOffline)) {
             match.setPauseTimeoutHuntersWin(runnersOffline);
             startPauseTimeout();
         }
@@ -729,9 +754,9 @@ public class GameManager {
      */
     private void startPauseTimeout() {
         stopPauseTimeout();
-        if (!plugin.getConfigManager().isPauseTimeoutEnabled()) return;
+        if (!cfg().isPauseTimeoutEnabled()) return;
 
-        match.setPauseTimeoutRemaining(plugin.getConfigManager().getPauseTimeoutDuration());
+        match.setPauseTimeoutRemaining(cfg().getPauseTimeoutDuration());
 
         pauseTimeoutTaskId = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             if (match.getState() != GameState.PAUSED) {
@@ -743,10 +768,10 @@ public class GameManager {
             if (remaining <= 0) {
                 stopPauseTimeout();
                 if (match.isPauseTimeoutHuntersWin()) {
-                    plugin.getUiManager().broadcastMessage("<red><bold>Time is up! The Hunters win (opposition by timeout)!");
+                    plugin.getUiManager().broadcastMessage(cfg().getMessage("pause.timeout-hunters-win"));
                     huntersWin();
                 } else {
-                    plugin.getUiManager().broadcastMessage("<gold><bold>Time is up! The Runner wins (opposition by timeout)!");
+                    plugin.getUiManager().broadcastMessage(cfg().getMessage("pause.timeout-runner-wins"));
                     runnerWins();
                 }
                 return;
@@ -803,13 +828,15 @@ public class GameManager {
         } else if (previousState == GameState.HEADSTART) {
             applyHeadstartFreezeState();
             int remaining = match.getHeadstartRemaining();
-            if (remaining <= 0) remaining = plugin.getConfigManager().getHeadstartDuration();
+            if (remaining <= 0) remaining = cfg().getHeadstartDuration();
             startHeadstartTimer(remaining);
         }
 
         plugin.getUiManager().hidePauseTitle();
-        plugin.getUiManager().sendTitle("<green>Game Resumed", "<gray>The game has been resumed");
-        plugin.getUiManager().sendToAll("<green>Game has been resumed!");
+        plugin.getUiManager().sendTitle(
+                cfg().getMessage("resume.title"),
+                cfg().getMessage("resume.subtitle"));
+        plugin.getUiManager().sendToAll(cfg().getMessage("resume.broadcast"));
 
         return true;
     }

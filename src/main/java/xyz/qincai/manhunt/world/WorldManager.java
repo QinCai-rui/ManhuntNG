@@ -37,7 +37,7 @@ public class WorldManager {
             overworld = loadWorld(worldName);
             if (overworld == null) {
                 plugin.getLogger().severe("Failed to load existing world: " + worldName);
-                plugin.getUiManager().broadcastMessage("<red>Failed to load world: " + worldName);
+                plugin.getUiManager().broadcastMessage(plugin.getConfigManager().getMessage("world.load-failed", "{world}", worldName));
                 match.setState(xyz.qincai.manhunt.game.GameState.WAITING);
                 return;
             }
