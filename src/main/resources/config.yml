@@ -1,7 +1,8 @@
 # ManhuntNG Configuration
-config-version: 1
+config-version: 2
 
 runner:
+  keepInventory: false
   lives: 1
 
 hunters:

@@ -4,15 +4,17 @@ import org.bukkit.World;
 import xyz.qincai.manhunt.player.PlayerRole;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 public class Match {
     private GameState state = GameState.WAITING;
     private StartMode startMode = StartMode.DREAMSTART;
-    private UUID runnerUuid;
-    private final java.util.Set<UUID> hunterUuids = new java.util.concurrent.ConcurrentHashMap<UUID, Boolean>().newKeySet();
-    private final java.util.Set<UUID> spectatorUuids = new java.util.concurrent.ConcurrentHashMap<UUID, Boolean>().newKeySet();
-    private final java.util.Map<UUID, PlayerRole> previousRoles = new java.util.concurrent.ConcurrentHashMap<>();
+    private ManhuntGameMode gameMode = ManhuntGameMode.NORMAL;
+    private final Set<UUID> runnerUuids = new java.util.concurrent.ConcurrentHashMap<UUID, Boolean>().newKeySet();
+    private final Set<UUID> hunterUuids = new java.util.concurrent.ConcurrentHashMap<UUID, Boolean>().newKeySet();
+    private final Set<UUID> spectatorUuids = new java.util.concurrent.ConcurrentHashMap<UUID, Boolean>().newKeySet();
+    private final Map<UUID, PlayerRole> previousRoles = new java.util.concurrent.ConcurrentHashMap<>();
     private UUID ownerUuid;
     private long startTime;
     private long endTime;
@@ -48,12 +50,35 @@ public class Match {
         this.startMode = startMode;
     }
 
-    public UUID getRunnerUuid() {
-        return runnerUuid;
+    public ManhuntGameMode getGameMode() {
+        return gameMode;
     }
 
-    public void setRunnerUuid(UUID runnerUuid) {
-        this.runnerUuid = runnerUuid;
+    public void setGameMode(ManhuntGameMode gameMode) {
+        this.gameMode = gameMode;
+    }
+
+    public Set<UUID> getRunnerUuids() {
+        return runnerUuids;
+    }
+
+    public void addRunner(UUID uuid) {
+        runnerUuids.add(uuid);
+    }
+
+    public void removeRunner(UUID uuid) {
+        runnerUuids.remove(uuid);
+    }
+
+    public boolean isRunner(UUID uuid) {
+        return runnerUuids.contains(uuid);
+    }
+
+    public UUID getRunnerUuid() {
+        if (runnerUuids.isEmpty()) {
+            return null;
+        }
+        return runnerUuids.iterator().next();
     }
 
     public java.util.Set<UUID> getHunterUuids() {
@@ -243,7 +268,7 @@ public class Match {
     }
 
     public boolean isPlayer(UUID uuid) {
-        return (runnerUuid != null && runnerUuid.equals(uuid)) || hunterUuids.contains(uuid);
+        return runnerUuids.contains(uuid) || hunterUuids.contains(uuid);
     }
 
     public boolean isParticipant(UUID uuid) {

@@ -24,19 +24,21 @@ public class PotionEffectManager {
     }
 
     /*
-     * Applies configured potion effects to runner and hunters.
+     * Applies configured potion effects to all runners and hunters.
      * Called when the hunt starts (RUNNING state) or force-start.
      */
     public void applyEffects() {
         Match match = plugin.getGameManager().getMatch();
 
-        // Apply runner effects
+        // Apply runner effects to all runners
         List<PotionEffect> runnerEffects = plugin.getConfigManager().getRunnerPotionEffects();
-        if (match.getRunnerUuid() != null && !runnerEffects.isEmpty()) {
-            Player runner = Bukkit.getPlayer(match.getRunnerUuid());
-            if (runner != null) {
-                for (PotionEffect effect : runnerEffects) {
-                    runner.addPotionEffect(effect);
+        if (!runnerEffects.isEmpty()) {
+            for (UUID runnerUuid : match.getRunnerUuids()) {
+                Player runner = Bukkit.getPlayer(runnerUuid);
+                if (runner != null) {
+                    for (PotionEffect effect : runnerEffects) {
+                        runner.addPotionEffect(effect);
+                    }
                 }
             }
         }
@@ -56,7 +58,7 @@ public class PotionEffectManager {
     }
 
     /*
-     * Clears ALL active potion effects from runner and hunters.
+     * Clears ALL active potion effects from all runners and hunters.
      * Called when the game ends or is stopped.
      *
      * Note: This clears ALL effects, including but not limited to configured ones.
@@ -65,9 +67,9 @@ public class PotionEffectManager {
     public void clearEffects() {
         Match match = plugin.getGameManager().getMatch();
 
-        // Clear runner effects
-        if (match.getRunnerUuid() != null) {
-            Player runner = Bukkit.getPlayer(match.getRunnerUuid());
+        // Clear effects from all runners
+        for (UUID runnerUuid : match.getRunnerUuids()) {
+            Player runner = Bukkit.getPlayer(runnerUuid);
             if (runner != null) {
                 runner.getActivePotionEffects().stream()
                         .map(PotionEffect::getType)

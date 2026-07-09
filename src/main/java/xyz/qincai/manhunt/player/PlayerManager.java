@@ -51,6 +51,16 @@ public class PlayerManager {
         return null;
     }
 
+    public java.util.Set<UUID> getRunnerUuids() {
+        java.util.Set<UUID> runners = new java.util.HashSet<>();
+        for (Map.Entry<UUID, PlayerRole> entry : playerRoles.entrySet()) {
+            if (entry.getValue() == PlayerRole.RUNNER) {
+                runners.add(entry.getKey());
+            }
+        }
+        return runners;
+    }
+
     public void addHunterRespawn(UUID uuid) {
         hunterRespawns.merge(uuid, 1, Integer::sum);
     }
@@ -67,7 +77,7 @@ public class PlayerManager {
         Match match = plugin.getGameManager().getMatch();
         switch (role) {
             case RUNNER -> {
-                match.setRunnerUuid(player.getUniqueId());
+                match.addRunner(player.getUniqueId());
                 match.removeSpectator(player.getUniqueId());
                 setRole(player.getUniqueId(), PlayerRole.RUNNER);
             }
@@ -83,13 +93,30 @@ public class PlayerManager {
         }
     }
 
+    public void infectRunnerToHunter(UUID runnerUuid) {
+        Match match = plugin.getGameManager().getMatch();
+        Player player = Bukkit.getPlayer(runnerUuid);
+        if (player == null) return;
+
+        match.removeRunner(runnerUuid);
+        match.addHunter(runnerUuid);
+        setRole(runnerUuid, PlayerRole.HUNTER);
+        player.setGameMode(GameMode.SURVIVAL);
+
+        // Clear runner potion effects before applying hunter effects
+        for (org.bukkit.potion.PotionEffect effect : plugin.getConfigManager().getRunnerPotionEffects()) {
+            player.removePotionEffect(effect.getType());
+        }
+
+        plugin.getTrackerManager().giveCompassToPlayer(player);
+        plugin.getPotionEffectManager().applyHunterEffects(runnerUuid);
+    }
+
     public void removePlayerFromGame(UUID uuid) {
         Match match = plugin.getGameManager().getMatch();
         match.getHunterUuids().remove(uuid);
         match.getSpectatorUuids().remove(uuid);
-        if (match.getRunnerUuid() != null && match.getRunnerUuid().equals(uuid)) {
-            match.setRunnerUuid(null);
-        }
+        match.removeRunner(uuid);
         playerRoles.remove(uuid);
         hunterRespawns.remove(uuid);
     }

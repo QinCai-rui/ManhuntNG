@@ -21,22 +21,37 @@ public class FormationManager {
         Match match = plugin.getGameManager().getMatch();
         World gameWorld = match.getGameWorld();
         if (gameWorld == null) return; // No world loaded -> cannot form anything
-        if (match.getRunnerUuid() == null) return; // No runner selected yet
+        if (match.getRunnerUuids().isEmpty()) return; // No runner selected yet
 
-        Player runner = org.bukkit.Bukkit.getPlayer(match.getRunnerUuid());
-        if (runner == null) return; // Runner offline or not found
-
-        double radius = plugin.getConfigManager().getHunterCircleRadius(); // Circle radius for hunters
-        int searchRadius = plugin.getConfigManager().getFormationSearchRadius(); // How far we search for safe formation center
-        List<UUID> hunterUuids = List.copyOf(match.getHunterUuids()); // Copy to avoid >=1 modification at a time
+        List<UUID> runnerUuids = List.copyOf(match.getRunnerUuids()); // Copy to avoid concurrent modification
+        List<UUID> hunterUuids = List.copyOf(match.getHunterUuids());
+        int runnerCount = runnerUuids.size();
         int hunterCount = hunterUuids.size();
+
+        // Decide who forms the ring and who stands in the center.
+        // If there are strictly more runners than hunters, the runners surround the hunter(s).
+        // Otherwise (hunters >= runners) the hunters surround the runner(s) - the default behaviour.
+        boolean runnersSurround = runnerCount > hunterCount && hunterCount > 0;
+
+        // The center holds the smaller group: a hunter when runners surround, otherwise a runner.
+        List<UUID> centerGroup = runnersSurround ? hunterUuids : runnerUuids;
+        // The outer ring holds the larger group: the runners when they surround, otherwise the hunters.
+        List<UUID> outerGroup = runnersSurround ? runnerUuids : hunterUuids;
+        int outerCount = outerGroup.size();
+
+        UUID centerUuid = centerGroup.get(0);
+        Player centerPlayer = org.bukkit.Bukkit.getPlayer(centerUuid);
+        if (centerPlayer == null) return; // Center player offline or not found
+
+        double radius = plugin.getConfigManager().getHunterCircleRadius(); // Circle radius for the outer ring
+        int searchRadius = plugin.getConfigManager().getFormationSearchRadius(); // How far we search for safe formation center
 
         Location spawnLoc = gameWorld.getSpawnLocation();
         Location center = findSafeSurfaceLocation(spawnLoc); // Try vanilla spawn first
 
-        // Check if vanilla spawn is safe AND hunter circle is safe
+        // Check if vanilla spawn is safe AND the outer ring is safe
         boolean formationFound = center != null
-                && (hunterCount == 0 || areHunterPositionsSafe(center, radius, hunterCount, gameWorld));
+                && (outerCount == 0 || areOuterPositionsSafe(center, radius, outerCount, gameWorld));
 
         // If vanilla spawn isn't safe, search outward in a square ring pattern
         if (!formationFound) {
@@ -56,8 +71,8 @@ public class FormationManager {
                         if (safe == null) continue; // No safe ground here
                         if (!isSafeForPlayer(safe)) continue; // Player cannot stand here
 
-                        // Ensure hunters can also stand safely in a circle around this point
-                        if (hunterCount > 0 && !areHunterPositionsSafe(safe, radius, hunterCount, gameWorld))
+                        // Ensure the outer ring can also stand safely around this point
+                        if (outerCount > 0 && !areOuterPositionsSafe(safe, radius, outerCount, gameWorld))
                             continue;
 
                         center = safe;
@@ -73,38 +88,64 @@ public class FormationManager {
             center = findSafeLocationGuaranteed(gameWorld, spawnLoc);
         }
 
-        // Teleport runner first
-        runner.teleport(center);
+        // Teleport the center group. The first member stands exactly at the center;
+        // any remaining members cluster tightly around it (the inner ring).
+        for (int i = 0; i < centerGroup.size(); i++) {
+            Player member = org.bukkit.Bukkit.getPlayer(centerGroup.get(i));
+            if (member == null) continue;
 
-        if (hunterCount == 0) return; // No hunters -> formation ends here
+            if (i == 0) {
+                member.teleport(center);
+                continue;
+            }
 
-        // Compute hunter positions in a CIRCLE around the runner
+            double innerAngle = 2 * Math.PI / centerGroup.size() * i;
+            double innerRadius = Math.min(2.0, radius * 0.5);
+            double x = center.getX() + innerRadius * Math.cos(innerAngle);
+            double z = center.getZ() + innerRadius * Math.sin(innerAngle);
+
+            Location innerLoc;
+            if (formationFound) {
+                innerLoc = new Location(gameWorld, x, center.getY(), z);
+            } else {
+                Location ground = findSafeSurfaceLocation(new Location(gameWorld, x, center.getY(), z));
+                innerLoc = ground != null ? ground : center;
+            }
+            member.teleport(innerLoc);
+        }
+
+        if (outerCount == 0) return; // No outer members -> formation ends here
+
+        // Compute outer ring positions in a CIRCLE around the center
         double y = center.getY();
-        double angleStep = 2 * Math.PI / hunterCount;
+        double angleStep = 2 * Math.PI / outerCount;
 
-        for (int i = 0; i < hunterCount; i++) {
-            UUID hunterUuid = hunterUuids.get(i);
-            Player hunter = org.bukkit.Bukkit.getPlayer(hunterUuid);
-            if (hunter == null) continue; // Skip offline hunters
+        for (int i = 0; i < outerCount; i++) {
+            UUID outerUuid = outerGroup.get(i);
+            Player outer = org.bukkit.Bukkit.getPlayer(outerUuid);
+            if (outer == null) continue; // Skip offline players
 
             double angle = angleStep * i;
             double x = center.getX() + radius * Math.cos(angle);
             double z = center.getZ() + radius * Math.sin(angle);
 
-            Location hunterLoc;
+            Location outerLoc;
 
             if (formationFound) {
                 // Use exact circle position if formation center is safe
-                hunterLoc = new Location(gameWorld, x, y, z);
+                outerLoc = new Location(gameWorld, x, y, z);
             } else {
                 // Otherwise try to find safe ground near the circle position
                 Location ground = findSafeSurfaceLocation(new Location(gameWorld, x, center.getY(), z));
-                hunterLoc = ground != null ? ground : center; // Fallback to center if needed
+                outerLoc = ground != null ? ground : center; // Fallback to center if needed
             }
 
-            // Make hunter face the runner
-            hunterLoc.setDirection(center.toVector().subtract(hunterLoc.toVector()).setY(0).normalize());
-            hunter.teleport(hunterLoc);
+            // Make the outer member face the center
+            // Guard against zero-length vector when outerLoc equals center
+            if (!outerLoc.toVector().equals(center.toVector())) {
+                outerLoc.setDirection(center.toVector().subtract(outerLoc.toVector()).setY(0).normalize());
+            }
+            outer.teleport(outerLoc);
         }
     }
 
@@ -144,13 +185,13 @@ public class FormationManager {
                 && below.getType().isSolid(); // Must stand on solid block
     }
 
-    // All hunter positions must be on the same surface level as the runner.
-    private boolean areHunterPositionsSafe(Location center, double radius, int hunterCount, World world) {
-        double angleStep = 2 * Math.PI / hunterCount;
+    // All outer-ring positions must be on the same surface level as the center.
+    private boolean areOuterPositionsSafe(Location center, double radius, int outerCount, World world) {
+        double angleStep = 2 * Math.PI / outerCount;
         double y = center.getY();
 
-        // Check each hunter’s circle position for safety
-        for (int i = 0; i < hunterCount; i++) {
+        // Check each outer ring member's circle position for safety
+        for (int i = 0; i < outerCount; i++) {
             double angle = angleStep * i;
             double x = center.getX() + radius * Math.cos(angle);
             double z = center.getZ() + radius * Math.sin(angle);

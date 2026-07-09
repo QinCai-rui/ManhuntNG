@@ -14,6 +14,7 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import xyz.qincai.manhunt.ManhuntNG;
 import xyz.qincai.manhunt.chat.ChatMode;
+import xyz.qincai.manhunt.game.ManhuntGameMode;
 import xyz.qincai.manhunt.game.GameState;
 import xyz.qincai.manhunt.game.Match;
 import xyz.qincai.manhunt.game.StartMode;
@@ -152,6 +153,15 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
+        Match match = plugin.getGameManager().getMatch();
+        ManhuntGameMode gameMode = match.getGameMode();
+        if (gameMode == ManhuntGameMode.NORMAL) {
+            if (!match.getRunnerUuids().isEmpty()) {
+                sender.sendMessage(Component.text("Only one runner is allowed in Normal mode!", NamedTextColor.RED));
+                return true;
+            }
+        }
+
         if (plugin.getGameManager().isGameActive()) {
             sender.sendMessage(Component.text("Cannot change roles during an active game!", NamedTextColor.RED));
             return true;
@@ -159,10 +169,10 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
 
         plugin.getPlayerManager().removePlayerFromGame(target.getUniqueId());
         plugin.getPlayerManager().setRole(target.getUniqueId(), PlayerRole.RUNNER);
-        plugin.getGameManager().getMatch().setRunnerUuid(target.getUniqueId());
+        match.addRunner(target.getUniqueId());
         sender.sendMessage(Component.text(target.getName(), NamedTextColor.AQUA)
-                .append(Component.text(" is now the Runner!", NamedTextColor.GREEN)));
-        target.sendMessage(Component.text("You are now the Runner!", NamedTextColor.GREEN));
+                .append(Component.text(" is now a Runner!", NamedTextColor.GREEN)));
+        target.sendMessage(Component.text("You are now a Runner!", NamedTextColor.GREEN));
         return true;
     }
 
@@ -221,30 +231,64 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        if (args.length < 2) {
-            StartMode current = plugin.getGameManager().getMatch().getStartMode();
-            sender.sendMessage(Component.text("Current mode: ", NamedTextColor.GRAY)
-                    .append(Component.text(current.getDisplayName(), NamedTextColor.AQUA)));
+        if (args.length == 1) {
+            ManhuntGameMode currentGameMode = plugin.getGameManager().getMatch().getGameMode();
+            StartMode currentStartMode = plugin.getGameManager().getMatch().getStartMode();
+            sender.sendMessage(Component.text("Current game mode: ", NamedTextColor.GRAY)
+                    .append(Component.text(currentGameMode.getDisplayName(), NamedTextColor.AQUA)));
+            sender.sendMessage(Component.text("Current start mode: ", NamedTextColor.GRAY)
+                    .append(Component.text(currentStartMode.getDisplayName(), NamedTextColor.AQUA)));
             sender.sendMessage(Component.text("Usage: ", NamedTextColor.RED)
-                    .append(Component.text("/manhunt mode <dreamstart|headstart>", NamedTextColor.WHITE)));
+                    .append(Component.text("/manhunt mode <normal|infection> <dreamstart|headstart>", NamedTextColor.WHITE)));
             return true;
         }
 
-        switch (args[1].toLowerCase()) {
-            case "dreamstart" -> {
-                plugin.getGameManager().getMatch().setStartMode(StartMode.DREAMSTART);
-                sender.sendMessage(Component.text("Start mode set to ", NamedTextColor.GREEN)
-                        .append(Component.text("Dreamstart", NamedTextColor.AQUA)));
-                sender.sendMessage(Component.text("Runner must punch a hunter to start the hunt.", NamedTextColor.GRAY));
+        if (args.length < 3) {
+            sender.sendMessage(Component.text("Usage: ", NamedTextColor.RED)
+                    .append(Component.text("/manhunt mode <normal|infection> <dreamstart|headstart>", NamedTextColor.WHITE)));
+            return true;
+        }
+
+        ManhuntGameMode gameMode;
+        if (args[1].toLowerCase().equals("infection")) {
+            gameMode = ManhuntGameMode.INFECTION;
+        } else if (args[1].toLowerCase().equals("normal")) {
+            gameMode = ManhuntGameMode.NORMAL;
+        } else {
+            sender.sendMessage(Component.text("Invalid game mode! Must be 'normal' or 'infection'.", NamedTextColor.RED));
+            return true;
+        }
+
+        StartMode startMode;
+        if (args[2].toLowerCase().equals("headstart")) {
+            startMode = StartMode.HEADSTART;
+        } else if (args[2].toLowerCase().equals("dreamstart")) {
+            startMode = StartMode.DREAMSTART;
+        } else {
+            sender.sendMessage(Component.text("Invalid start mode! Must be 'dreamstart' or 'headstart'.", NamedTextColor.RED));
+            return true;
+        }
+
+        Match match = plugin.getGameManager().getMatch();
+
+        // Prevent switching to Normal mode when multiple runners are selected
+        if (gameMode == ManhuntGameMode.NORMAL) {
+            if (match.getRunnerUuids().size() > 1) {
+                sender.sendMessage(Component.text("Cannot switch to Normal mode with multiple runners! Remove runners first.", NamedTextColor.RED));
+                return true;
             }
-            case "headstart" -> {
-                plugin.getGameManager().getMatch().setStartMode(StartMode.HEADSTART);
-                sender.sendMessage(Component.text("Start mode set to ", NamedTextColor.GREEN)
-                        .append(Component.text("Headstart", NamedTextColor.AQUA)));
-                sender.sendMessage(Component.text("Runner gets a headstart while hunters are frozen.", NamedTextColor.GRAY));
-            }
-            default -> sender.sendMessage(Component.text("Usage: ", NamedTextColor.RED)
-                    .append(Component.text("/manhunt mode <dreamstart|headstart>", NamedTextColor.WHITE)));
+        }
+
+        match.setGameMode(gameMode);
+        match.setStartMode(startMode);
+
+        sender.sendMessage(Component.text("Game mode set to ", NamedTextColor.GREEN)
+                .append(Component.text(gameMode.getDisplayName(), NamedTextColor.AQUA)));
+        sender.sendMessage(Component.text("Start mode set to ", NamedTextColor.GREEN)
+                .append(Component.text(startMode.getDisplayName(), NamedTextColor.AQUA)));
+
+        if (gameMode == ManhuntGameMode.INFECTION) {
+            sender.sendMessage(Component.text("Infection mode: Runners are permanently converted to hunters when killed.", NamedTextColor.GRAY));
         }
         return true;
     }
@@ -276,11 +320,10 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
         Match match = plugin.getGameManager().getMatch();
 
         if (plugin.getPlayerManager().isRunner(targetUuid)) {
-            match.setRunnerUuid(null);
             plugin.getPlayerManager().removePlayerFromGame(targetUuid);
             sender.sendMessage(Component.text(target.getName(), NamedTextColor.AQUA)
-                    .append(Component.text(" is no longer the Runner!", NamedTextColor.YELLOW)));
-            target.sendMessage(Component.text("You are no longer the Runner!", NamedTextColor.YELLOW));
+                    .append(Component.text(" is no longer a Runner!", NamedTextColor.YELLOW)));
+            target.sendMessage(Component.text("You are no longer a Runner!", NamedTextColor.YELLOW));
         } else if (plugin.getPlayerManager().isHunter(targetUuid)) {
             plugin.getPlayerManager().removePlayerFromGame(targetUuid);
             sender.sendMessage(Component.text(target.getName(), NamedTextColor.AQUA)
@@ -551,7 +594,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
                     "Click to set seed", "manhunt.admin");
             helpEntry(sender, "manhunt world [name]", "View/set existing world to use",
                     "Click to set world", "manhunt.admin");
-            helpEntry(sender, "manhunt mode <dreamstart|headstart>", "Set start mode",
+            helpEntry(sender, "manhunt mode <normal|infection> <dreamstart|headstart>", "Set game and start mode",
                     "Click to set mode", "manhunt.admin");
             helpEntry(sender, "manhunt forcestart", "Skip validation & start",
                     "Click to force start", "manhunt.admin");
@@ -576,6 +619,24 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
         Component desc = Component.text(" \u2014 ", NamedTextColor.DARK_GRAY)
                 .append(Component.text(description, NamedTextColor.GRAY));
         sender.sendMessage(cmd.append(desc));
+    }
+
+    private void updateEntryWithMode(CommandSender sender, String gameModeName) {
+        String command = "manhunt mode " + gameModeName + " dreamstart";
+        String description = "Set game mode to " + gameModeName + " with dreamstart";
+        String hoverText = "Click to set " + gameModeName + " mode";
+        String permission = "manhunt.admin";
+
+        helpEntry(sender, command, description, hoverText, permission);
+    }
+
+    private void updateEntryWithModeAndHeadstart(CommandSender sender, String gameModeName) {
+        String command = "manhunt mode " + gameModeName + " headstart";
+        String description = "Set game mode to " + gameModeName + " with headstart";
+        String hoverText = "Click to set " + gameModeName + " mode with headstart";
+        String permission = "manhunt.admin";
+
+        helpEntry(sender, command, description, hoverText, permission);
     }
 
     private NamedTextColor getTextColor(GameState state) {
@@ -642,9 +703,21 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
                 return filterPartial(args[1], completions);
             }
             if (sub.equals("mode")) {
-                completions.add("dreamstart");
-                completions.add("headstart");
+                completions.add("normal");
+                completions.add("infection");
                 return filterPartial(args[1], completions);
+            }
+        }
+
+        if (args.length == 3) {
+            String sub = args[0].toLowerCase();
+            if (sub.equals("mode")) {
+                String gameMode = args[1].toLowerCase();
+                if (gameMode.equals("normal") || gameMode.equals("infection")) {
+                    completions.add("dreamstart");
+                    completions.add("headstart");
+                }
+                return filterPartial(args[2], completions);
             }
         }
 

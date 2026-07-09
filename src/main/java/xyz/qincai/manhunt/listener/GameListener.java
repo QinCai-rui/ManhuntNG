@@ -145,7 +145,7 @@ public class GameListener implements Listener {
         Match match = plugin.getGameManager().getMatch();
 
         if (match.getState() == GameState.RUNNING &&
-                player.getUniqueId().equals(match.getRunnerUuid())) {
+                match.isRunner(player.getUniqueId())) {
             plugin.getTrackerManager().updateRunnerLastKnown(player);
         }
     }
@@ -157,9 +157,9 @@ public class GameListener implements Listener {
     public void onPlayerQuit(PlayerQuitEvent event) {
         Match match = plugin.getGameManager().getMatch();
         if (match.getState() != GameState.RUNNING && match.getState() != GameState.HEADSTART) return;
-        if (!event.getPlayer().getUniqueId().equals(match.getRunnerUuid())) return;
+        if (!match.isRunner(event.getPlayer().getUniqueId())) return;
 
-        plugin.getUiManager().sendToAll("<yellow>Runner has disconnected — pausing game!");
+        plugin.getUiManager().sendToAll("<yellow>A runner has disconnected — pausing game!");
         plugin.getGameManager().pauseGame();
     }
 
@@ -178,7 +178,7 @@ public class GameListener implements Listener {
 
         destroyTrackingCompass(player, event);
 
-        // Runner death -> hunters win
+        // Runner death
         if (plugin.getPlayerManager().isRunner(uuid)) {
             Component vanilla = event.deathMessage();
             if (vanilla != null) {
@@ -188,8 +188,34 @@ public class GameListener implements Listener {
                         .build());
             }
 
-            plugin.getPlayerManager().eliminateRunner(uuid);
+            // Infection mode: runner becomes a hunter (only during RUNNING)
+            if (match.getGameMode() == xyz.qincai.manhunt.game.ManhuntGameMode.INFECTION) {
+                // Record death before any conversion
+                plugin.getStatsManager().recordDeath(uuid);
+
+                // Only convert to hunter if match is RUNNING
+                if (match.getState() == GameState.RUNNING) {
+                    if (plugin.getConfigManager().isRunnerKeepInventory()) {
+                        event.setKeepInventory(true);
+                        event.getDrops().clear();
+                    } else {
+                        event.setKeepInventory(false);
+                    }
+                    plugin.getGameManager().infectPlayer(uuid);
+                    return;
+                }
+
+                // For HEADSTART or other states, handle as normal elimination
+                plugin.getPlayerManager().addHunterRespawn(uuid);
+                plugin.getPlayerManager().eliminateRunner(uuid);
+                plugin.getGameManager().huntersWin();
+                return;
+            }
+
+            // Normal mode: runner is eliminated, hunters win
+            plugin.getPlayerManager().addHunterRespawn(uuid);
             plugin.getStatsManager().recordDeath(uuid);
+            plugin.getPlayerManager().eliminateRunner(uuid);
             plugin.getGameManager().huntersWin();
             return;
         }
