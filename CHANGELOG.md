@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added support for multiple runners in a match
+- Added a new Infection gamemode, where hunters can infect runners and turn them into hunters
+- Added a runner keepInventory option
+
+### Fixed
+
+- Tracking compass now works properly by tracking nearest runners
+
 ## [1.2.1] - 2026-07-08
 
 ### Deprecated
