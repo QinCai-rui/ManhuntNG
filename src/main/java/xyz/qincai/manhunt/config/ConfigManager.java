@@ -98,6 +98,9 @@ public class ConfigManager {
         validateBoolean("scoreboard.enabled", true);
         validateBoolean("actionBar.enabled", true);
 
+        validateBoolean("pauseTimeout.enabled", false);
+        validateInt("pauseTimeout.duration", 60);
+
         validateBoolean("runner.keepInventory", false);
 
         validateBoolean("hunters.keepInventory", false);
@@ -339,6 +342,14 @@ public class ConfigManager {
 
     public boolean isActionBarEnabled() {
         return config.getBoolean("actionBar.enabled", true);
+    }
+
+    public boolean isPauseTimeoutEnabled() {
+        return config.getBoolean("pauseTimeout.enabled", false);
+    }
+
+    public int getPauseTimeoutDuration() {
+        return config.getInt("pauseTimeout.duration", 60);
     }
 
     public boolean isHunterKeepInventory() {

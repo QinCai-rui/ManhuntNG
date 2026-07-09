@@ -6,6 +6,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.GameRule;
 import org.bukkit.World;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.advancement.Advancement;
 import org.bukkit.advancement.AdvancementProgress;
 import org.bukkit.entity.EnderDragon;
@@ -24,6 +25,7 @@ public class GameManager {
     private final Match match;
     private int countdownTaskId = -1;
     private int headstartTaskId = -1;
+    private int pauseTimeoutTaskId = -1;
     private java.util.concurrent.atomic.AtomicInteger headstartCounter;
     private boolean forceStart;
 
@@ -429,6 +431,7 @@ public class GameManager {
             headstartTaskId = -1;
         }
         headstartCounter = null;
+        stopPauseTimeout();
 
         plugin.getTrackerManager().stopTracking();
         plugin.getUiManager().stopUIUpdates();
@@ -697,6 +700,69 @@ public class GameManager {
 
         plugin.getUiManager().showPauseTitle();
         plugin.getUiManager().sendToAll("<yellow>Game has been paused!");
+
+        // If a whole team disconnected (causing this pause), start the pause-timeout.
+        // When it expires the OPPOSING team wins (e.g. all runners gone -> hunters win).
+        boolean runnersOffline = isTeamFullyOffline(match.getRunnerUuids());
+        boolean huntersOffline = isTeamFullyOffline(match.getHunterUuids());
+        if (plugin.getConfigManager().isPauseTimeoutEnabled() && (runnersOffline || huntersOffline)) {
+            match.setPauseTimeoutHuntersWin(runnersOffline);
+            startPauseTimeout();
+        }
+    }
+
+    /*
+     * Returns true if every player in the given set is currently offline.
+     */
+    private boolean isTeamFullyOffline(java.util.Set<UUID> uuids) {
+        if (uuids.isEmpty()) return false;
+        for (UUID id : uuids) {
+            Player p = Bukkit.getPlayer(id);
+            if (p != null && p.isOnline()) return false;
+        }
+        return true;
+    }
+
+    /*
+     * Starts the pause-timeout countdown. When it reaches zero while still paused,
+     * the opposition team wins. Cancelled automatically on resume or stop.
+     */
+    private void startPauseTimeout() {
+        stopPauseTimeout();
+        if (!plugin.getConfigManager().isPauseTimeoutEnabled()) return;
+
+        match.setPauseTimeoutRemaining(plugin.getConfigManager().getPauseTimeoutDuration());
+
+        pauseTimeoutTaskId = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            if (match.getState() != GameState.PAUSED) {
+                stopPauseTimeout();
+                return;
+            }
+
+            int remaining = match.getPauseTimeoutRemaining();
+            if (remaining <= 0) {
+                stopPauseTimeout();
+                if (match.isPauseTimeoutHuntersWin()) {
+                    plugin.getUiManager().broadcastMessage("<red><bold>Time is up! The Hunters win (opposition by timeout)!");
+                    huntersWin();
+                } else {
+                    plugin.getUiManager().broadcastMessage("<gold><bold>Time is up! The Runner wins (opposition by timeout)!");
+                    runnerWins();
+                }
+                return;
+            }
+            match.setPauseTimeoutRemaining(remaining - 1);
+        }, 20L, 20L).getTaskId();
+    }
+
+    /*
+     * Cancels the pause-timeout task.
+     */
+    private void stopPauseTimeout() {
+        if (pauseTimeoutTaskId != -1) {
+            Bukkit.getScheduler().cancelTask(pauseTimeoutTaskId);
+            pauseTimeoutTaskId = -1;
+        }
     }
 
     /*
@@ -704,6 +770,9 @@ public class GameManager {
      */
     public boolean resumeGame(UUID ownerUuid) {
         if (match.getState() != GameState.PAUSED) return false;
+
+        // Cancel any pending pause-timeout (the game is being resumed)
+        stopPauseTimeout();
 
         // Only owner or admin can resume
         if (!match.isOwner(ownerUuid)) {
