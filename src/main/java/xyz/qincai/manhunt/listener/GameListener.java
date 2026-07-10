@@ -280,7 +280,7 @@ public class GameListener implements Listener {
             if (runnerLimit >= 0 && plugin.getPlayerManager().getRunnerRespawnCount(uuid) > runnerLimit) {
                 // No lives left - eliminate
                 plugin.getPlayerManager().eliminateRunner(uuid);
-                plugin.getUiManager().sendToAll(plugin.getConfigManager().getMessageComponent("death.runner-eliminated", "{player}", player.getName()));
+                plugin.getUiManager().sendToAll(plugin.getConfigManager().getMessage("death.runner-eliminated", "{player}", player.getName()));
                 if (match.getRunnerUuids().isEmpty()) {
                     plugin.getGameManager().huntersWin();
                 }
@@ -290,7 +290,7 @@ public class GameListener implements Listener {
             // Lives remaining - broadcast lives message
             int livesLeft = runnerLimit < 0 ? -1 : runnerLimit - plugin.getPlayerManager().getRunnerRespawnCount(uuid) + 1;
             if (livesLeft >= 0) {
-                plugin.getUiManager().sendToAll(plugin.getConfigManager().getMessageComponent("death.runner-lives",
+                plugin.getUiManager().sendToAll(plugin.getConfigManager().getMessage("death.runner-lives",
                         "{player}", player.getName(), "{lives}", String.valueOf(livesLeft)));
             }
             return;
@@ -405,10 +405,10 @@ public class GameListener implements Listener {
                 int runnerLimit = plugin.getConfigManager().getRunnerRespawnLimit();
                 int livesLeft = runnerLimit < 0 ? -1 : runnerLimit - plugin.getPlayerManager().getRunnerRespawnCount(uuid) + 1;
                 if (livesLeft >= 0) {
-                    plugin.getUiManager().sendToAll(plugin.getConfigManager().getMessageComponent("respawn.runner",
+                    plugin.getUiManager().sendToAll(plugin.getConfigManager().getMessage("respawn.runner",
                             "{player}", player.getName(), "{lives}", String.valueOf(livesLeft)));
                 } else {
-                    plugin.getUiManager().sendToAll(plugin.getConfigManager().getMessageComponent("respawn.broadcast", "{player}", player.getName()));
+                    plugin.getUiManager().sendToAll(plugin.getConfigManager().getMessage("respawn.broadcast", "{player}", player.getName()));
                 }
             }, 1L);
         }
