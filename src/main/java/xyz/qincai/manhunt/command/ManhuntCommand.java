@@ -22,7 +22,11 @@ import xyz.qincai.manhunt.game.StartMode;
 import xyz.qincai.manhunt.player.PlayerRole;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
 
 public class ManhuntCommand implements CommandExecutor, TabCompleter {
@@ -55,6 +59,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             case "remove" -> handleRemove(sender, args);
             case "kick" -> handleKick(sender, args);
             case "forcestart" -> handleForceStart(sender, args);
+            case "shuffle" -> handleShuffle(sender, args);
             case "mode" -> handleMode(sender, args);
             case "pause" -> handlePause(sender, args);
             case "resume" -> handleResume(sender, args);
@@ -241,6 +246,89 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
         UUID ownerUuid = sender instanceof Player player ? player.getUniqueId() : null;
         plugin.getGameManager().startGameForce(ownerUuid);
         sender.sendMessage(cfg().getMessageComponent("admin.force-started"));
+        return true;
+    }
+
+    private boolean handleShuffle(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("manhunt.admin")) {
+            sender.sendMessage(cfg().getMessageComponent("error.no-permission"));
+            return true;
+        }
+
+        if (args.length < 2) {
+            sender.sendMessage(cfg().getMessageComponent("usage.shuffle"));
+            return true;
+        }
+
+        int runnerCount;
+        try {
+            runnerCount = Integer.parseInt(args[1]);
+        } catch (NumberFormatException e) {
+            sender.sendMessage(cfg().getMessageComponent("error.invalid-number"));
+            return true;
+        }
+
+        if (runnerCount < 1) {
+            sender.sendMessage(cfg().getMessageComponent("error.invalid-number"));
+            return true;
+        }
+
+        if (plugin.getGameManager().isGameActive()) {
+            sender.sendMessage(cfg().getMessageComponent("error.cannot-change-roles"));
+            return true;
+        }
+
+        Match match = plugin.getGameManager().getMatch();
+
+        // Issue 1: Build deduplicated participant list using a Set to avoid duplicates
+        Set<UUID> participantSet = new HashSet<>();
+        participantSet.addAll(match.getRunnerUuids());
+        participantSet.addAll(match.getHunterUuids());
+        participantSet.addAll(match.getSpectatorUuids());
+
+        // Issue 2: Reset roles for ALL participants (including offline) before reassignment
+        for (UUID uuid : participantSet) {
+            match.getRunnerUuids().remove(uuid);
+            match.getHunterUuids().remove(uuid);
+            match.addSpectator(uuid);
+            plugin.getPlayerManager().setRole(uuid, PlayerRole.SPECTATOR);
+        }
+
+        // Filter to only online participants for shuffling and assignment
+        List<UUID> onlineParticipants = new ArrayList<>();
+        for (UUID uuid : participantSet) {
+            if (Bukkit.getPlayer(uuid) != null) {
+                onlineParticipants.add(uuid);
+            }
+        }
+
+        // Issue 3: Validate minimum players safely to avoid integer overflow
+        if (runnerCount >= onlineParticipants.size() || onlineParticipants.size() < (long) runnerCount + 1) {
+            sender.sendMessage(cfg().getMessageComponent("error.not-enough-players",
+                    "{needed}", String.valueOf(runnerCount + 1)));
+            return true;
+        }
+
+        Collections.shuffle(onlineParticipants, new Random());
+
+        int assignedRunners = 0;
+        int assignedHunters = 0;
+        for (int i = 0; i < onlineParticipants.size(); i++) {
+            UUID uuid = onlineParticipants.get(i);
+            Player player = Bukkit.getPlayer(uuid);
+            if (player == null) continue;
+            if (i < runnerCount) {
+                plugin.getPlayerManager().applyRoleToPlayer(player, PlayerRole.RUNNER);
+                assignedRunners++;
+            } else {
+                plugin.getPlayerManager().applyRoleToPlayer(player, PlayerRole.HUNTER);
+                assignedHunters++;
+            }
+        }
+
+        sender.sendMessage(cfg().getMessageComponent("role.shuffle-result",
+                "{runners}", String.valueOf(assignedRunners),
+                "{hunters}", String.valueOf(assignedHunters)));
         return true;
     }
 
@@ -615,6 +703,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             helpEntry(sender, config, "help.world");
             helpEntry(sender, config, "help.mode");
             helpEntry(sender, config, "help.forcestart");
+            helpEntry(sender, config, "help.shuffle");
             helpEntry(sender, config, "help.reload");
             helpEntry(sender, config, "help.debug");
         }
@@ -670,6 +759,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
                 completions.add("remove");
                 completions.add("kick");
                 completions.add("forcestart");
+                completions.add("shuffle");
                 completions.add("mode");
                 completions.add("owner");
                 completions.add("seed");
