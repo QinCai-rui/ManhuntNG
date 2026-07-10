@@ -99,50 +99,6 @@ Action bar examples (with `tracking.showDistance: true`):
 
 ---
 
-## Why ManhuntNG
-
-I made this plugin because I wanted a more accurate tracking system for Minecraft Manhunt. Many existing plugins/datapacks have issues with cross-dimension tracking, and I wanted to create a solution that was reliable, easy to use, and configurable.
-
-ManhuntNG is designed to be simple to set up and use, and also having advanced features for those who want more control over their Manhunt games.
-
-### Team Chat
-
-By default, your messages are only visible to your teammates, unless you are a runner (because as of right now there is no multi runner support)
-
-### Better Tracking
-
-Runner tracking is live within the same dimension, updates last‑known locations correctly across dimensions, and automatically disables the compass when data isn’t available.
-
-### Match Pausing
-
-The pause/resume system freezes movement (including camera angle), world time, block & entity interactions, furnace activity, and crafting (mob AI freeze: TODO). Matches also pause automatically whenever the runner disconnects.
-
-### Respawn Handling
-
-Respawns are handled cleanly: compasses are removed on death to avoid duplication and automatically returned on respawn; optional partial or full inventory restoration.
-
-### World Management
-
-The plugin allows for preexisting worlds or new worlds with custom seeds to be used for matches, and allows for multiple matches to run on the same server.
-
-### Better Player UI/UX
-
-Players get a clean, simple UI with action bar messages and a scoreboard. The help menu is clickable with hover/click actions (Adventure API).
-
-### Simple Config
-
-Potion effects, inventory restoration, and other options are configurable in `config.yml`. Messages are configurable in `messages.yml`.
-
-### Modern-ish
-
-(pls dont tell me to use gradle, i tried. trust me)
-
-- Built with Adventure API  
-- Modular managers (tracking, players, world, UI)  
-- Clean command system  
-
----
-
 ## Building & Development
 
 Build with:
