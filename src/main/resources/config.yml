@@ -26,6 +26,10 @@ preHunt:
   hunterCircleRadius: 3.0
   formationSearchRadius: 30
 
+chat:
+  # Log chat messages to the server console (when chat is intercepted during a game)
+  logToConsole: true
+
 scoreboard:
   enabled: true
 
