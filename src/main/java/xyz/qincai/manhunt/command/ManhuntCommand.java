@@ -23,8 +23,10 @@ import xyz.qincai.manhunt.player.PlayerRole;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
 
 public class ManhuntCommand implements CommandExecutor, TabCompleter {
@@ -278,32 +280,41 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
 
         Match match = plugin.getGameManager().getMatch();
 
-        List<UUID> participants = new ArrayList<>();
-        participants.addAll(match.getRunnerUuids());
-        participants.addAll(match.getHunterUuids());
-        participants.addAll(match.getSpectatorUuids());
+        // Issue 1: Build deduplicated participant list using a Set to avoid duplicates
+        Set<UUID> participantSet = new HashSet<>();
+        participantSet.addAll(match.getRunnerUuids());
+        participantSet.addAll(match.getHunterUuids());
+        participantSet.addAll(match.getSpectatorUuids());
 
-        participants.removeIf(uuid -> Bukkit.getPlayer(uuid) == null);
-
-        if (participants.size() < runnerCount + 1) {
-            sender.sendMessage(cfg().getMessageComponent("error.not-enough-players",
-                    "{needed}", String.valueOf(runnerCount + 1)));
-            return true;
-        }
-
-        Collections.shuffle(participants, new Random());
-
-        for (UUID uuid : participants) {
+        // Issue 2: Reset roles for ALL participants (including offline) before reassignment
+        for (UUID uuid : participantSet) {
             match.getRunnerUuids().remove(uuid);
             match.getHunterUuids().remove(uuid);
             match.addSpectator(uuid);
             plugin.getPlayerManager().setRole(uuid, PlayerRole.SPECTATOR);
         }
 
+        // Filter to only online participants for shuffling and assignment
+        List<UUID> onlineParticipants = new ArrayList<>();
+        for (UUID uuid : participantSet) {
+            if (Bukkit.getPlayer(uuid) != null) {
+                onlineParticipants.add(uuid);
+            }
+        }
+
+        // Issue 3: Validate minimum players safely to avoid integer overflow
+        if (runnerCount >= onlineParticipants.size() || onlineParticipants.size() < (long) runnerCount + 1) {
+            sender.sendMessage(cfg().getMessageComponent("error.not-enough-players",
+                    "{needed}", String.valueOf(runnerCount + 1)));
+            return true;
+        }
+
+        Collections.shuffle(onlineParticipants, new Random());
+
         int assignedRunners = 0;
         int assignedHunters = 0;
-        for (int i = 0; i < participants.size(); i++) {
-            UUID uuid = participants.get(i);
+        for (int i = 0; i < onlineParticipants.size(); i++) {
+            UUID uuid = onlineParticipants.get(i);
             Player player = Bukkit.getPlayer(uuid);
             if (player == null) continue;
             if (i < runnerCount) {
