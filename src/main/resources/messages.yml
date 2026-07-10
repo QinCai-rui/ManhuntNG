@@ -31,6 +31,8 @@ error.failed-to-resume: '<red>Failed to resume the game!'
 error.message-empty: '<red>Message cannot be empty!'
 error.spectator-global-only: '<red>Spectators can only use global chat!'
 error.cannot-team-single: '<red>Cannot use team chat - you''re the only one on your team.'
+error.invalid-number: '<red>Invalid number!'
+error.not-enough-players: '<red>Not enough online players! Need at least {needed}.'
 
 # ============================================================================
 # Command Responses - Join / Leave
@@ -51,6 +53,7 @@ role.set-hunter-target: '<green>You are now a Hunter!'
 role.not-joined: '<red>{player} has not joined the game!'
 role.removed-sender: '{player} <yellow>''s role has been removed!'
 role.removed-target: '<yellow>Your role has been removed!'
+role.shuffle-result: '<green>Randomly assigned {runners} runner(s) and {hunters} hunter(s)!'
 
 # ============================================================================
 # Command Responses - Admin Actions
@@ -87,6 +90,7 @@ mode.infection-info: '<gray>Infection mode: Runners are permanently converted to
 # ============================================================================
 usage.runner: '<red>Usage: <white>/manhunt runner <player>'
 usage.hunter: '<red>Usage: <white>/manhunt hunter <player>'
+usage.shuffle: '<red>Usage: <white>/manhunt shuffle <runners_count>'
 usage.remove: '<red>Usage: <white>/manhunt remove <player>'
 usage.kick: '<red>Usage: <white>/manhunt kick <player>'
 usage.mode: '<red>Usage: <white>/manhunt mode <normal|infection> <dreamstart|headstart>'
@@ -325,6 +329,10 @@ help.forcestart.cmd: 'manhunt forcestart'
 help.forcestart.desc: 'Skip validation & start'
 help.forcestart.hover: 'Click to force start'
 help.forcestart.permission: 'manhunt.admin'
+help.shuffle.cmd: 'manhunt shuffle <runners_count>'
+help.shuffle.desc: 'Randomly assign runners and hunters'
+help.shuffle.hover: 'Click to randomly assign roles'
+help.shuffle.permission: 'manhunt.admin'
 help.reload.cmd: 'manhunt reload'
 help.reload.desc: 'Reload configuration'
 help.reload.hover: 'Click to reload'
