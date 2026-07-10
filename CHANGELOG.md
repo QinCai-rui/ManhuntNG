@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-07-10
+
 ### Added
 
 - Runner respawn system: runners now support multiple lives via `runner.respawnLimit`
@@ -19,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added runner death/respawn/elimination messages to `messages.yml`:
   `death.runner-lives`, `death.runner-eliminated`, `respawn.runner`
 
-### Changed (**BREAKING**)
+### Changed (*BREAKING*)
 
 - Hunter respawn limit check now uses `respawnLimit == -1` for infinite instead
   of a separate boolean flag
@@ -27,8 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - Removed `runner.lives` config option
-- Removed `hunters.infiniteRespawns` config option - use `hunters.respawnLimit:
-  -1` for infinite hunter respawns
+- Removed `hunters.infiniteRespawns` config option (See _Changed_ section above)
 
 ## [1.4.1] - 2026-07-10
 
