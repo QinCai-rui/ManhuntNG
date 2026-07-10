@@ -186,6 +186,7 @@ death.runner-prefix: '(Runner) '
 death.hunter-prefix: '(Hunter) '
 death.runner-lives: '<red>(<bold>Runner</bold>) <white>{player} <gray>died - {lives} life(s) remaining'
 death.runner-eliminated: '<red>(<bold>Runner</bold>) <white>{player} <gray>has been eliminated'
+death.hunter-eliminated: '<red>(<bold>Hunter</bold>) <white>{player} <gray>has been eliminated'
 respawn.broadcast: '<yellow>{player} has respawned!'
 respawn.runner: '<green>(<bold>Runner</bold>) <white>{player} <gray>respawned - {lives} life(s) remaining'
 

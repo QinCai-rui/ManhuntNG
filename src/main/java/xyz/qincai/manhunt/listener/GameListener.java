@@ -312,6 +312,10 @@ public class GameListener implements Listener {
             int hunterLimit = plugin.getConfigManager().getHunterRespawnLimit();
             if (hunterLimit >= 0 && plugin.getPlayerManager().getHunterRespawnCount(uuid) > hunterLimit) {
                 plugin.getPlayerManager().eliminateHunter(uuid);
+                plugin.getUiManager().sendToAll(plugin.getConfigManager().getMessage("death.hunter-eliminated", "{player}", player.getName()));
+                if (match.getHunterUuids().isEmpty()) {
+                    plugin.getGameManager().runnerWins();
+                }
                 return;
             }
 
