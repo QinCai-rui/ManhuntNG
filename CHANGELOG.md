@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Runner respawn system: runners now support multiple lives via `runner.respawnLimit`
+  in `config.yml` (default `0`: first death = elimination).
+  When a runner dies with lives remaining, they respawn at world spawn with potion
+  effects reapplied instead of being converted to spectator. Death and respawn messages
+  display remaining lives. Runners respect `runner.keepInventory` on respawn.
+- Added `applyRunnerEffects()` to `PotionEffectManager` for reapplying runner
+  potion effects on respawn
+- Added runner death/respawn/elimination messages to `messages.yml`:
+  `death.runner-lives`, `death.runner-eliminated`, `respawn.runner`
+
+### Changed (**BREAKING**)
+
+- Hunter respawn limit check now uses `respawnLimit == -1` for infinite instead
+  of a separate boolean flag
+
+### Removed
+
+- Removed `runner.lives` config option
+- Removed `hunters.infiniteRespawns` config option - use `hunters.respawnLimit:
+  -1` for infinite hunter respawns
+
 ## [1.4.1] - 2026-07-10
 
 ### Changed
