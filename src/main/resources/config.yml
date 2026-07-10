@@ -2,11 +2,10 @@
 config-version: 4
 
 runner:
+  respawnLimit: 0
   keepInventory: false
-  lives: 1
 
 hunters:
-  infiniteRespawns: true
   respawnLimit: -1
   keepInventory: false
   keepArmor: false

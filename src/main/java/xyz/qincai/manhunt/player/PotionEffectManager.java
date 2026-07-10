@@ -105,6 +105,22 @@ public class PotionEffectManager {
     }
 
     /*
+     * Applies runner effects to a single runner.
+     * Used when a runner respawns mid-game.
+     */
+    public void applyRunnerEffects(UUID runnerUuid) {
+        List<PotionEffect> runnerEffects = plugin.getConfigManager().getRunnerPotionEffects();
+        if (runnerEffects.isEmpty()) return;
+
+        Player runner = Bukkit.getPlayer(runnerUuid);
+        if (runner == null) return;
+
+        for (PotionEffect effect : runnerEffects) {
+            runner.addPotionEffect(effect);
+        }
+    }
+
+    /*
      * Removes only the configured potion effects from a player.
      * NOTE: (Currently unused)
      */

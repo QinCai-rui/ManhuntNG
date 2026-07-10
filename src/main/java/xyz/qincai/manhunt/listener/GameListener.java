@@ -264,11 +264,34 @@ public class GameListener implements Listener {
                 return;
             }
 
-            // Normal mode: runner is eliminated, hunters win when all runners are dead
+            // Normal mode: check respawn limit before eliminating
             plugin.getStatsManager().recordDeath(uuid);
-            plugin.getPlayerManager().eliminateRunner(uuid);
-            if (match.getRunnerUuids().isEmpty()) {
-                plugin.getGameManager().huntersWin();
+            plugin.getPlayerManager().addRunnerRespawn(uuid);
+
+            // Handle keepInventory for runners
+            if (plugin.getConfigManager().isRunnerKeepInventory()) {
+                event.setKeepInventory(true);
+                event.getDrops().clear();
+            } else {
+                event.setKeepInventory(false);
+            }
+
+            int runnerLimit = plugin.getConfigManager().getRunnerRespawnLimit();
+            if (runnerLimit >= 0 && plugin.getPlayerManager().getRunnerRespawnCount(uuid) > runnerLimit) {
+                // No lives left - eliminate
+                plugin.getPlayerManager().eliminateRunner(uuid);
+                plugin.getUiManager().sendToAll(plugin.getConfigManager().getMessage("death.runner-eliminated", "{player}", player.getName()));
+                if (match.getRunnerUuids().isEmpty()) {
+                    plugin.getGameManager().huntersWin();
+                }
+                return;
+            }
+
+            // Lives remaining - broadcast lives message
+            int livesLeft = runnerLimit < 0 ? -1 : runnerLimit - plugin.getPlayerManager().getRunnerRespawnCount(uuid) + 1;
+            if (livesLeft >= 0) {
+                plugin.getUiManager().sendToAll(plugin.getConfigManager().getMessage("death.runner-lives",
+                        "{player}", player.getName(), "{lives}", String.valueOf(livesLeft)));
             }
             return;
         }
@@ -286,12 +309,14 @@ public class GameListener implements Listener {
             plugin.getPlayerManager().addHunterRespawn(uuid);
 
             // Check respawn limit
-            if (!plugin.getConfigManager().isHunterInfiniteRespawns()) {
-                int limit = plugin.getConfigManager().getHunterRespawnLimit();
-                if (plugin.getPlayerManager().getHunterRespawnCount(uuid) > limit) {
-                    plugin.getPlayerManager().eliminateHunter(uuid);
-                    return;
+            int hunterLimit = plugin.getConfigManager().getHunterRespawnLimit();
+            if (hunterLimit >= 0 && plugin.getPlayerManager().getHunterRespawnCount(uuid) > hunterLimit) {
+                plugin.getPlayerManager().eliminateHunter(uuid);
+                plugin.getUiManager().sendToAll(plugin.getConfigManager().getMessage("death.hunter-eliminated", "{player}", player.getName()));
+                if (match.getHunterUuids().isEmpty()) {
+                    plugin.getGameManager().runnerWins();
                 }
+                return;
             }
 
             // Inventory rules
@@ -369,6 +394,26 @@ public class GameListener implements Listener {
                     plugin.getTrackerManager().giveCompassToPlayer(player);
                 }
                 plugin.getUiManager().sendToAll(plugin.getConfigManager().getMessage("respawn.broadcast", "{player}", player.getName()));
+            }, 1L);
+        }
+
+        if (plugin.getPlayerManager().isRunner(uuid)) {
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                if (!player.isOnline()) return;
+
+                player.setGameMode(GameMode.SURVIVAL);
+
+                // Reapply runner potion effects
+                plugin.getPotionEffectManager().applyRunnerEffects(uuid);
+
+                int runnerLimit = plugin.getConfigManager().getRunnerRespawnLimit();
+                int livesLeft = runnerLimit < 0 ? -1 : runnerLimit - plugin.getPlayerManager().getRunnerRespawnCount(uuid) + 1;
+                if (livesLeft >= 0) {
+                    plugin.getUiManager().sendToAll(plugin.getConfigManager().getMessage("respawn.runner",
+                            "{player}", player.getName(), "{lives}", String.valueOf(livesLeft)));
+                } else {
+                    plugin.getUiManager().sendToAll(plugin.getConfigManager().getMessage("respawn.broadcast", "{player}", player.getName()));
+                }
             }, 1L);
         }
     }

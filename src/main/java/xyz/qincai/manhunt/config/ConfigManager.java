@@ -94,9 +94,8 @@ public class ConfigManager {
         validateInt("tracking.updateTicks", 5);
         validateBoolean("tracking.showDistance", true);
 
-        validateInt("runner.lives", 1);
+        validateInt("runner.respawnLimit", 0);
 
-        validateBoolean("hunters.infiniteRespawns", true);
         validateInt("hunters.respawnLimit", -1);
 
         validateBoolean("chat.logToConsole", true);
@@ -362,16 +361,12 @@ public class ConfigManager {
         return config.getBoolean("tracking.showDistance", true);
     }
 
-    public int getRunnerLives() {
-        return config.getInt("runner.lives", 1);
+    public int getRunnerRespawnLimit() {
+        return config.getInt("runner.respawnLimit", 0);
     }
 
     public boolean isRunnerKeepInventory() {
         return config.getBoolean("runner.keepInventory", false);
-    }
-
-    public boolean isHunterInfiniteRespawns() {
-        return config.getBoolean("hunters.infiniteRespawns", true);
     }
 
     public int getHunterRespawnLimit() {
