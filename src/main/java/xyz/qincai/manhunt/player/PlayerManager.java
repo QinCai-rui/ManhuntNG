@@ -14,6 +14,7 @@ public class PlayerManager {
     private final ManhuntNG plugin;
     private final Map<UUID, PlayerRole> playerRoles = new ConcurrentHashMap<>();
     private final Map<UUID, Integer> hunterRespawns = new ConcurrentHashMap<>();
+    private final Map<UUID, Integer> runnerRespawns = new ConcurrentHashMap<>();
 
     public PlayerManager(ManhuntNG plugin) {
         this.plugin = plugin;
@@ -22,6 +23,7 @@ public class PlayerManager {
     public void reset() {
         playerRoles.clear();
         hunterRespawns.clear();
+        runnerRespawns.clear();
         plugin.getNameTagManager().clearAll();
     }
 
@@ -75,6 +77,18 @@ public class PlayerManager {
         hunterRespawns.clear();
     }
 
+    public void addRunnerRespawn(UUID uuid) {
+        runnerRespawns.merge(uuid, 1, Integer::sum);
+    }
+
+    public int getRunnerRespawnCount(UUID uuid) {
+        return runnerRespawns.getOrDefault(uuid, 0);
+    }
+
+    public void clearRunnerRespawns() {
+        runnerRespawns.clear();
+    }
+
     public void applyRoleToPlayer(Player player, PlayerRole role) {
         Match match = plugin.getGameManager().getMatch();
         switch (role) {
@@ -121,6 +135,7 @@ public class PlayerManager {
         match.removeRunner(uuid);
         playerRoles.remove(uuid);
         hunterRespawns.remove(uuid);
+        runnerRespawns.remove(uuid);
         plugin.getNameTagManager().clearTag(Bukkit.getPlayer(uuid));
     }
 

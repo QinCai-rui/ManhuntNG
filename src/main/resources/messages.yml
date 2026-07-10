@@ -33,7 +33,7 @@ error.spectator-global-only: '<red>Spectators can only use global chat!'
 error.cannot-team-single: '<red>Cannot use team chat - you''re the only one on your team.'
 
 # ============================================================================
-# Command Responses — Join / Leave
+# Command Responses - Join / Leave
 # ============================================================================
 join.lobby: '<green>You joined the manhunt lobby!'
 join.spectator: '<green>You joined as a spectator!'
@@ -42,7 +42,7 @@ leave.lobby: '<yellow>You left the manhunt lobby.'
 leave.broadcast: '<yellow>{player} has left the game!'
 
 # ============================================================================
-# Command Responses — Role Assignment
+# Command Responses - Role Assignment
 # ============================================================================
 role.set-runner-sender: '{player} <green>is now a Runner!'
 role.set-runner-target: '<green>You are now a Runner!'
@@ -53,7 +53,7 @@ role.removed-sender: '{player} <yellow>''s role has been removed!'
 role.removed-target: '<yellow>Your role has been removed!'
 
 # ============================================================================
-# Command Responses — Admin Actions
+# Command Responses - Admin Actions
 # ============================================================================
 admin.game-stopped: '<yellow>Game stopped.'
 admin.config-reloaded: '<green>Configuration reloaded!'
@@ -74,7 +74,7 @@ admin.world-cleared: '<green>World cleared. Will generate a new world on start.'
 admin.world-set: '<green>World set to <aqua>{world}<green>. Will use this world on start.'
 
 # ============================================================================
-# Command Responses — Mode
+# Command Responses - Mode
 # ============================================================================
 mode.current-game: '<gray>Current game mode: <aqua>{mode}'
 mode.current-start: '<gray>Current start mode: <aqua>{mode}'
@@ -83,7 +83,7 @@ mode.start-set: '<green>Start mode set to <aqua>{mode}'
 mode.infection-info: '<gray>Infection mode: Runners are permanently converted to hunters when killed.'
 
 # ============================================================================
-# Command Responses — Usage
+# Command Responses - Usage
 # ============================================================================
 usage.runner: '<red>Usage: <white>/manhunt runner <player>'
 usage.hunter: '<red>Usage: <white>/manhunt hunter <player>'
@@ -94,7 +94,7 @@ usage.chat-command: '<red>Usage: /{label} <message>'
 usage.chat-mode: '<red>Usage: /manhunt chat <global|team>'
 
 # ============================================================================
-# Command Responses — Chat
+# Command Responses - Chat
 # ============================================================================
 chat.mode-show: '<gray>Current chat mode: '
 chat.mode-global: 'GLOBAL'
@@ -103,7 +103,7 @@ chat.mode-set-global: '<gray>Chat mode set to <gold>GLOBAL'
 chat.mode-set-team: '<gray>Chat mode set to <green>TEAM'
 
 # ============================================================================
-# Command Responses — Game Control
+# Command Responses - Game Control
 # ============================================================================
 game.starting: '<yellow>Game is starting...'
 game.started: '<green>The hunt has begun!'
@@ -184,7 +184,11 @@ resume.broadcast: '<green>Game has been resumed!'
 # ============================================================================
 death.runner-prefix: '(Runner) '
 death.hunter-prefix: '(Hunter) '
+death.runner-lives: '<red>(<bold>Runner</bold>) <white>{player} <gray>died - {lives} life(s) remaining'
+death.runner-eliminated: '<red>(<bold>Runner</bold>) <white>{player} <gray>has been eliminated'
+death.hunter-eliminated: '<red>(<bold>Hunter</bold>) <white>{player} <gray>has been eliminated'
 respawn.broadcast: '<yellow>{player} has respawned!'
+respawn.runner: '<green>(<bold>Runner</bold>) <white>{player} <gray>respawned - {lives} life(s) remaining'
 
 # ============================================================================
 # Scoreboard
@@ -342,7 +346,7 @@ state.paused: 'Paused'
 state.finished: 'Finished'
 
 # ============================================================================
-# Advanced — Enum Display Names
+# Advanced - Enum Display Names
 # ============================================================================
 advanced.gamemode.normal: 'Normal'
 advanced.gamemode.infection: 'Infection'
