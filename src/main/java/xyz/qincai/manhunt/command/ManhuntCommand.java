@@ -300,16 +300,24 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             plugin.getPlayerManager().setRole(uuid, PlayerRole.SPECTATOR);
         }
 
+        int assignedRunners = 0;
+        int assignedHunters = 0;
         for (int i = 0; i < participants.size(); i++) {
             UUID uuid = participants.get(i);
             Player player = Bukkit.getPlayer(uuid);
-            PlayerRole role = i < runnerCount ? PlayerRole.RUNNER : PlayerRole.HUNTER;
-            plugin.getPlayerManager().applyRoleToPlayer(player, role);
+            if (player == null) continue;
+            if (i < runnerCount) {
+                plugin.getPlayerManager().applyRoleToPlayer(player, PlayerRole.RUNNER);
+                assignedRunners++;
+            } else {
+                plugin.getPlayerManager().applyRoleToPlayer(player, PlayerRole.HUNTER);
+                assignedHunters++;
+            }
         }
 
         sender.sendMessage(cfg().getMessageComponent("role.shuffle-result",
-                "{runners}", String.valueOf(runnerCount),
-                "{hunters}", String.valueOf(participants.size() - runnerCount)));
+                "{runners}", String.valueOf(assignedRunners),
+                "{hunters}", String.valueOf(assignedHunters)));
         return true;
     }
 
