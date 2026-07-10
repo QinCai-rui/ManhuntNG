@@ -134,10 +134,16 @@ public class ChatManager implements Listener {
             mode = ChatMode.GLOBAL;
         }
 
+        String prefix = mode == ChatMode.GLOBAL ? "[Global]" : "[Team]";
+
         if (mode == ChatMode.GLOBAL) {
             sendGlobalMessage(player, message);
         } else {
             sendTeamMessage(player, message);
+        }
+
+        if (plugin.getConfigManager().isChatLogToConsole()) {
+            plugin.getLogger().info("[Manhunt Chat] " + prefix + " " + player.getName() + ": " + message);
         }
     }
 

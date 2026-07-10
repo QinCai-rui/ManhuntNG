@@ -99,6 +99,7 @@ public class ConfigManager {
         validateBoolean("hunters.infiniteRespawns", true);
         validateInt("hunters.respawnLimit", -1);
 
+        validateBoolean("chat.logToConsole", true);
         validateBoolean("scoreboard.enabled", true);
         validateBoolean("actionBar.enabled", true);
 
@@ -375,6 +376,10 @@ public class ConfigManager {
 
     public int getHunterRespawnLimit() {
         return config.getInt("hunters.respawnLimit", -1);
+    }
+
+    public boolean isChatLogToConsole() {
+        return config.getBoolean("chat.logToConsole", true);
     }
 
     public boolean isScoreboardEnabled() {
