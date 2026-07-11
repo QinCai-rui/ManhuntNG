@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.bukkit.Material;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.potion.PotionType;
 
 import java.io.File;
@@ -158,6 +159,7 @@ public class LootConfig {
                 double weight = getDouble(item, "weight", 1.0);
                 PotionType potionType = parsePotionType(getString(item, "potion-type", null));
                 Material potionForm = parsePotionForm(getString(item, "potion-form", null), mat);
+                List<EnchantmentEntry> enchantments = parseEnchantments(item);
 
                 // Validate: weight must be positive
                 if (weight <= 0) continue;
@@ -169,7 +171,7 @@ public class LootConfig {
                     maxAmount = temp;
                 }
 
-                items.add(new WeightedItem(mat, minAmount, maxAmount, weight, potionType, potionForm));
+                items.add(new WeightedItem(mat, minAmount, maxAmount, weight, potionType, potionForm, enchantments));
             }
         }
 
@@ -204,6 +206,7 @@ public class LootConfig {
             String displayName = getString(item, "display-name", null);
             PotionType potionType = parsePotionType(getString(item, "potion-type", null));
             Material potionForm = parsePotionForm(getString(item, "potion-form", null), mat);
+            List<EnchantmentEntry> enchantments = parseEnchantments(item);
 
             // Validate: min-amount must not exceed max-amount
             if (minAmount > maxAmount) {
@@ -212,7 +215,7 @@ public class LootConfig {
                 maxAmount = temp;
             }
 
-            drops.add(new LootDrop(mat, minAmount, maxAmount, dropChance, displayName, potionType, potionForm));
+            drops.add(new LootDrop(mat, minAmount, maxAmount, dropChance, displayName, potionType, potionForm, enchantments));
         }
         return drops;
     }
@@ -236,7 +239,6 @@ public class LootConfig {
 
     private Material parsePotionForm(String name, Material originalMaterial) {
         if (name == null || name.isEmpty()) {
-            // If no form specified, keep the original material (could be POTION, SPLASH_POTION, etc.)
             return originalMaterial;
         }
         try {
@@ -244,6 +246,30 @@ public class LootConfig {
         } catch (IllegalArgumentException e) {
             return originalMaterial;
         }
+    }
+
+    private List<EnchantmentEntry> parseEnchantments(JsonObject obj) {
+        List<EnchantmentEntry> enchants = new ArrayList<>();
+        if (!obj.has("enchantments") || !obj.get("enchantments").isJsonArray()) return enchants;
+
+        JsonArray arr = obj.getAsJsonArray("enchantments");
+        for (JsonElement elem : arr) {
+            if (!elem.isJsonObject()) continue;
+            JsonObject enchantObj = elem.getAsJsonObject();
+            String name = getString(enchantObj, "enchantment", "");
+            if (name.isEmpty()) continue;
+
+            try {
+                Enchantment ench = Enchantment.getByName(name.toUpperCase().replace(" ", "_"));
+                if (ench == null) continue;
+                int minLevel = getInt(enchantObj, "min-level", getInt(enchantObj, "level", 1));
+                int maxLevel = getInt(enchantObj, "max-level", minLevel);
+                enchants.add(new EnchantmentEntry(ench, minLevel, maxLevel));
+            } catch (Exception e) {
+                // skip invalid enchantment
+            }
+        }
+        return enchants;
     }
 
     private static int getInt(JsonObject obj, String key, int def) {
@@ -284,9 +310,11 @@ public class LootConfig {
 
     // ---- Data classes ----
 
-    public record LootDrop(Material material, int minAmount, int maxAmount, double dropChance, String displayName, PotionType potionType, Material potionForm) {}
+    public record LootDrop(Material material, int minAmount, int maxAmount, double dropChance, String displayName, PotionType potionType, Material potionForm, List<EnchantmentEntry> enchantments) {}
 
-    public record WeightedItem(Material material, int minAmount, int maxAmount, double weight, PotionType potionType, Material potionForm) {}
+    public record WeightedItem(Material material, int minAmount, int maxAmount, double weight, PotionType potionType, Material potionForm, List<EnchantmentEntry> enchantments) {}
+
+    public record EnchantmentEntry(Enchantment enchantment, int minLevel, int maxLevel) {}
 
     public record MobDropSource(String role, List<LootDrop> drops) {}
 

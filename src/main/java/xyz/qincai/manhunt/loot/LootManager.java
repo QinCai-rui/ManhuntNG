@@ -1,6 +1,7 @@
 package xyz.qincai.manhunt.loot;
 
 import org.bukkit.Material;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
@@ -114,6 +115,7 @@ public class LootManager {
                 ? drop.potionForm() : drop.material();
         ItemStack item = new ItemStack(material, amount);
         applyPotionMeta(item, drop.potionType());
+        applyEnchantments(item, drop.enchantments());
 
         if (drop.displayName() != null && !drop.displayName().isEmpty()) {
             ItemMeta meta = item.getItemMeta();
@@ -137,6 +139,7 @@ public class LootManager {
                 ? item.potionForm() : item.material();
         ItemStack stack = new ItemStack(material, amount);
         applyPotionMeta(stack, item.potionType());
+        applyEnchantments(stack, item.enchantments());
         return stack;
     }
 
@@ -148,6 +151,18 @@ public class LootManager {
         if (!(item.getItemMeta() instanceof PotionMeta meta)) return;
         meta.setBasePotionType(potionType);
         item.setItemMeta(meta);
+    }
+
+    /**
+     * Applies enchantments to an ItemStack from a list of EnchantmentEntry.
+     */
+    private void applyEnchantments(ItemStack item, List<LootConfig.EnchantmentEntry> enchantments) {
+        if (enchantments == null || enchantments.isEmpty()) return;
+        ThreadLocalRandom rng = ThreadLocalRandom.current();
+        for (LootConfig.EnchantmentEntry entry : enchantments) {
+            int level = rng.nextInt(entry.minLevel(), entry.maxLevel() + 1);
+            item.addUnsafeEnchantment(entry.enchantment(), level);
+        }
     }
 
     /**

@@ -33,13 +33,27 @@
       "enabled": true,
       "all": {
         "role": "all",
+        "comment": "Vanilla pool (total weight 469). Admins: adjust weights to modify drop rates. Runner-advantage items have boosted weights.",
         "items": [
-          { "material": "ENDER_PEARL", "min-amount": 5, "max-amount": 12, "weight": 10 },
-          { "material": "CRYING_OBSIDIAN", "min-amount": 3, "max-amount": 8, "weight": 10 },
-          { "material": "OBSIDIAN", "min-amount": 1, "max-amount": 4, "weight": 5 },
-          { "material": "POTION", "potion-type": "FIRE_RESISTANCE", "potion-form": "POTION", "min-amount": 1, "max-amount": 1, "weight": 5 },
-          { "material": "GOLD_NUGGET", "min-amount": 2, "max-amount": 8, "weight": 8 },
-          { "material": "SPECTRAL_ARROW", "min-amount": 6, "max-amount": 14, "weight": 6 }
+          { "material": "ENCHANTED_BOOK", "min-amount": 1, "max-amount": 1, "weight": 5, "enchantments": [{ "enchantment": "SOUL_SPEED", "min-level": 1, "max-level": 3 }] },
+          { "material": "IRON_BOOTS", "min-amount": 1, "max-amount": 1, "weight": 8, "enchantments": [{ "enchantment": "SOUL_SPEED", "min-level": 1, "max-level": 3 }] },
+          { "material": "POTION", "potion-type": "FIRE_RESISTANCE", "potion-form": "SPLASH_POTION", "min-amount": 1, "max-amount": 1, "weight": 10 },
+          { "material": "POTION", "potion-type": "FIRE_RESISTANCE", "potion-form": "POTION", "min-amount": 1, "max-amount": 1, "weight": 10 },
+          { "material": "POTION", "potion-form": "WATER_BOTTLE", "min-amount": 1, "max-amount": 1, "weight": 10 },
+          { "material": "DRIED_GHAST", "min-amount": 1, "max-amount": 1, "weight": 10 },
+          { "material": "IRON_NUGGET", "min-amount": 10, "max-amount": 36, "weight": 10 },
+          { "material": "ENDER_PEARL", "min-amount": 2, "max-amount": 4, "weight": 40 },
+          { "material": "STRING", "min-amount": 3, "max-amount": 9, "weight": 20 },
+          { "material": "NETHER_QUARTZ", "min-amount": 5, "max-amount": 12, "weight": 20 },
+          { "material": "OBSIDIAN", "min-amount": 1, "max-amount": 1, "weight": 40 },
+          { "material": "FIRE_CHARGE", "min-amount": 1, "max-amount": 1, "weight": 40 },
+          { "material": "CRYING_OBSIDIAN", "min-amount": 1, "max-amount": 3, "weight": 40 },
+          { "material": "LEATHER", "min-amount": 2, "max-amount": 4, "weight": 40 },
+          { "material": "SOUL_SAND", "min-amount": 2, "max-amount": 8, "weight": 40 },
+          { "material": "NETHER_BRICK", "min-amount": 1, "max-amount": 1, "weight": 40 },
+          { "material": "SPECTRAL_ARROW", "min-amount": 6, "max-amount": 12, "weight": 40 },
+          { "material": "GRAVEL", "min-amount": 8, "max-amount": 16, "weight": 40 },
+          { "material": "BLACKSTONE", "min-amount": 1, "max-amount": 1, "weight": 40 }
         ]
       }
     },
