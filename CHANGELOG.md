@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added `/manhunt shuffle <runners_count>` command to randomly assign a given
-  number of players as runners, and the rest as hunters [b52d9ca](https://github.com/QinCai-rui/ManhuntNG/commit/b52d9ca0c06e773ab43df681b2b1a15c4b2708cb)
+  number of players as runners, and the rest as hunters [`b52d9ca`](https://github.com/QinCai-rui/ManhuntNG/commit/b52d9ca0c06e773ab43df681b2b1a15c4b2708cb)
 
 ## [1.5.1] - 2026-07-10
 
@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added `chat.logToConsole` config option (default `true`) to log game chat
   messages to the server console with format `[Manhunt Chat] [Global/Team] Play
-  r: message` [f564955](https://github.com/QinCai-rui/ManhuntNG/commit/f564955583073d869edcc0398b56065149920f0c)
+  r: message` [`f564955`](https://github.com/QinCai-rui/ManhuntNG/commit/f564955583073d869edcc0398b56065149920f0c)
 
 ## [1.5.0] - 2026-07-10
 
