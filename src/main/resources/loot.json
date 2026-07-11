@@ -63,15 +63,7 @@
           { "material": "SPECTRAL_ARROW", "min-amount": 2, "max-amount": 14, "drop-chance": 0.6 }
         ]
       },
-      "bastion_housing": {
-        "role": "runner",
-        "drops": [
-          { "material": "ENDER_PEARL", "min-amount": 1, "max-amount": 2, "drop-chance": 1.0 },
-          { "material": "GOLD_NUGGET", "min-amount": 4, "max-amount": 12, "drop-chance": 1.0 },
-          { "material": "SPECTRAL_ARROW", "min-amount": 2, "max-amount": 11, "drop-chance": 0.5 }
-        ]
-      },
-      "bastion_stables": {
+      "bastion_hoglin_stable": {
         "role": "runner",
         "drops": [
           { "material": "ENDER_PEARL", "min-amount": 1, "max-amount": 2, "drop-chance": 1.0 },
@@ -84,16 +76,17 @@
         "drops": [
           { "material": "DIAMOND_SWORD", "min-amount": 1, "max-amount": 1, "drop-chance": 0.2 },
           { "material": "ENDER_PEARL", "min-amount": 1, "max-amount": 2, "drop-chance": 1.0 },
-          { "material": "SPECTRAL_ARROW", "min-amount": 2, "max-amount": 8, "drop-chance": 0.4 }
+          { "material": "GOLD_NUGGET", "min-amount": 4, "max-amount": 12, "drop-chance": 1.0 },
+          { "material": "SPECTRAL_ARROW", "min-amount": 2, "max-amount": 11, "drop-chance": 0.5 }
         ]
       },
-      "fortress": {
+      "nether_bridge": {
         "role": "runner",
         "drops": [
           { "material": "BLAZE_ROD", "min-amount": 1, "max-amount": 2, "drop-chance": 0.1 }
         ]
       },
-      "end_city": {
+      "end_city_treasure": {
         "role": "runner",
         "drops": [
           { "material": "DIAMOND_SWORD", "min-amount": 1, "max-amount": 1, "drop-chance": 0.4 },

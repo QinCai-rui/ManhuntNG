@@ -31,11 +31,16 @@ public class LootListener implements Listener {
     private final ManhuntNG plugin;
 
     // Track last chest interaction per player for LootGenerateEvent correlation
-    private final Map<Long, Player> lastChestInteract = new HashMap<>();
+    private final Map<BlockKey, Player> lastChestInteract = new HashMap<>();
 
     public LootListener(ManhuntNG plugin) {
         this.plugin = plugin;
     }
+
+    /**
+     * World-aware block key for tracking chest interactions across different worlds.
+     */
+    private record BlockKey(java.util.UUID worldUid, int x, int y, int z) {}
 
     /**
      * Tracks which player last interacted with a container block.
@@ -52,7 +57,7 @@ public class LootListener implements Listener {
         Match match = plugin.getGameManager().getMatch();
         if (!match.isParticipant(player.getUniqueId())) return;
 
-        long key = blockKey(block.getLocation());
+        BlockKey key = blockKey(block.getLocation());
         lastChestInteract.put(key, player);
     }
 
@@ -148,7 +153,7 @@ public class LootListener implements Listener {
         // Method 2: Check inventory holder
         if (opener == null && event.getInventoryHolder() != null) {
             if (event.getInventoryHolder() instanceof Container container) {
-                long key = blockKey(container.getBlock().getLocation());
+                BlockKey key = blockKey(container.getBlock().getLocation());
                 opener = lastChestInteract.get(key);
             }
         }
@@ -230,8 +235,7 @@ public class LootListener implements Listener {
         return nearest;
     }
 
-    private long blockKey(Location loc) {
-        return ((long) loc.getBlockX() << 32) | ((long) loc.getBlockZ() & 0xFFFFFFFFL)
-                ^ (long) loc.getBlockY();
+    private BlockKey blockKey(Location loc) {
+        return new BlockKey(loc.getWorld().getUID(), loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
     }
 }

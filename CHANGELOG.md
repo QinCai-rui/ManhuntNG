@@ -25,8 +25,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   configuring splash, lingering, or drinkable potions (eg. fire res)
 - Added item control: material, min/max amount, drop chance/weight,
   display name, and potion properties
-- **NOTE**: Loot modifications are additive — custom items are added alongside vanilla
-  drops, never replacing them
+- **NOTE**: Mob drops and structure chest loot are additive — custom items are
+  added alongside vanilla drops. Piglin bartering outcomes, however, replace
+  vanilla bartering results when configured
 
 ### Changed
 

@@ -53,14 +53,15 @@ public class LootConfig {
         LootConfig config = new LootConfig();
         File file = new File(dataFolder, "loot.json");
 
-        try {
+        try (InputStream resource = defaultResource) {
             if (file.exists()) {
                 try (FileReader reader = new FileReader(file, StandardCharsets.UTF_8)) {
                     config.parse(JsonParser.parseReader(reader).getAsJsonObject());
                 }
-            } else if (defaultResource != null) {
-                config.parse(JsonParser.parseReader(
-                        new InputStreamReader(defaultResource, StandardCharsets.UTF_8)).getAsJsonObject());
+            } else if (resource != null) {
+                try (InputStreamReader reader = new InputStreamReader(resource, StandardCharsets.UTF_8)) {
+                    config.parse(JsonParser.parseReader(reader).getAsJsonObject());
+                }
             }
         } catch (Exception e) {
             java.util.logging.Logger.getLogger("ManhuntNG").log(Level.SEVERE,
@@ -158,6 +159,16 @@ public class LootConfig {
                 PotionType potionType = parsePotionType(getString(item, "potion-type", null));
                 Material potionForm = parsePotionForm(getString(item, "potion-form", null), mat);
 
+                // Validate: weight must be positive
+                if (weight <= 0) continue;
+
+                // Validate: min-amount must not exceed max-amount
+                if (minAmount > maxAmount) {
+                    int temp = minAmount;
+                    minAmount = maxAmount;
+                    maxAmount = temp;
+                }
+
                 items.add(new WeightedItem(mat, minAmount, maxAmount, weight, potionType, potionForm));
             }
         }
@@ -193,6 +204,13 @@ public class LootConfig {
             String displayName = getString(item, "display-name", null);
             PotionType potionType = parsePotionType(getString(item, "potion-type", null));
             Material potionForm = parsePotionForm(getString(item, "potion-form", null), mat);
+
+            // Validate: min-amount must not exceed max-amount
+            if (minAmount > maxAmount) {
+                int temp = minAmount;
+                minAmount = maxAmount;
+                maxAmount = temp;
+            }
 
             drops.add(new LootDrop(mat, minAmount, maxAmount, dropChance, displayName, potionType, potionForm));
         }
