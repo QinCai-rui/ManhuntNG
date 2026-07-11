@@ -161,8 +161,8 @@ public class LootConfig {
                 Material potionForm = parsePotionForm(getString(item, "potion-form", null), mat);
                 List<EnchantmentEntry> enchantments = parseEnchantments(item);
 
-                // Validate: weight must be positive
-                if (weight <= 0) continue;
+                // Validate: weight must be finite and positive
+                if (!Double.isFinite(weight) || weight <= 0) continue;
 
                 // Validate: min-amount must not exceed max-amount
                 if (minAmount > maxAmount) {
@@ -264,6 +264,11 @@ public class LootConfig {
                 if (ench == null) continue;
                 int minLevel = getInt(enchantObj, "min-level", getInt(enchantObj, "level", 1));
                 int maxLevel = getInt(enchantObj, "max-level", minLevel);
+
+                // Validate: reject inverted ranges and Integer.MAX_VALUE
+                if (minLevel > maxLevel) continue;
+                if (maxLevel == Integer.MAX_VALUE) continue;
+
                 enchants.add(new EnchantmentEntry(ench, minLevel, maxLevel));
             } catch (Exception e) {
                 // skip invalid enchantment
