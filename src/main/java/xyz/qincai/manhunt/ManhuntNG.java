@@ -9,6 +9,8 @@ import xyz.qincai.manhunt.config.ConfigManager;
 import xyz.qincai.manhunt.formation.FormationManager;
 import xyz.qincai.manhunt.game.GameManager;
 import xyz.qincai.manhunt.listener.GameListener;
+import xyz.qincai.manhunt.loot.LootListener;
+import xyz.qincai.manhunt.loot.LootManager;
 import xyz.qincai.manhunt.player.PlayerManager;
 import xyz.qincai.manhunt.player.NameTagManager;
 import xyz.qincai.manhunt.player.PotionEffectManager;
@@ -31,6 +33,8 @@ public class ManhuntNG extends JavaPlugin {
     private StatisticsManager statsManager;
     private ChatManager chatManager;
     private GameListener gameListener;
+    private LootManager lootManager;
+    private LootListener lootListener;
     private CommandRegistrar commandRegistrar;
 
     @Override
@@ -50,6 +54,8 @@ public class ManhuntNG extends JavaPlugin {
         uiManager = new UIManager(this);
         statsManager = new StatisticsManager(this);
         chatManager = new ChatManager(this);
+        lootManager = new LootManager(this);
+        lootManager.loadConfig();
 
         trackerManager.init();
         uiManager.init();
@@ -61,6 +67,9 @@ public class ManhuntNG extends JavaPlugin {
         gameListener = new GameListener(this);
         getServer().getPluginManager().registerEvents(gameListener, this);
         getServer().getPluginManager().registerEvents(chatManager, this);
+
+        lootListener = new LootListener(this);
+        getServer().getPluginManager().registerEvents(lootListener, this);
 
         commandRegistrar.register("g", "Send a global message", new ChatCommand(this, true), null);
         commandRegistrar.register("t", "Send a team message", new ChatCommand(this, false), null);
@@ -129,5 +138,13 @@ public class ManhuntNG extends JavaPlugin {
 
     public GameListener getGameListener() {
         return gameListener;
+    }
+
+    public LootManager getLootManager() {
+        return lootManager;
+    }
+
+    public LootListener getLootListener() {
+        return lootListener;
     }
 }

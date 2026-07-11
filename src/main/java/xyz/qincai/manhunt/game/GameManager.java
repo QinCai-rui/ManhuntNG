@@ -468,6 +468,9 @@ public class GameManager {
         plugin.getPlayerManager().reset();
         plugin.getStatsManager().reset();
         plugin.getGameListener().clearSavedItems();
+        if (plugin.getLootListener() != null) {
+            plugin.getLootListener().clearTracking();
+        }
         plugin.getChatManager().resetDefaults();
     }
 

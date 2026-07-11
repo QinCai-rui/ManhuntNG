@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added configurable loot table modifications via `loot.json`. Admins can now
+  modify mob drops, piglin bartering `outcomes`, and structure chest loot to give
+  runners/hunters (configurable, see below) an advantage.
+- Added three loot modification sources:
+  - **Mob drops**: Boost ender pearl, blaze rod, arrow, and string drops from
+    killed mobs (`EntityDeathEvent`)
+  - **Piglin bartering**: Replace bartering outcomes with configured items
+    (`PiglinBarterEvent`)
+  - **Structure chest loot**: Add extra items to bastion, fortress, and end city
+    chests (`LootGenerateEvent`)
+- Added per-entry role filtering (`"all"`, `"runner"`, `"hunter"`) so admins
+  can control which team benefits from each loot modification
+- Added potion item support with `potion-type` and `potion-form` fields for
+  configuring splash, lingering, or drinkable potions (eg. fire res)
+- Added item control: material, min/max amount, drop chance/weight,
+  display name, and potion properties
+- **NOTE**: Mob drops and structure chest loot are additive — custom items are
+  added alongside vanilla drops. Piglin bartering outcomes, however, replace
+  vanilla bartering results when configured
+
+### Changed
+
+- `/manhunt reload` now also reloads `loot.json` for hot-reloading loot changes
+
 ## [1.6.0] - 2026-07-11
 
 ### Added

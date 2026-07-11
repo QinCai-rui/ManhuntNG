@@ -75,6 +75,11 @@ public class ConfigManager {
 
         // Validate (on reload)
         validateConfig();
+
+        // Reload loot config
+        if (plugin.getLootManager() != null) {
+            plugin.getLootManager().reloadConfig();
+        }
     }
 
     /*
