@@ -1,0 +1,107 @@
+{
+  "config-version": 1,
+  "enabled": true,
+  "sources": {
+    "mob-drops": {
+      "enabled": true,
+      "enderman": {
+        "role": "runner",
+        "drops": [
+          { "material": "ENDER_PEARL", "min-amount": 1, "max-amount": 2, "drop-chance": 1.0 }
+        ]
+      },
+      "blaze": {
+        "role": "runner",
+        "drops": [
+          { "material": "BLAZE_ROD", "min-amount": 1, "max-amount": 3, "drop-chance": 1.0 }
+        ]
+      },
+      "skeleton": {
+        "role": "all",
+        "drops": [
+          { "material": "ARROW", "min-amount": 2, "max-amount": 6, "drop-chance": 1.0 }
+        ]
+      },
+      "spider": {
+        "role": "all",
+        "drops": [
+          { "material": "STRING", "min-amount": 1, "max-amount": 3, "drop-chance": 1.0 }
+        ]
+      }
+    },
+    "piglin-bartering": {
+      "enabled": true,
+      "all": {
+        "role": "all",
+        "items": [
+          { "material": "ENDER_PEARL", "min-amount": 5, "max-amount": 12, "weight": 10 },
+          { "material": "CRYING_OBSIDIAN", "min-amount": 3, "max-amount": 8, "weight": 10 },
+          { "material": "OBSIDIAN", "min-amount": 1, "max-amount": 4, "weight": 5 },
+          { "material": "POTION", "potion-type": "FIRE_RESISTANCE", "potion-form": "POTION", "min-amount": 1, "max-amount": 1, "weight": 5 },
+          { "material": "GOLD_NUGGET", "min-amount": 2, "max-amount": 8, "weight": 8 },
+          { "material": "SPECTRAL_ARROW", "min-amount": 6, "max-amount": 14, "weight": 6 }
+        ]
+      }
+    },
+    "chest-loot": {
+      "enabled": true,
+      "bastion_treasure": {
+        "role": "runner",
+        "drops": [
+          { "material": "DIAMOND_SWORD", "min-amount": 1, "max-amount": 1, "drop-chance": 0.5 },
+          { "material": "DIAMOND_HELMET", "min-amount": 1, "max-amount": 1, "drop-chance": 0.3 },
+          { "material": "ENDER_PEARL", "min-amount": 2, "max-amount": 5, "drop-chance": 1.0 },
+          { "material": "OBSIDIAN", "min-amount": 3, "max-amount": 6, "drop-chance": 1.0 },
+          { "material": "SPECTRAL_ARROW", "min-amount": 2, "max-amount": 15, "drop-chance": 0.8 }
+        ]
+      },
+      "bastion_bridge": {
+        "role": "runner",
+        "drops": [
+          { "material": "ENDER_PEARL", "min-amount": 1, "max-amount": 2, "drop-chance": 1.0 },
+          { "material": "OBSIDIAN", "min-amount": 2, "max-amount": 4, "drop-chance": 1.0 },
+          { "material": "SPECTRAL_ARROW", "min-amount": 2, "max-amount": 14, "drop-chance": 0.6 }
+        ]
+      },
+      "bastion_housing": {
+        "role": "runner",
+        "drops": [
+          { "material": "ENDER_PEARL", "min-amount": 1, "max-amount": 2, "drop-chance": 1.0 },
+          { "material": "GOLD_NUGGET", "min-amount": 4, "max-amount": 12, "drop-chance": 1.0 },
+          { "material": "SPECTRAL_ARROW", "min-amount": 2, "max-amount": 11, "drop-chance": 0.5 }
+        ]
+      },
+      "bastion_stables": {
+        "role": "runner",
+        "drops": [
+          { "material": "ENDER_PEARL", "min-amount": 1, "max-amount": 2, "drop-chance": 1.0 },
+          { "material": "OBSIDIAN", "min-amount": 1, "max-amount": 3, "drop-chance": 1.0 },
+          { "material": "SPECTRAL_ARROW", "min-amount": 2, "max-amount": 10, "drop-chance": 0.4 }
+        ]
+      },
+      "bastion_other": {
+        "role": "runner",
+        "drops": [
+          { "material": "DIAMOND_SWORD", "min-amount": 1, "max-amount": 1, "drop-chance": 0.2 },
+          { "material": "ENDER_PEARL", "min-amount": 1, "max-amount": 2, "drop-chance": 1.0 },
+          { "material": "SPECTRAL_ARROW", "min-amount": 2, "max-amount": 8, "drop-chance": 0.4 }
+        ]
+      },
+      "fortress": {
+        "role": "runner",
+        "drops": [
+          { "material": "BLAZE_ROD", "min-amount": 1, "max-amount": 2, "drop-chance": 0.1 }
+        ]
+      },
+      "end_city": {
+        "role": "runner",
+        "drops": [
+          { "material": "DIAMOND_SWORD", "min-amount": 1, "max-amount": 1, "drop-chance": 0.4 },
+          { "material": "DIAMOND_CHESTPLATE", "min-amount": 1, "max-amount": 1, "drop-chance": 0.3 },
+          { "material": "DIAMOND_LEGGINGS", "min-amount": 1, "max-amount": 1, "drop-chance": 0.3 },
+          { "material": "DIAMOND_BOOTS", "min-amount": 1, "max-amount": 1, "drop-chance": 0.2 }
+        ]
+      }
+    }
+  }
+}
