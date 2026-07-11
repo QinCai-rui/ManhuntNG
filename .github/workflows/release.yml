@@ -101,15 +101,15 @@ jobs:
             echo "skipped=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Publish to Modrinth
-        if: steps.version.outputs.prerelease == 'false' && steps.release_notes.outputs.found == 'true'
-        uses: cloudnode-pro/modrinth-publish@v2
-        with:
-          token: ${{ secrets.MODRINTH_TOKEN }}
-          project: ${{ vars.MODRINTH_ID }}
-          version: ${{ steps.version.outputs.version }}
-          name: ManhuntNG ${{ steps.version.outputs.version }}
-          changelog: ${{ steps.release_notes.outputs.changelog }}
-          loaders: '["bukkit", "spigot", "paper", "purpur"]'
-          game-versions: '["1.21.4", "1.21.5", "1.21.6", "1.21.7", "1.21.8", "1.21.9", "1.21.10", "1.21.11", "26.1", "26.1.1", "26.1.2"]'
-          files: target/ManhuntNG-${{ steps.version.outputs.version }}.jar
+      #- name: Publish to Modrinth
+      #  if: steps.version.outputs.prerelease == 'false' && steps.release_notes.outputs.found == 'true'
+      #  uses: cloudnode-pro/modrinth-publish@v2
+      #  with:
+      #    token: ${{ secrets.MODRINTH_TOKEN }}
+      #    project: ${{ vars.MODRINTH_ID }}
+      #    version: ${{ steps.version.outputs.version }}
+      #    name: ManhuntNG ${{ steps.version.outputs.version }}
+      #    changelog: ${{ steps.release_notes.outputs.changelog }}
+      #    loaders: '["bukkit", "spigot", "paper", "purpur"]'
+      #    game-versions: '["1.21.4", "1.21.5", "1.21.6", "1.21.7", "1.21.8", "1.21.9", "1.21.10", "1.21.11", "26.1", "26.1.1", "26.1.2"]'
+      #    files: target/ManhuntNG-${{ steps.version.outputs.version }}.jar
