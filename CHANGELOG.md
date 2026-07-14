@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added configurable loot table modifications via `loot.json`. Admins can now
   modify mob drops, piglin bartering `outcomes`, and structure chest loot to give
   runners/hunters (configurable, see below) an advantage.
+  [`c5f3ac0`](https://github.com/QinCai-rui/ManhuntNG/commit/c5f3ac0eed558c34ef9ce5da10d5feba0f343c91)
 - Added three loot modification sources:
   - **Mob drops**: Boost ender pearl, blaze rod, arrow, and string drops from
     killed mobs (`EntityDeathEvent`)
@@ -19,12 +20,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     (`PiglinBarterEvent`)
   - **Structure chest loot**: Add extra items to bastion, fortress, and end city
     chests (`LootGenerateEvent`)
+    [`c5f3ac0`](https://github.com/QinCai-rui/ManhuntNG/commit/c5f3ac0eed558c34ef9ce5da10d5feba0f343c91)
 - Added per-entry role filtering (`"all"`, `"runner"`, `"hunter"`) so admins
   can control which team benefits from each loot modification
+  [`c5f3ac0`](https://github.com/QinCai-rui/ManhuntNG/commit/c5f3ac0eed558c34ef9ce5da10d5feba0f343c91)
 - Added potion item support with `potion-type` and `potion-form` fields for
   configuring splash, lingering, or drinkable potions (eg. fire res)
+  [`c5f3ac0`](https://github.com/QinCai-rui/ManhuntNG/commit/c5f3ac0eed558c34ef9ce5da10d5feba0f343c91)
 - Added item control: material, min/max amount, drop chance/weight,
   display name, and potion properties
+  [`c5f3ac0`](https://github.com/QinCai-rui/ManhuntNG/commit/c5f3ac0eed558c34ef9ce5da10d5feba0f343c91)
 - **NOTE**: Mob drops and structure chest loot are additive — custom items are
   added alongside vanilla drops. Piglin bartering outcomes, however, replace
   vanilla bartering results when configured
@@ -57,20 +62,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   When a runner dies with lives remaining, they respawn at world spawn with potion
   effects reapplied instead of being converted to spectator. Death and respawn messages
   display remaining lives. Runners respect `runner.keepInventory` on respawn.
+  [`f77245b`](https://github.com/QinCai-rui/ManhuntNG/commit/f77245b5157593f28975d405aa942b11af404625)
 - Added `applyRunnerEffects()` to `PotionEffectManager` for reapplying runner
-  potion effects on respawn
+  potion effects on respawn [`f77245b`](https://github.com/QinCai-rui/ManhuntNG/commit/f77245b5157593f28975d405aa942b11af404625)
 - Added runner death/respawn/elimination messages to `messages.yml`:
   `death.runner-lives`, `death.runner-eliminated`, `respawn.runner`
+  [`f77245b`](https://github.com/QinCai-rui/ManhuntNG/commit/f77245b5157593f28975d405aa942b11af404625)
 
 ### Changed (*BREAKING*)
 
 - Hunter respawn limit check now uses `respawnLimit == -1` for infinite instead
-  of a separate boolean flag
+  of a separate boolean flag [`f77245b`](https://github.com/QinCai-rui/ManhuntNG/commit/f77245b5157593f28975d405aa942b11af404625)
 
 ### Removed
 
-- Removed `runner.lives` config option
+- Removed `runner.lives` config option [`f77245b`](https://github.com/QinCai-rui/ManhuntNG/commit/f77245b5157593f28975d405aa942b11af404625)
 - Removed `hunters.infiniteRespawns` config option (See _Changed_ section above)
+  [`f77245b`](https://github.com/QinCai-rui/ManhuntNG/commit/f77245b5157593f28975d405aa942b11af404625)
 
 ## [1.4.1] - 2026-07-10
 
@@ -78,20 +86,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - All hardcoded messages now read from `messages.yml`, making every
   message configurable and translatable (bumped `config-version` to 3)
+  [`d005dd9`](https://github.com/QinCai-rui/ManhuntNG/commit/d005dd95554bd9e9cdf90eaa7ec4c00d774de208)
   
 ### Added
 
 - Added `getMessageComponent()` helpers to `ConfigManager` to return
   Minimessage-deserialised `Component` objects
+  [`d005dd9`](https://github.com/QinCai-rui/ManhuntNG/commit/d005dd95554bd9e9cdf90eaa7ec4c00d774de208)
 - Externalised enum display names (`GamePhase`, `ManhuntGameMode`, `StartMode`,
 `PlayerRole`) to the `advanced` section of `messages.yml`
+[`d005dd9`](https://github.com/QinCai-rui/ManhuntNG/commit/d005dd95554bd9e9cdf90eaa7ec4c00d774de208)
 
 ## [1.4.0] - 2026-07-09
 
 ### Added
 
 - Added configurable role name tag suffixes (red `[H]` for hunters, green `[R]` for runners) using MiniMessage
+  [`dfca4b5`](https://github.com/QinCai-rui/ManhuntNG/commit/dfca4b5846afef678d84849c45283b507d28354f)
 - toggleable for the overhead nametag and tab list via `nameTags` in `config.yml`
+  [`dfca4b5`](https://github.com/QinCai-rui/ManhuntNG/commit/dfca4b5846afef678d84849c45283b507d28354f)
 
 ## [1.3.0] - 2026-07-09
 
