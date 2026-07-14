@@ -40,11 +40,11 @@
           { "material": "POTION", "potion-type": "FIRE_RESISTANCE", "potion-form": "SPLASH_POTION", "min-amount": 1, "max-amount": 1, "weight": 10 },
           { "material": "POTION", "potion-type": "FIRE_RESISTANCE", "potion-form": "POTION", "min-amount": 1, "max-amount": 1, "weight": 10 },
           { "material": "WATER_BOTTLE", "min-amount": 1, "max-amount": 1, "weight": 10 },
-          { "material": "DRIED_GHAST", "min-amount": 1, "max-amount": 1, "weight": 20 },
+          { "material": "DRIED_GHAST", "min-amount": 1, "max-amount": 1, "weight": 15 },
           { "material": "IRON_NUGGET", "min-amount": 10, "max-amount": 36, "weight": 10 },
           { "material": "ENDER_PEARL", "min-amount": 2, "max-amount": 4, "weight": 30 },
           { "material": "STRING", "min-amount": 3, "max-amount": 9, "weight": 20 },
-          { "material": "NETHER_QUARTZ", "min-amount": 5, "max-amount": 12, "weight": 10 },
+          { "material": "NETHER_QUARTZ", "min-amount": 5, "max-amount": 12, "weight": 20 },
           { "material": "OBSIDIAN", "min-amount": 1, "max-amount": 1, "weight": 40 },
           { "material": "FIRE_CHARGE", "min-amount": 1, "max-amount": 1, "weight": 40 },
           { "material": "CRYING_OBSIDIAN", "min-amount": 1, "max-amount": 3, "weight": 40 },
@@ -52,8 +52,8 @@
           { "material": "SOUL_SAND", "min-amount": 2, "max-amount": 8, "weight": 30 },
           { "material": "NETHER_BRICK", "min-amount": 1, "max-amount": 6, "weight": 10 },
           { "material": "SPECTRAL_ARROW", "min-amount": 6, "max-amount": 12, "weight": 40 },
-          { "material": "GRAVEL", "min-amount": 8, "max-amount": 16, "weight": 10 },
-          { "material": "BLACKSTONE", "min-amount": 1, "max-amount": 1, "weight": 10 }
+          { "material": "GRAVEL", "min-amount": 8, "max-amount": 16, "weight": 30 },
+          { "material": "BLACKSTONE", "min-amount": 1, "max-amount": 1, "weight": 30 }
         ]
       }
     },
