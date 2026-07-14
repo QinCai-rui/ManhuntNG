@@ -30,7 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added item control: material, min/max amount, drop chance/weight,
   display name, and potion properties
   [`c5f3ac0`](https://github.com/QinCai-rui/ManhuntNG/commit/c5f3ac0eed558c34ef9ce5da10d5feba0f343c91)
-- **NOTE**: Mob drops and structure chest loot are additive — custom items are
+- **NOTE**: Mob drops and structure chest loot are additive - custom items are
   added alongside vanilla drops. Piglin bartering outcomes, however, replace
   vanilla bartering results when configured
 
