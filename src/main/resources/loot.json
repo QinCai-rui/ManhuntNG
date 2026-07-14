@@ -1,6 +1,6 @@
 {
   "config-version": 1,
-  "enabled": true,
+  "enabled": false,
   "sources": {
     "mob-drops": {
       "enabled": true,
@@ -13,13 +13,13 @@
       "blaze": {
         "role": "runner",
         "drops": [
-          { "material": "BLAZE_ROD", "min-amount": 1, "max-amount": 3, "drop-chance": 1.0 }
+          { "material": "BLAZE_ROD", "min-amount": 0, "max-amount": 1, "drop-chance": 1.0 }
         ]
       },
       "skeleton": {
         "role": "all",
         "drops": [
-          { "material": "ARROW", "min-amount": 2, "max-amount": 6, "drop-chance": 1.0 }
+          { "material": "ARROW", "min-amount": 2, "max-amount": 6, "drop-chance": 0.5 }
         ]
       },
       "spider": {
@@ -39,21 +39,21 @@
           { "material": "IRON_BOOTS", "min-amount": 1, "max-amount": 1, "weight": 8, "enchantments": [{ "enchantment": "SOUL_SPEED", "min-level": 1, "max-level": 3 }] },
           { "material": "POTION", "potion-type": "FIRE_RESISTANCE", "potion-form": "SPLASH_POTION", "min-amount": 1, "max-amount": 1, "weight": 10 },
           { "material": "POTION", "potion-type": "FIRE_RESISTANCE", "potion-form": "POTION", "min-amount": 1, "max-amount": 1, "weight": 10 },
-          { "material": "POTION", "potion-form": "WATER_BOTTLE", "min-amount": 1, "max-amount": 1, "weight": 10 },
-          { "material": "DRIED_GHAST", "min-amount": 1, "max-amount": 1, "weight": 10 },
+          { "material": "WATER_BOTTLE", "min-amount": 1, "max-amount": 1, "weight": 10 },
+          { "material": "DRIED_GHAST", "min-amount": 1, "max-amount": 1, "weight": 20 },
           { "material": "IRON_NUGGET", "min-amount": 10, "max-amount": 36, "weight": 10 },
-          { "material": "ENDER_PEARL", "min-amount": 2, "max-amount": 4, "weight": 40 },
+          { "material": "ENDER_PEARL", "min-amount": 2, "max-amount": 4, "weight": 30 },
           { "material": "STRING", "min-amount": 3, "max-amount": 9, "weight": 20 },
-          { "material": "NETHER_QUARTZ", "min-amount": 5, "max-amount": 12, "weight": 20 },
+          { "material": "NETHER_QUARTZ", "min-amount": 5, "max-amount": 12, "weight": 10 },
           { "material": "OBSIDIAN", "min-amount": 1, "max-amount": 1, "weight": 40 },
           { "material": "FIRE_CHARGE", "min-amount": 1, "max-amount": 1, "weight": 40 },
           { "material": "CRYING_OBSIDIAN", "min-amount": 1, "max-amount": 3, "weight": 40 },
-          { "material": "LEATHER", "min-amount": 2, "max-amount": 4, "weight": 40 },
-          { "material": "SOUL_SAND", "min-amount": 2, "max-amount": 8, "weight": 40 },
-          { "material": "NETHER_BRICK", "min-amount": 1, "max-amount": 1, "weight": 40 },
+          { "material": "LEATHER", "min-amount": 2, "max-amount": 4, "weight": 30 },
+          { "material": "SOUL_SAND", "min-amount": 2, "max-amount": 8, "weight": 30 },
+          { "material": "NETHER_BRICK", "min-amount": 1, "max-amount": 6, "weight": 10 },
           { "material": "SPECTRAL_ARROW", "min-amount": 6, "max-amount": 12, "weight": 40 },
-          { "material": "GRAVEL", "min-amount": 8, "max-amount": 16, "weight": 40 },
-          { "material": "BLACKSTONE", "min-amount": 1, "max-amount": 1, "weight": 40 }
+          { "material": "GRAVEL", "min-amount": 8, "max-amount": 16, "weight": 10 },
+          { "material": "BLACKSTONE", "min-amount": 1, "max-amount": 1, "weight": 10 }
         ]
       }
     },
@@ -88,7 +88,6 @@
       "bastion_other": {
         "role": "runner",
         "drops": [
-          { "material": "DIAMOND_SWORD", "min-amount": 1, "max-amount": 1, "drop-chance": 0.2 },
           { "material": "ENDER_PEARL", "min-amount": 1, "max-amount": 2, "drop-chance": 1.0 },
           { "material": "GOLD_NUGGET", "min-amount": 4, "max-amount": 12, "drop-chance": 1.0 },
           { "material": "SPECTRAL_ARROW", "min-amount": 2, "max-amount": 11, "drop-chance": 0.5 }
