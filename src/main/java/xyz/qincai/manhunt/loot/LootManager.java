@@ -24,6 +24,7 @@ public class LootManager {
     }
 
     public void loadConfig() {
+        plugin.saveResource("loot.json", false);
         InputStream stream = plugin.getResource("loot.json");
         config = LootConfig.load(plugin.getDataFolder(), stream);
         plugin.getLogger().info("[Loot] Loaded loot.json (v" + config.getConfigVersion()
