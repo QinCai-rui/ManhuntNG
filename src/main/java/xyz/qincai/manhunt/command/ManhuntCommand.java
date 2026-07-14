@@ -5,39 +5,68 @@ import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
-import org.bukkit.Bukkit;
-import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
-import org.bukkit.entity.Player;
 import xyz.qincai.manhunt.ManhuntNG;
-import xyz.qincai.manhunt.chat.ChatMode;
+import xyz.qincai.manhunt.command.sub.ChatSubcommand;
+import xyz.qincai.manhunt.command.sub.ForceStartSubcommand;
+import xyz.qincai.manhunt.command.sub.HunterSubcommand;
+import xyz.qincai.manhunt.command.sub.JoinSubcommand;
+import xyz.qincai.manhunt.command.sub.KickSubcommand;
+import xyz.qincai.manhunt.command.sub.LeaveSubcommand;
+import xyz.qincai.manhunt.command.sub.ModeSubcommand;
+import xyz.qincai.manhunt.command.sub.OwnerSubcommand;
+import xyz.qincai.manhunt.command.sub.PauseSubcommand;
+import xyz.qincai.manhunt.command.sub.ReloadSubcommand;
+import xyz.qincai.manhunt.command.sub.RemoveSubcommand;
+import xyz.qincai.manhunt.command.sub.ResumeSubcommand;
+import xyz.qincai.manhunt.command.sub.RunnerSubcommand;
+import xyz.qincai.manhunt.command.sub.SeedSubcommand;
+import xyz.qincai.manhunt.command.sub.ShuffleSubcommand;
+import xyz.qincai.manhunt.command.sub.StartSubcommand;
+import xyz.qincai.manhunt.command.sub.StopSubcommand;
+import xyz.qincai.manhunt.command.sub.WorldSubcommand;
 import xyz.qincai.manhunt.config.ConfigManager;
-import xyz.qincai.manhunt.game.ManhuntGameMode;
 import xyz.qincai.manhunt.game.GameState;
-import xyz.qincai.manhunt.game.Match;
-import xyz.qincai.manhunt.game.StartMode;
-import xyz.qincai.manhunt.player.PlayerRole;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Random;
-import java.util.Set;
-import java.util.UUID;
+import java.util.Map;
 
 public class ManhuntCommand implements CommandExecutor, TabCompleter {
     private final ManhuntNG plugin;
+    private final Map<String, Subcommand> subcommands = new LinkedHashMap<>();
+    private final ManhuntDebugCommand debugCommand;
 
     public ManhuntCommand(ManhuntNG plugin) {
         this.plugin = plugin;
+        this.debugCommand = new ManhuntDebugCommand(plugin);
+
+        register(new JoinSubcommand());
+        register(new LeaveSubcommand());
+        register(new StartSubcommand());
+        register(new StopSubcommand());
+        register(new ReloadSubcommand());
+        register(new RunnerSubcommand());
+        register(new HunterSubcommand());
+        register(new RemoveSubcommand());
+        register(new KickSubcommand());
+        register(new ForceStartSubcommand());
+        register(new ShuffleSubcommand());
+        register(new ModeSubcommand());
+        register(new PauseSubcommand());
+        register(new ResumeSubcommand());
+        register(new OwnerSubcommand());
+        register(new SeedSubcommand());
+        register(new WorldSubcommand());
+        register(new ChatSubcommand());
     }
 
-    private ConfigManager cfg() {
-        return plugin.getConfigManager();
+    private void register(Subcommand subcommand) {
+        subcommands.put(subcommand.getName(), subcommand);
     }
 
     @Override
@@ -47,615 +76,60 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        String subCommand = args[0].toLowerCase();
-        return switch (subCommand) {
-            case "join" -> handleJoin(sender, args);
-            case "leave" -> handleLeave(sender, args);
-            case "start" -> handleStart(sender, args);
-            case "stop" -> handleStop(sender, args);
-            case "reload" -> handleReload(sender, args);
-            case "runner" -> handleRunner(sender, args);
-            case "hunter" -> handleHunter(sender, args);
-            case "remove" -> handleRemove(sender, args);
-            case "kick" -> handleKick(sender, args);
-            case "forcestart" -> handleForceStart(sender, args);
-            case "shuffle" -> handleShuffle(sender, args);
-            case "mode" -> handleMode(sender, args);
-            case "pause" -> handlePause(sender, args);
-            case "resume" -> handleResume(sender, args);
-            case "owner" -> handleOwner(sender, args);
-            case "seed" -> handleSeed(sender, args);
-            case "world" -> handleWorld(sender, args);
-            case "chat" -> handleChat(sender, args);
-            case "debug" -> new ManhuntDebugCommand(plugin).onCommand(sender, null, null, args);
-            default -> {
-                sendHelp(sender);
-                yield true;
-            }
-        };
+        String subName = args[0].toLowerCase();
+
+        if (subName.equals("debug")) {
+            String[] debugArgs = new String[args.length - 1];
+            System.arraycopy(args, 1, debugArgs, 0, debugArgs.length);
+            return debugCommand.onCommand(sender, null, null, debugArgs);
+        }
+
+        Subcommand sub = subcommands.get(subName);
+        if (sub == null) {
+            sendHelp(sender);
+            return true;
+        }
+
+        if (!sub.validatePreconditions(sender, plugin, args)) {
+            return true;
+        }
+
+        return sub.execute(sender, plugin, args);
     }
 
-    private boolean handleJoin(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player player)) {
-            sender.sendMessage(cfg().getMessageComponent("error.only-players"));
-            return true;
-        }
-
-        if (!player.hasPermission("manhunt.play")) {
-            player.sendMessage(cfg().getMessageComponent("error.no-permission"));
-            return true;
-        }
-
-        Match match = plugin.getGameManager().getMatch();
-
-        if (match.isParticipant(player.getUniqueId())) {
-            player.sendMessage(cfg().getMessageComponent("error.already-joined"));
-            return true;
-        }
-
-        plugin.getPlayerManager().setRole(player.getUniqueId(), PlayerRole.SPECTATOR);
-        match.addSpectator(player.getUniqueId());
-
-        if (plugin.getGameManager().isGameActive()) {
-            org.bukkit.World gameWorld = match.getGameWorld();
-            if (gameWorld != null) {
-                player.teleport(gameWorld.getSpawnLocation());
-            }
-            plugin.getUiManager().sendToAll(cfg().getMessage("join.broadcast", "{player}", player.getName()));
-            player.sendMessage(cfg().getMessageComponent("join.spectator"));
-        } else {
-            player.sendMessage(cfg().getMessageComponent("join.lobby"));
-        }
-        return true;
-    }
-
-    private boolean handleLeave(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player player)) {
-            sender.sendMessage(cfg().getMessageComponent("error.only-players"));
-            return true;
-        }
-
-        Match match = plugin.getGameManager().getMatch();
-
-        if (!match.isParticipant(player.getUniqueId())) {
-            player.sendMessage(cfg().getMessageComponent("error.not-in-game", "{player}", player.getName()));
-            return true;
-        }
-
-        plugin.getPlayerManager().removePlayerFromGame(player.getUniqueId());
-
-        if (plugin.getGameManager().isGameActive()) {
-            org.bukkit.World mainWorld = org.bukkit.Bukkit.getWorlds().get(0);
-            player.teleport(mainWorld.getSpawnLocation());
-            plugin.getUiManager().sendToAll(cfg().getMessage("leave.broadcast", "{player}", player.getName()));
-        }
-
-        player.sendMessage(cfg().getMessageComponent("leave.lobby"));
-        return true;
-    }
-
-    private boolean handleStart(CommandSender sender, String[] args) {
-        if (!sender.hasPermission("manhunt.admin")) {
-            sender.sendMessage(cfg().getMessageComponent("error.no-permission"));
-            return true;
-        }
-
-        UUID ownerUuid = sender instanceof Player player ? player.getUniqueId() : null;
-        plugin.getGameManager().startGame(ownerUuid);
-        return true;
-    }
-
-    private boolean handleStop(CommandSender sender, String[] args) {
-        if (!sender.hasPermission("manhunt.admin")) {
-            sender.sendMessage(cfg().getMessageComponent("error.no-permission"));
-            return true;
-        }
-
-        plugin.getGameManager().stopGame();
-        sender.sendMessage(cfg().getMessageComponent("admin.game-stopped"));
-        return true;
-    }
-
-    private boolean handleReload(CommandSender sender, String[] args) {
-        if (!sender.hasPermission("manhunt.admin")) {
-            sender.sendMessage(cfg().getMessageComponent("error.no-permission"));
-            return true;
-        }
-
-        plugin.getConfigManager().reloadConfigs();
-        sender.sendMessage(cfg().getMessageComponent("admin.config-reloaded"));
-        return true;
-    }
-
-    private boolean handleRunner(CommandSender sender, String[] args) {
-        if (!sender.hasPermission("manhunt.admin")) {
-            sender.sendMessage(cfg().getMessageComponent("error.no-permission"));
-            return true;
-        }
-
-        if (args.length < 2) {
-            sender.sendMessage(cfg().getMessageComponent("usage.runner"));
-            return true;
-        }
-
-        Player target = Bukkit.getPlayer(args[1]);
-        if (target == null) {
-            sender.sendMessage(cfg().getMessageComponent("error.player-not-found"));
-            return true;
-        }
-
-        Match match = plugin.getGameManager().getMatch();
-
-        if (!match.isParticipant(target.getUniqueId())) {
-            sender.sendMessage(cfg().getMessageComponent("role.not-joined", "{player}", target.getName()));
-            return true;
-        }
-
-        if (plugin.getGameManager().isGameActive()) {
-            sender.sendMessage(cfg().getMessageComponent("error.cannot-change-roles"));
-            return true;
-        }
-
-        plugin.getPlayerManager().applyRoleToPlayer(target, PlayerRole.RUNNER);
-        sender.sendMessage(cfg().getMessageComponent("role.set-runner-sender", "{player}", target.getName()));
-        target.sendMessage(cfg().getMessageComponent("role.set-runner-target"));
-        return true;
-    }
-
-    private boolean handleHunter(CommandSender sender, String[] args) {
-        if (!sender.hasPermission("manhunt.admin")) {
-            sender.sendMessage(cfg().getMessageComponent("error.no-permission"));
-            return true;
-        }
-
-        if (args.length < 2) {
-            sender.sendMessage(cfg().getMessageComponent("usage.hunter"));
-            return true;
-        }
-
-        Player target = Bukkit.getPlayer(args[1]);
-        if (target == null) {
-            sender.sendMessage(cfg().getMessageComponent("error.player-not-found"));
-            return true;
-        }
-
-        Match match = plugin.getGameManager().getMatch();
-
-        if (!match.isParticipant(target.getUniqueId())) {
-            sender.sendMessage(cfg().getMessageComponent("role.not-joined", "{player}", target.getName()));
-            return true;
-        }
-
-        if (plugin.getGameManager().isGameActive()) {
-            sender.sendMessage(cfg().getMessageComponent("error.cannot-change-roles"));
-            return true;
-        }
-
-        plugin.getPlayerManager().applyRoleToPlayer(target, PlayerRole.HUNTER);
-        sender.sendMessage(cfg().getMessageComponent("role.set-hunter-sender", "{player}", target.getName()));
-        target.sendMessage(cfg().getMessageComponent("role.set-hunter-target"));
-        return true;
-    }
-
-    private boolean handleForceStart(CommandSender sender, String[] args) {
-        if (!sender.hasPermission("manhunt.admin")) {
-            sender.sendMessage(cfg().getMessageComponent("error.no-permission"));
-            return true;
-        }
-
-        UUID ownerUuid = sender instanceof Player player ? player.getUniqueId() : null;
-        plugin.getGameManager().startGameForce(ownerUuid);
-        sender.sendMessage(cfg().getMessageComponent("admin.force-started"));
-        return true;
-    }
-
-    private boolean handleShuffle(CommandSender sender, String[] args) {
-        if (!sender.hasPermission("manhunt.admin")) {
-            sender.sendMessage(cfg().getMessageComponent("error.no-permission"));
-            return true;
-        }
-
-        if (args.length < 2) {
-            sender.sendMessage(cfg().getMessageComponent("usage.shuffle"));
-            return true;
-        }
-
-        int runnerCount;
-        try {
-            runnerCount = Integer.parseInt(args[1]);
-        } catch (NumberFormatException e) {
-            sender.sendMessage(cfg().getMessageComponent("error.invalid-number"));
-            return true;
-        }
-
-        if (runnerCount < 1) {
-            sender.sendMessage(cfg().getMessageComponent("error.invalid-number"));
-            return true;
-        }
-
-        if (plugin.getGameManager().isGameActive()) {
-            sender.sendMessage(cfg().getMessageComponent("error.cannot-change-roles"));
-            return true;
-        }
-
-        Match match = plugin.getGameManager().getMatch();
-
-        // Issue 1: Build deduplicated participant list using a Set to avoid duplicates
-        Set<UUID> participantSet = new HashSet<>();
-        participantSet.addAll(match.getRunnerUuids());
-        participantSet.addAll(match.getHunterUuids());
-        participantSet.addAll(match.getSpectatorUuids());
-
-        // Issue 2: Reset roles for ALL participants (including offline) before reassignment
-        for (UUID uuid : participantSet) {
-            match.getRunnerUuids().remove(uuid);
-            match.getHunterUuids().remove(uuid);
-            match.addSpectator(uuid);
-            plugin.getPlayerManager().setRole(uuid, PlayerRole.SPECTATOR);
-        }
-
-        // Filter to only online participants for shuffling and assignment
-        List<UUID> onlineParticipants = new ArrayList<>();
-        for (UUID uuid : participantSet) {
-            if (Bukkit.getPlayer(uuid) != null) {
-                onlineParticipants.add(uuid);
-            }
-        }
-
-        // Issue 3: Validate minimum players safely to avoid integer overflow
-        if (runnerCount >= onlineParticipants.size() || onlineParticipants.size() < (long) runnerCount + 1) {
-            sender.sendMessage(cfg().getMessageComponent("error.not-enough-players",
-                    "{needed}", String.valueOf(runnerCount + 1)));
-            return true;
-        }
-
-        Collections.shuffle(onlineParticipants, new Random());
-
-        int assignedRunners = 0;
-        int assignedHunters = 0;
-        for (int i = 0; i < onlineParticipants.size(); i++) {
-            UUID uuid = onlineParticipants.get(i);
-            Player player = Bukkit.getPlayer(uuid);
-            if (player == null) continue;
-            if (i < runnerCount) {
-                plugin.getPlayerManager().applyRoleToPlayer(player, PlayerRole.RUNNER);
-                assignedRunners++;
-            } else {
-                plugin.getPlayerManager().applyRoleToPlayer(player, PlayerRole.HUNTER);
-                assignedHunters++;
-            }
-        }
-
-        sender.sendMessage(cfg().getMessageComponent("role.shuffle-result",
-                "{runners}", String.valueOf(assignedRunners),
-                "{hunters}", String.valueOf(assignedHunters)));
-        return true;
-    }
-
-    private boolean handleMode(CommandSender sender, String[] args) {
-        if (!sender.hasPermission("manhunt.admin")) {
-            sender.sendMessage(cfg().getMessageComponent("error.no-permission"));
-            return true;
-        }
-
-        if (plugin.getGameManager().isGameActive()) {
-            sender.sendMessage(cfg().getMessageComponent("error.cannot-change-mode"));
-            return true;
-        }
-
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 1) {
-            ManhuntGameMode currentGameMode = plugin.getGameManager().getMatch().getGameMode();
-            StartMode currentStartMode = plugin.getGameManager().getMatch().getStartMode();
-            sender.sendMessage(cfg().getMessageComponent("mode.current-game", "{mode}", currentGameMode.getDisplayName(cfg())));
-            sender.sendMessage(cfg().getMessageComponent("mode.current-start", "{mode}", currentStartMode.getDisplayName(cfg())));
-            sender.sendMessage(cfg().getMessageComponent("usage.mode"));
-            return true;
-        }
-
-        if (args.length < 3) {
-            sender.sendMessage(cfg().getMessageComponent("usage.mode"));
-            return true;
-        }
-
-        ManhuntGameMode gameMode;
-        if (args[1].toLowerCase().equals("infection")) {
-            gameMode = ManhuntGameMode.INFECTION;
-        } else if (args[1].toLowerCase().equals("normal")) {
-            gameMode = ManhuntGameMode.NORMAL;
-        } else {
-            sender.sendMessage(cfg().getMessageComponent("error.invalid-game-mode"));
-            return true;
-        }
-
-        StartMode startMode;
-        if (args[2].toLowerCase().equals("headstart")) {
-            startMode = StartMode.HEADSTART;
-        } else if (args[2].toLowerCase().equals("dreamstart")) {
-            startMode = StartMode.DREAMSTART;
-        } else {
-            sender.sendMessage(cfg().getMessageComponent("error.invalid-start-mode"));
-            return true;
-        }
-
-        Match match = plugin.getGameManager().getMatch();
-
-        match.setGameMode(gameMode);
-        match.setStartMode(startMode);
-
-        sender.sendMessage(cfg().getMessageComponent("mode.game-set", "{mode}", gameMode.getDisplayName(cfg())));
-        sender.sendMessage(cfg().getMessageComponent("mode.start-set", "{mode}", startMode.getDisplayName(cfg())));
-
-        if (gameMode == ManhuntGameMode.INFECTION) {
-            sender.sendMessage(cfg().getMessageComponent("mode.infection-info"));
-        }
-        return true;
-    }
-
-    private boolean handleRemove(CommandSender sender, String[] args) {
-        if (!sender.hasPermission("manhunt.admin")) {
-            sender.sendMessage(cfg().getMessageComponent("error.no-permission"));
-            return true;
-        }
-
-        if (args.length < 2) {
-            sender.sendMessage(cfg().getMessageComponent("usage.remove"));
-            return true;
-        }
-
-        Player target = Bukkit.getPlayer(args[1]);
-        if (target == null) {
-            sender.sendMessage(cfg().getMessageComponent("error.player-not-found"));
-            return true;
-        }
-
-        Match match = plugin.getGameManager().getMatch();
-
-        if (!match.isParticipant(target.getUniqueId())) {
-            sender.sendMessage(cfg().getMessageComponent("error.not-in-game", "{player}", target.getName()));
-            return true;
-        }
-
-        if (plugin.getGameManager().isGameActive()) {
-            sender.sendMessage(cfg().getMessageComponent("error.cannot-change-roles"));
-            return true;
-        }
-
-        plugin.getPlayerManager().applyRoleToPlayer(target, PlayerRole.SPECTATOR);
-        sender.sendMessage(cfg().getMessageComponent("role.removed-sender", "{player}", target.getName()));
-        target.sendMessage(cfg().getMessageComponent("role.removed-target"));
-        return true;
-    }
-
-    private boolean handleKick(CommandSender sender, String[] args) {
-        if (!sender.hasPermission("manhunt.admin")) {
-            sender.sendMessage(cfg().getMessageComponent("error.no-permission"));
-            return true;
-        }
-
-        if (args.length < 2) {
-            sender.sendMessage(cfg().getMessageComponent("usage.kick"));
-            return true;
-        }
-
-        Player target = Bukkit.getPlayer(args[1]);
-        if (target == null) {
-            sender.sendMessage(cfg().getMessageComponent("error.player-not-found"));
-            return true;
-        }
-
-        Match match = plugin.getGameManager().getMatch();
-
-        if (!match.isParticipant(target.getUniqueId())) {
-            sender.sendMessage(cfg().getMessageComponent("error.not-in-game", "{player}", target.getName()));
-            return true;
-        }
-
-        plugin.getPlayerManager().removePlayerFromGame(target.getUniqueId());
-
-        if (plugin.getGameManager().isGameActive()) {
-            org.bukkit.World mainWorld = org.bukkit.Bukkit.getWorlds().get(0);
-            target.teleport(mainWorld.getSpawnLocation());
-            plugin.getUiManager().sendToAll(cfg().getMessage("admin.kick-broadcast", "{player}", target.getName()));
-        }
-
-        sender.sendMessage(cfg().getMessageComponent("admin.kick-sender", "{player}", target.getName()));
-        target.sendMessage(cfg().getMessageComponent("admin.kick-target"));
-        return true;
-    }
-
-    private boolean handlePause(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player player)) {
-            sender.sendMessage(cfg().getMessageComponent("error.only-players"));
-            return true;
-        }
-
-        if (plugin.getGameManager().getMatch().getState() != GameState.RUNNING &&
-                plugin.getGameManager().getMatch().getState() != GameState.PRE_HUNT &&
-                plugin.getGameManager().getMatch().getState() != GameState.HEADSTART) {
-            player.sendMessage(cfg().getMessageComponent("error.no-active-game-to-pause"));
-            return true;
-        }
-
-        if (!plugin.getGameManager().getMatch().isOwner(player.getUniqueId()) && !player.hasPermission("manhunt.admin")) {
-            player.sendMessage(cfg().getMessageComponent("error.only-owner-can-pause"));
-            return true;
-        }
-
-        if (!plugin.getGameManager().pauseGame(player.getUniqueId())) {
-            player.sendMessage(cfg().getMessageComponent("error.failed-to-pause"));
-        }
-        return true;
-    }
-
-    private boolean handleResume(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player player)) {
-            sender.sendMessage(cfg().getMessageComponent("error.only-players"));
-            return true;
-        }
-
-        if (plugin.getGameManager().getMatch().getState() != GameState.PAUSED) {
-            player.sendMessage(cfg().getMessageComponent("error.no-paused-game"));
-            return true;
-        }
-
-        if (!plugin.getGameManager().getMatch().isOwner(player.getUniqueId()) && !player.hasPermission("manhunt.admin")) {
-            player.sendMessage(cfg().getMessageComponent("error.only-owner-can-resume"));
-            return true;
-        }
-
-        if (!plugin.getGameManager().resumeGame(player.getUniqueId())) {
-            player.sendMessage(cfg().getMessageComponent("error.failed-to-resume"));
-        }
-        return true;
-    }
-
-    private boolean handleOwner(CommandSender sender, String[] args) {
-        if (!sender.hasPermission("manhunt.admin")) {
-            sender.sendMessage(cfg().getMessageComponent("error.no-permission"));
-            return true;
-        }
-
-        if (args.length < 2) {
-            UUID ownerUuid = plugin.getGameManager().getMatch().getOwnerUuid();
-            if (ownerUuid != null) {
-                Player owner = Bukkit.getPlayer(ownerUuid);
-                String ownerName = owner != null ? owner.getName() : "Unknown";
-                sender.sendMessage(cfg().getMessageComponent("admin.owner-show", "{player}", ownerName));
-            } else {
-                sender.sendMessage(cfg().getMessageComponent("admin.owner-none"));
-            }
-            return true;
-        }
-
-        Player target = Bukkit.getPlayer(args[1]);
-        if (target == null) {
-            sender.sendMessage(cfg().getMessageComponent("error.player-not-found"));
-            return true;
-        }
-
-        plugin.getGameManager().getMatch().setOwnerUuid(target.getUniqueId());
-        sender.sendMessage(cfg().getMessageComponent("admin.owner-set-sender", "{player}", target.getName()));
-        target.sendMessage(cfg().getMessageComponent("admin.owner-set-target"));
-        return true;
-    }
-
-    private boolean handleSeed(CommandSender sender, String[] args) {
-        if (!sender.hasPermission("manhunt.admin")) {
-            sender.sendMessage(cfg().getMessageComponent("error.no-permission"));
-            return true;
-        }
-
-        if (plugin.getGameManager().isGameActive()) {
-            sender.sendMessage(cfg().getMessageComponent("error.cannot-change-seed"));
-            return true;
-        }
-
-        if (args.length < 2) {
-            Long currentSeed = plugin.getGameManager().getMatch().getSeed();
-            if (currentSeed != null) {
-                sender.sendMessage(cfg().getMessageComponent("admin.seed-show", "{seed}", String.valueOf(currentSeed)));
-            } else {
-                sender.sendMessage(cfg().getMessageComponent("admin.seed-none"));
-            }
-            return true;
-        }
-
-        String seedArg = args[1];
-        try {
-            long seed;
-            if (seedArg.matches("-?\\d+")) {
-                seed = Long.parseLong(seedArg);
-            } else {
-                seed = seedArg.hashCode();
-            }
-
-            plugin.getGameManager().getMatch().setSeed(seed);
-            sender.sendMessage(cfg().getMessageComponent("admin.seed-set",
-                    "{seed}", String.valueOf(seed),
-                    "{input}", seedArg));
-        } catch (NumberFormatException e) {
-            sender.sendMessage(cfg().getMessageComponent("error.invalid-seed"));
-        }
-        return true;
-    }
-
-    private boolean handleWorld(CommandSender sender, String[] args) {
-        if (!sender.hasPermission("manhunt.admin")) {
-            sender.sendMessage(cfg().getMessageComponent("error.no-permission"));
-            return true;
-        }
-
-        if (plugin.getGameManager().isGameActive()) {
-            sender.sendMessage(cfg().getMessageComponent("error.cannot-change-world"));
-            return true;
-        }
-
-        if (args.length < 2) {
-            String currentWorld = plugin.getGameManager().getMatch().getWorldName();
-            if (currentWorld != null) {
-                sender.sendMessage(cfg().getMessageComponent("admin.world-show", "{world}", currentWorld));
-            } else {
-                sender.sendMessage(cfg().getMessageComponent("admin.world-none"));
-            }
-            return true;
-        }
-
-        String worldName = args[1];
-
-        if (worldName.equalsIgnoreCase("clear") || worldName.equalsIgnoreCase("reset")) {
-            plugin.getGameManager().getMatch().setWorldName(null);
-            sender.sendMessage(cfg().getMessageComponent("admin.world-cleared"));
-            return true;
-        }
-
-        plugin.getGameManager().getMatch().setWorldName(worldName);
-        sender.sendMessage(cfg().getMessageComponent("admin.world-set", "{world}", worldName));
-        return true;
-    }
-
-    private boolean handleChat(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player player)) {
-            sender.sendMessage(cfg().getMessageComponent("error.only-players"));
-            return true;
-        }
-
-        if (args.length < 2) {
-            ChatMode mode = plugin.getChatManager().getChatMode(player.getUniqueId());
-            player.sendMessage(cfg().getMessageComponent("chat.mode-show")
-                    .append(Component.text(mode.name(),
-                            mode == ChatMode.GLOBAL ? NamedTextColor.GOLD : NamedTextColor.GREEN)));
-            player.sendMessage(cfg().getMessageComponent("usage.chat-mode"));
-            return true;
-        }
-
-        PlayerRole role = plugin.getPlayerManager().getRole(player.getUniqueId());
-        if (role == PlayerRole.SPECTATOR) {
-            player.sendMessage(cfg().getMessageComponent("error.spectator-global-only"));
-            return true;
-        }
-
-        switch (args[1].toLowerCase()) {
-            case "global", "g" -> {
-                plugin.getChatManager().setChatMode(player.getUniqueId(), ChatMode.GLOBAL);
-                player.sendMessage(cfg().getMessageComponent("chat.mode-set-global"));
-            }
-            case "team", "t" -> {
-                if (plugin.getChatManager().isTeamSinglePlayer(player.getUniqueId())) {
-                    plugin.getChatManager().setChatMode(player.getUniqueId(), ChatMode.GLOBAL);
-                    player.sendMessage(cfg().getMessageComponent("chat.mode-set-global"));
-                    player.sendMessage(cfg().getMessageComponent("error.cannot-team-single"));
-                } else {
-                    plugin.getChatManager().setChatMode(player.getUniqueId(), ChatMode.TEAM);
-                    player.sendMessage(cfg().getMessageComponent("chat.mode-set-team"));
+            List<String> completions = new ArrayList<>();
+            for (Subcommand sub : subcommands.values()) {
+                if (sub.getPermission() == null || sender.hasPermission(sub.getPermission())) {
+                    completions.add(sub.getName());
                 }
             }
-            default -> player.sendMessage(cfg().getMessageComponent("usage.chat-mode"));
+            completions.add("debug");
+            return filterPartial(args[0], completions);
         }
-        return true;
+
+        String subName = args[0].toLowerCase();
+        if (subName.equals("debug")) {
+            if (args.length == 2) {
+                List<String> completions = new ArrayList<>();
+                completions.add("lastknown");
+                return filterPartial(args[1], completions);
+            }
+            return new ArrayList<>();
+        }
+
+        Subcommand sub = subcommands.get(subName);
+        if (sub != null) {
+            return filterPartial(args.length > 1 ? args[args.length - 1] : "", sub.tabComplete(sender, plugin, args));
+        }
+
+        return new ArrayList<>();
     }
 
     private void sendHelp(CommandSender sender) {
-        ConfigManager config = cfg();
+        ConfigManager config = plugin.getConfigManager();
         GameState state = plugin.getGameManager().getMatch().getState();
         String stateName = switch (state) {
             case WAITING -> config.getMessage("state.waiting");
@@ -740,81 +214,6 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             case PAUSED -> NamedTextColor.AQUA;
             case FINISHED -> NamedTextColor.DARK_GRAY;
         };
-    }
-
-    @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
-        List<String> completions = new ArrayList<>();
-
-        if (args.length == 1) {
-            completions.add("join");
-            completions.add("leave");
-            completions.add("chat");
-            if (sender.hasPermission("manhunt.admin")) {
-                completions.add("start");
-                completions.add("stop");
-                completions.add("reload");
-                completions.add("runner");
-                completions.add("hunter");
-                completions.add("remove");
-                completions.add("kick");
-                completions.add("forcestart");
-                completions.add("shuffle");
-                completions.add("mode");
-                completions.add("owner");
-                completions.add("seed");
-                completions.add("world");
-                completions.add("debug");
-            }
-            completions.add("pause");
-            completions.add("resume");
-            return filterPartial(args[0], completions);
-        }
-
-        if (args.length == 2) {
-            String sub = args[0].toLowerCase();
-            if (sub.equals("chat")) {
-                completions.add("global");
-                completions.add("team");
-                return filterPartial(args[1], completions);
-            }
-            if (sub.equals("runner") || sub.equals("hunter") || sub.equals("owner") || sub.equals("remove") || sub.equals("kick")) {
-                for (Player player : Bukkit.getOnlinePlayers()) {
-                    completions.add(player.getName());
-                }
-                return filterPartial(args[1], completions);
-            }
-            if (sub.equals("world")) {
-                for (World world : Bukkit.getWorlds()) {
-                    completions.add(world.getName());
-                }
-                completions.add("clear");
-                return filterPartial(args[1], completions);
-            }
-            if (sub.equals("debug")) {
-                completions.add("lastknown");
-                return filterPartial(args[1], completions);
-            }
-            if (sub.equals("mode")) {
-                completions.add("normal");
-                completions.add("infection");
-                return filterPartial(args[1], completions);
-            }
-        }
-
-        if (args.length == 3) {
-            String sub = args[0].toLowerCase();
-            if (sub.equals("mode")) {
-                String gameMode = args[1].toLowerCase();
-                if (gameMode.equals("normal") || gameMode.equals("infection")) {
-                    completions.add("dreamstart");
-                    completions.add("headstart");
-                }
-                return filterPartial(args[2], completions);
-            }
-        }
-
-        return completions;
     }
 
     private List<String> filterPartial(String partial, List<String> options) {
