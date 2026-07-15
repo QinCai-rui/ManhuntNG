@@ -1,0 +1,64 @@
+# ManhuntNG Configuration
+config-version: 4
+
+runner:
+  respawnLimit: 0
+  keepInventory: false
+
+hunters:
+  respawnLimit: -1
+  keepInventory: false
+  keepArmor: false
+  keepOffhand: false
+
+tracking:
+  enabled: true
+  updateTicks: 5
+  showDistance: true
+
+headstart:
+  duration: 10
+  compassEnabled: false
+
+preHunt:
+  countdown: 5
+  hunterCircleRadius: 3.0
+  formationSearchRadius: 30
+
+chat:
+  logToConsole: true
+
+scoreboard:
+  enabled: true
+
+actionBar:
+  enabled: true
+
+nameTags:
+  enabled: true
+  overhead: true
+  tabList: true
+  hunters:
+    suffix: "<red>[H]</red>"
+  runners:
+    suffix: "<green>[R]</green>"
+
+potionEffects:
+  runner:
+    - type: HEALTH_BOOST
+      level: 1
+      duration: -1
+      ambient: true
+    - type: ABSORPTION
+      level: 2
+      duration: -1
+      ambient: true
+  hunters:
+    - type: SPEED
+      level: 1
+      duration: 1200
+      ambient: true
+
+pauseTimeout:
+  enabled: false
+  duration: 120
