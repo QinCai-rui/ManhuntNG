@@ -9,10 +9,12 @@ on:
     paths-ignore:
       - "assets/**"
       - "README.md"
+      - "pumpkin-plugin/**"
   pull_request:
     paths-ignore:
       - "assets/**"
       - "README.md"
+      - "pumpkin-plugin/**"
 
 permissions:
   contents: read

@@ -9,6 +9,7 @@ on:
     paths-ignore:
       - "assets/**"
       - "README.md"
+      - "pumpkin-plugin/**"
   workflow_dispatch:
     inputs:
       version:
