@@ -22,3 +22,6 @@ mvnw.cmd
 
 # Logs
 *.log
+
+# PumpkinMC (Python plugin)
+__pycache__/
