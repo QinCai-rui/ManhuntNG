@@ -7,7 +7,7 @@
       "enderman": {
         "role": "runner",
         "drops": [
-          { "material": "ENDER_PEARL", "min-amount": 1, "max-amount": 2, "drop-chance": 1.0 }
+          { "material": "ENDER_PEARL", "min-amount": 1, "max-amount": 1, "drop-chance": 1.0 }
         ]
       },
       "blaze": {
@@ -19,7 +19,7 @@
       "skeleton": {
         "role": "all",
         "drops": [
-          { "material": "ARROW", "min-amount": 2, "max-amount": 6, "drop-chance": 0.5 }
+          { "material": "ARROW", "min-amount": 1, "max-amount": 4, "drop-chance": 0.5 }
         ]
       },
       "spider": {
