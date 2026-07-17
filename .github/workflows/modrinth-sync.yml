@@ -1,11 +1,11 @@
 name: Sync Modrinth Project
 
 on:
-  push:
-    branches: ["main"]
-    paths:
-      - README.md
-      - assets/modrinth/**
+#  push:
+#    branches: ["main"]
+#   paths:
+#     - README.md
+#      - assets/modrinth/**
   workflow_dispatch:
 
 env:
