@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-07-18
+
 ### Added
 
 - Added configurable loot table modifications via `loot.json`. Admins can now
@@ -36,7 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- `/manhunt reload` now also reloads `loot.json` for hot-reloading loot changes
+- `/manhunt reload` now also reloads `loot.json` to hot-reload loot-table changes
   [`c5f3ac0`](https://github.com/QinCai-rui/ManhuntNG/commit/c5f3ac0eed558c34ef9ce5da10d5feba0f343c91)
 
 ## [1.6.0] - 2026-07-11
