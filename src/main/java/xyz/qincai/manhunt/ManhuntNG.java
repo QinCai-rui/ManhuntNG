@@ -8,7 +8,12 @@ import xyz.qincai.manhunt.command.ManhuntCommand;
 import xyz.qincai.manhunt.config.ConfigManager;
 import xyz.qincai.manhunt.formation.FormationManager;
 import xyz.qincai.manhunt.game.GameManager;
-import xyz.qincai.manhunt.listener.GameListener;
+import xyz.qincai.manhunt.listener.AdvancementListener;
+import xyz.qincai.manhunt.listener.CombatListener;
+import xyz.qincai.manhunt.listener.GameListenerState;
+import xyz.qincai.manhunt.listener.GamePhaseListener;
+import xyz.qincai.manhunt.listener.PlayerLifecycleListener;
+import xyz.qincai.manhunt.listener.WorldInteractionListener;
 import xyz.qincai.manhunt.loot.LootListener;
 import xyz.qincai.manhunt.loot.LootManager;
 import xyz.qincai.manhunt.player.PlayerManager;
@@ -32,7 +37,7 @@ public class ManhuntNG extends JavaPlugin {
     private UIManager uiManager;
     private StatisticsManager statsManager;
     private ChatManager chatManager;
-    private GameListener gameListener;
+    private GameListenerState gameListenerState;
     private LootManager lootManager;
     private LootListener lootListener;
     private CommandRegistrar commandRegistrar;
@@ -64,8 +69,12 @@ public class ManhuntNG extends JavaPlugin {
         ManhuntCommand manhuntCommand = new ManhuntCommand(this);
         commandRegistrar.register("manhunt", "ManhuntNG main command", manhuntCommand, manhuntCommand);
 
-        gameListener = new GameListener(this);
-        getServer().getPluginManager().registerEvents(gameListener, this);
+        gameListenerState = new GameListenerState(this);
+        getServer().getPluginManager().registerEvents(new PlayerLifecycleListener(this, gameListenerState), this);
+        getServer().getPluginManager().registerEvents(new CombatListener(this, gameListenerState), this);
+        getServer().getPluginManager().registerEvents(new WorldInteractionListener(this, gameListenerState), this);
+        getServer().getPluginManager().registerEvents(new GamePhaseListener(this, gameListenerState), this);
+        getServer().getPluginManager().registerEvents(new AdvancementListener(this), this);
         getServer().getPluginManager().registerEvents(chatManager, this);
 
         lootListener = new LootListener(this);
@@ -136,8 +145,8 @@ public class ManhuntNG extends JavaPlugin {
         return chatManager;
     }
 
-    public GameListener getGameListener() {
-        return gameListener;
+    public GameListenerState getGameListenerState() {
+        return gameListenerState;
     }
 
     public LootManager getLootManager() {

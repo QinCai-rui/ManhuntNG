@@ -467,7 +467,7 @@ public class GameManager {
         match.clearAllPlayers();
         plugin.getPlayerManager().reset();
         plugin.getStatsManager().reset();
-        plugin.getGameListener().clearSavedItems();
+        plugin.getGameListenerState().clearSavedItems();
         if (plugin.getLootListener() != null) {
             plugin.getLootListener().clearTracking();
         }
@@ -502,7 +502,7 @@ public class GameManager {
             match.setWorldName(null);
             match.clearAllPlayers();
             plugin.getPlayerManager().reset();
-            plugin.getGameListener().clearSavedItems();
+            plugin.getGameListenerState().clearSavedItems();
             plugin.getChatManager().resetDefaults();
         }, 200L);
     }
@@ -534,7 +534,7 @@ public class GameManager {
             match.setWorldName(null);
             match.clearAllPlayers();
             plugin.getPlayerManager().reset();
-            plugin.getGameListener().clearSavedItems();
+            plugin.getGameListenerState().clearSavedItems();
             plugin.getChatManager().resetDefaults();
         }, 200L);
     }
