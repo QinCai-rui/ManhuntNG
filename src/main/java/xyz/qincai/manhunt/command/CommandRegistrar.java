@@ -9,7 +9,6 @@ import org.bukkit.command.TabCompleter;
 import xyz.qincai.manhunt.ManhuntNG;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
