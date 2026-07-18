@@ -165,11 +165,29 @@ public class WorldManager {
                 return;
             }
         }
-        File worldFolder = new File(Bukkit.getWorldContainer(), worldName);
-        if (worldFolder.exists()) {
+        File worldFolder = getWorldFolder(worldName);
+        if (worldFolder != null && worldFolder.exists()) {
             plugin.getLogger().info("Deleting world folder: " + worldName);
             deleteFolder(worldFolder);
         }
+    }
+
+    private File getWorldFolder(String worldName) {
+        World world = Bukkit.getWorld(worldName);
+        if (world != null) {
+            File folder = world.getWorldFolder();
+            if (folder != null) {
+                return folder;
+            }
+        }
+        try {
+            File container = Bukkit.getWorldContainer();
+            if (container != null) {
+                return new File(container, worldName);
+            }
+        } catch (Exception ignored) {
+        }
+        return null;
     }
 
     private void deleteFolder(File folder) {
