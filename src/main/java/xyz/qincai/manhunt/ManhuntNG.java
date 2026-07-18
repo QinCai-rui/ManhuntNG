@@ -74,6 +74,7 @@ public class ManhuntNG extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new CombatListener(this, gameListenerState), this);
         getServer().getPluginManager().registerEvents(new WorldInteractionListener(this, gameListenerState), this);
         getServer().getPluginManager().registerEvents(new GamePhaseListener(this, gameListenerState), this);
+        getServer().getPluginManager().registerEvents(new PortalListener(this), this);
         getServer().getPluginManager().registerEvents(new AdvancementListener(this), this);
         getServer().getPluginManager().registerEvents(chatManager, this);
 
