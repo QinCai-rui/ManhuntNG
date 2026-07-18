@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Extracted 18 `/manhunt` subcommands into individual `Subcommand` files
+- Split `GameListener` into five individual listeners: `PlayerLifecycleListener`,
+  `CombatListener`, `WorldInteractionListener`, `GamePhaseListener`,
+  `AdvancementListener`
+- Migrated deprecated APIs: (bukkit) `AsyncPlayerChatEvent` -> (paper-api) `AsyncChatEvent`,
+  `PotionEffectType.getByName()` -> registry lookup, `Enchantment.getByName()` ->
+  registry lookup with legacy alias fallback
+- Removed unused code from `StatisticsManager` and `PotionEffectManager`
+
+### Added
+
+- `Subcommand` interface, `recordKill()` to `StatisticsManager`, projectile
+  damage resolution in `CombatListener`, permission checks for `/manhunt debug`
+
+### Fixed
+
+- Projectile-based (e.g. arrows, tridents, snowballs) PvP now correctly credits the shooter
+- `ForceStartSubcommand` only sends success message on actual start
+- `LootConfig` logs warnings for unknown enchantments instead of silent errors
+
 ## [1.7.0] - 2026-07-18
 
 ### Added
