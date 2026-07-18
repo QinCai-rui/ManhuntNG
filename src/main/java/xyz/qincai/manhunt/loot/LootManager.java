@@ -1,5 +1,6 @@
 package xyz.qincai.manhunt.loot;
 
+import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -118,7 +119,7 @@ public class LootManager {
         if (drop.displayName() != null && !drop.displayName().isEmpty()) {
             ItemMeta meta = item.getItemMeta();
             if (meta != null) {
-                meta.setDisplayName(drop.displayName());
+                meta.displayName(Component.text(drop.displayName()));
                 item.setItemMeta(meta);
             }
         }

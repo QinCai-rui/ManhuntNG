@@ -1,5 +1,7 @@
 package xyz.qincai.manhunt.config;
 
+import org.bukkit.NamespacedKey;
+import org.bukkit.Registry;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -198,24 +200,24 @@ public class ConfigManager {
                 continue;
             }
 
-            PotionEffectType type = PotionEffectType.getByName(typeObj.toString());
+            PotionEffectType type = potionEffectTypeFromString(typeObj.toString());
             if (type == null) {
                 plugin.getLogger().warning("[Config] Unknown potion effect type '" + typeObj + "' at '" + path + "'. Skipping entry.");
                 continue;
             }
 
             if (!(map.get("level") instanceof Number)) {
-                plugin.getLogger().warning("[Config] Potion effect '" + type.getName()
+                plugin.getLogger().warning("[Config] Potion effect '" + type.getKey().getKey()
                         + "' missing or invalid 'level' at '" + path + "'. Using default level = 1.");
             }
 
             if (!(map.get("duration") instanceof Number)) {
-                plugin.getLogger().warning("[Config] Potion effect '" + type.getName()
+                plugin.getLogger().warning("[Config] Potion effect '" + type.getKey().getKey()
                         + "' missing or invalid 'duration' at '" + path + "'. Using infinite duration.");
             }
 
             if (!(map.get("ambient") instanceof Boolean)) {
-                plugin.getLogger().warning("[Config] Potion effect '" + type.getName()
+                plugin.getLogger().warning("[Config] Potion effect '" + type.getKey().getKey()
                         + "' missing or invalid 'ambient' at '" + path + "'. Using default ambient = true.");
             }
         }
@@ -462,7 +464,7 @@ public class ConfigManager {
             Object typeObj = map.get("type");
             if (typeObj == null) continue;
 
-            PotionEffectType type = PotionEffectType.getByName(typeObj.toString());
+            PotionEffectType type = potionEffectTypeFromString(typeObj.toString());
             if (type == null) {
                 plugin.getLogger().warning("Unknown potion effect type: " + typeObj);
                 continue;
@@ -497,5 +499,9 @@ public class ConfigManager {
             effects.add(new PotionEffect(type, duration, level - 1, ambient, true));
         }
         return effects;
+    }
+
+    private static PotionEffectType potionEffectTypeFromString(String name) {
+        return Registry.POTION_EFFECT_TYPE.get(NamespacedKey.fromString(name.toLowerCase()));
     }
 }

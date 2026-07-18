@@ -119,14 +119,4 @@ public class PotionEffectManager {
             runner.addPotionEffect(effect);
         }
     }
-
-    /*
-     * Removes only the configured potion effects from a player.
-     * NOTE: (Currently unused)
-     */
-    private void clearConfiguredEffects(Player player, List<PotionEffect> configuredEffects) {
-        for (PotionEffect effect : configuredEffects) {
-            player.removePotionEffect(effect.getType());
-        }
-    }
 }

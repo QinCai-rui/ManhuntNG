@@ -1,13 +1,10 @@
 package xyz.qincai.manhunt.stats;
 
-import xyz.qincai.manhunt.ManhuntNG;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 public class StatisticsManager {
-    private final ManhuntNG plugin;
     private final Map<UUID, MutablePlayerStats> playerStats = new HashMap<>();
     private int runnerWins = 0;
     private int hunterWins = 0;
@@ -25,8 +22,7 @@ public class StatisticsManager {
         public void addTimePlayed(long time) { timePlayed += time; }
     }
 
-    public StatisticsManager(ManhuntNG plugin) {
-        this.plugin = plugin;
+    public StatisticsManager() {
     }
 
     public void reset() {

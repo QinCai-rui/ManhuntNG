@@ -5,8 +5,11 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.potion.PotionType;
+import io.papermc.paper.registry.RegistryAccess;
+import io.papermc.paper.registry.RegistryKey;
 
 import java.io.File;
 import java.io.FileReader;
@@ -260,7 +263,9 @@ public class LootConfig {
             if (name.isEmpty()) continue;
 
             try {
-                Enchantment ench = Enchantment.getByName(name.toUpperCase().replace(" ", "_"));
+                Enchantment ench = RegistryAccess.registryAccess()
+                        .getRegistry(RegistryKey.ENCHANTMENT)
+                        .get(NamespacedKey.fromString(name.toLowerCase().replace(" ", "_")));
                 if (ench == null) continue;
                 int minLevel = getInt(enchantObj, "min-level", getInt(enchantObj, "level", 1));
                 int maxLevel = getInt(enchantObj, "max-level", minLevel);

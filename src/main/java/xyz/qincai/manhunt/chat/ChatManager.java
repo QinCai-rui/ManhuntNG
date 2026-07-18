@@ -2,11 +2,12 @@ package xyz.qincai.manhunt.chat;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
+import io.papermc.paper.event.player.AsyncChatEvent;
 import xyz.qincai.manhunt.ManhuntNG;
 import xyz.qincai.manhunt.game.Match;
 import xyz.qincai.manhunt.player.PlayerRole;
@@ -112,7 +113,7 @@ public class ChatManager implements Listener {
     }
 
     @EventHandler
-    public void onPlayerChat(AsyncPlayerChatEvent event) {
+    public void onPlayerChat(AsyncChatEvent event) {
         if (!plugin.getGameManager().isGameActive()) return;
 
         Player player = event.getPlayer();
@@ -128,7 +129,7 @@ public class ChatManager implements Listener {
 
         event.setCancelled(true);
 
-        String message = event.getMessage();
+        String message = PlainTextComponentSerializer.plainText().serialize(event.message());
         ChatMode mode = getChatMode(uuid);
         if (mode == ChatMode.TEAM && isTeamSinglePlayer(uuid)) {
             mode = ChatMode.GLOBAL;

@@ -11,9 +11,9 @@ public class Match {
     private GameState state = GameState.WAITING;
     private StartMode startMode = StartMode.DREAMSTART;
     private ManhuntGameMode gameMode = ManhuntGameMode.NORMAL;
-    private final Set<UUID> runnerUuids = new java.util.concurrent.ConcurrentHashMap<UUID, Boolean>().newKeySet();
-    private final Set<UUID> hunterUuids = new java.util.concurrent.ConcurrentHashMap<UUID, Boolean>().newKeySet();
-    private final Set<UUID> spectatorUuids = new java.util.concurrent.ConcurrentHashMap<UUID, Boolean>().newKeySet();
+    private final Set<UUID> runnerUuids = java.util.concurrent.ConcurrentHashMap.newKeySet();
+    private final Set<UUID> hunterUuids = java.util.concurrent.ConcurrentHashMap.newKeySet();
+    private final Set<UUID> spectatorUuids = java.util.concurrent.ConcurrentHashMap.newKeySet();
     private final Map<UUID, PlayerRole> previousRoles = new java.util.concurrent.ConcurrentHashMap<>();
     private UUID ownerUuid;
     private long startTime;

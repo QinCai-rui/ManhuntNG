@@ -57,7 +57,7 @@ public class ManhuntNG extends JavaPlugin {
         trackerManager = new TrackerManager(this);
         worldManager = new WorldManager(this);
         uiManager = new UIManager(this);
-        statsManager = new StatisticsManager(this);
+        statsManager = new StatisticsManager();
         chatManager = new ChatManager(this);
         lootManager = new LootManager(this);
         lootManager.loadConfig();
