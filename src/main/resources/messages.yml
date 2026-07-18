@@ -1,5 +1,5 @@
 # ManhuntNG Messages
-config-version: 3
+config-version: 4
 
 # ============================================================================
 # General
@@ -17,7 +17,6 @@ error.already-joined: '<red>You have already joined!'
 error.cannot-change-roles: '<red>Cannot change roles during an active game!'
 error.cannot-change-mode: '<red>Cannot change mode during an active game!'
 error.cannot-change-seed: '<red>Cannot change seed during an active game!'
-error.cannot-change-world: '<red>Cannot change world during an active game!'
 error.invalid-game-mode: '<red>Invalid game mode! Must be ''normal'' or ''infection''.'
 error.invalid-start-mode: '<red>Invalid start mode! Must be ''dreamstart'' or ''headstart''.'
 error.invalid-seed: '<red>Invalid seed value!'
@@ -71,10 +70,8 @@ admin.owner-set-target: '<green>You are now the game owner!'
 admin.seed-show: '<gray>Current seed: <aqua>{seed}'
 admin.seed-none: '<gray>No seed set (will use random).'
 admin.seed-set: '<green>World seed set to <aqua>{seed} <green>("{input}")'
-admin.world-show: '<gray>Current world: <aqua>{world}'
-admin.world-none: '<gray>No world set (will generate a new world).'
-admin.world-cleared: '<green>World cleared. Will generate a new world on start.'
-admin.world-set: '<green>World set to <aqua>{world}<green>. Will use this world on start.'
+admin.world-info-game: '<gray>Current world: <aqua>{world} <gray>(<green>{dimension}<gray>)'
+admin.world-info-lobby: '<gray>Current world: <aqua>{world} <gray>(<green>{dimension}<gray>)'
 
 # ============================================================================
 # Command Responses - Mode
@@ -121,6 +118,7 @@ game.hunters-win-broadcast: '<red><bold>The Hunters have won the game!'
 game.no-runners: '<red>No runners selected!'
 game.no-hunters: '<red>No hunters selected!'
 game.world-failed: '<red>Failed to create game world!'
+game.generating-worlds: '<yellow>Generating game worlds...'
 
 # ============================================================================
 # Countdown
@@ -141,6 +139,14 @@ headstart.countdown-hunter-subtitle: '<gray>You are frozen!'
 headstart.countdown-runner-title: '<yellow>{seconds}'
 headstart.countdown-runner-subtitle: '<gray>Head start remaining'
 headstart.ended: '<red>Hunters are now free! The hunt begins!'
+
+# ============================================================================
+# Warmup
+# ============================================================================
+warmup.title: '<yellow>World Settling'
+warmup.subtitle: '<gray>Game starts in <yellow>{seconds}<gray> seconds...'
+warmup.countdown-title: '<yellow>{seconds}'
+warmup.countdown-subtitle: '<gray>World settling...'
 
 # ============================================================================
 # Pre-Hunt
@@ -317,10 +323,10 @@ help.seed.cmd: 'manhunt seed [value]'
 help.seed.desc: 'View/set world seed'
 help.seed.hover: 'Click to set seed'
 help.seed.permission: 'manhunt.admin'
-help.world.cmd: 'manhunt world [name]'
-help.world.desc: 'View/set existing world to use'
-help.world.hover: 'Click to set world'
-help.world.permission: 'manhunt.admin'
+help.world.cmd: 'manhunt world'
+help.world.desc: 'Show current world and dimension'
+help.world.hover: 'Click to show world info'
+help.world.permission: 'manhunt.play'
 help.mode.cmd: 'manhunt mode <normal|infection> <dreamstart|headstart>'
 help.mode.desc: 'Set game and start mode'
 help.mode.hover: 'Click to set mode'
@@ -346,7 +352,9 @@ help.debug.permission: 'manhunt.admin'
 # Game State Names (used in help menu)
 # ============================================================================
 state.waiting: 'Waiting'
+state.generating: 'Generating'
 state.countdown: 'Countdown'
+state.warmup: 'Warmup'
 state.headstart: 'Head Start'
 state.prehunt: 'Pre-Hunt'
 state.running: 'Running'

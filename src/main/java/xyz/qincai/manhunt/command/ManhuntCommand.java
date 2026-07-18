@@ -27,7 +27,7 @@ import xyz.qincai.manhunt.command.sub.SeedSubcommand;
 import xyz.qincai.manhunt.command.sub.ShuffleSubcommand;
 import xyz.qincai.manhunt.command.sub.StartSubcommand;
 import xyz.qincai.manhunt.command.sub.StopSubcommand;
-import xyz.qincai.manhunt.command.sub.WorldSubcommand;
+import xyz.qincai.manhunt.command.sub.WorldInfoSubcommand;
 import xyz.qincai.manhunt.config.ConfigManager;
 import xyz.qincai.manhunt.game.GameState;
 
@@ -68,7 +68,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
         register(new ResumeSubcommand());
         register(new OwnerSubcommand());
         register(new SeedSubcommand());
-        register(new WorldSubcommand());
+        register(new WorldInfoSubcommand());
         register(new ChatSubcommand());
     }
 
@@ -176,7 +176,9 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
         // Translate the current game state into a display name
         String stateName = switch (state) {
             case WAITING -> config.getMessage("state.waiting");
+            case GENERATING -> config.getMessage("state.generating");
             case COUNTDOWN -> config.getMessage("state.countdown");
+            case WARMUP -> config.getMessage("state.warmup");
             case HEADSTART -> config.getMessage("state.headstart");
             case PRE_HUNT -> config.getMessage("state.prehunt");
             case RUNNING -> config.getMessage("state.running");
@@ -255,7 +257,9 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
     private NamedTextColor getTextColor(GameState state) {
         return switch (state) {
             case WAITING -> NamedTextColor.GREEN;
+            case GENERATING -> NamedTextColor.LIGHT_PURPLE;
             case COUNTDOWN -> NamedTextColor.YELLOW;
+            case WARMUP -> NamedTextColor.AQUA;
             case HEADSTART -> NamedTextColor.LIGHT_PURPLE;
             case PRE_HUNT -> NamedTextColor.GOLD;
             case RUNNING -> NamedTextColor.RED;

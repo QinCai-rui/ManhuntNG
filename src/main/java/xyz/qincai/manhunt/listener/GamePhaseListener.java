@@ -86,6 +86,15 @@ public class GamePhaseListener implements Listener {
             return;
         }
 
+        // Freeze movement during WARMUP (world settling)
+        if (match.getState() == GameState.WARMUP) {
+            if (event.getTo() == null) return;
+            if (plugin.getPlayerManager().isRunner(uuid) || plugin.getPlayerManager().isHunter(uuid)) {
+                event.setTo(event.getFrom());
+            }
+            return;
+        }
+
         // Track runner world changes during RUNNING
         if (match.getState() == GameState.RUNNING && plugin.getPlayerManager().isRunner(uuid)) {
             World fromWorld = event.getFrom().getWorld();
