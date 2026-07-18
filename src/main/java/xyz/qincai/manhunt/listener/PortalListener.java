@@ -85,9 +85,11 @@ public class PortalListener implements Listener {
     }
 
     private Location computeDestination(World fromWorld, World toWorld, Location originalTo, TeleportCause cause) {
-        double scale = cause == TeleportCause.NETHER_PORTAL
-                ? (fromWorld.getEnvironment() == World.Environment.NETHER ? 8.0 : 1.0 / 8.0)
-                : 1.0;
+        if (cause == TeleportCause.END_PORTAL) {
+            return toWorld.getSpawnLocation();
+        }
+
+        double scale = fromWorld.getEnvironment() == World.Environment.NETHER ? 8.0 : 1.0 / 8.0;
 
         double x = originalTo.getX() * scale;
         double y = originalTo.getY();
