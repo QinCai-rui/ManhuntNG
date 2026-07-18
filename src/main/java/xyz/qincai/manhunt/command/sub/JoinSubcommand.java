@@ -35,6 +35,7 @@ public class JoinSubcommand implements Subcommand {
             plugin.getUiManager().sendToAll(cfg(plugin).getMessage("join.broadcast", "{player}", player.getName()));
             player.sendMessage(cfg(plugin).getMessageComponent("join.spectator"));
         } else {
+            plugin.getWorldManager().teleportToLobby(player);
             player.sendMessage(cfg(plugin).getMessageComponent("join.lobby"));
         }
         return true;

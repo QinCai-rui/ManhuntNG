@@ -108,6 +108,7 @@ public class GameListenerState {
 
         if (match.getState() == GameState.PRE_HUNT ||
             match.getState() == GameState.COUNTDOWN ||
+            match.getState() == GameState.WARMUP ||
             match.getState() == GameState.PAUSED) {
 
             if (plugin.getPlayerManager().isRunner(uuid) ||

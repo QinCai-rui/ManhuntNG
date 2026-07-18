@@ -96,6 +96,8 @@ public class ConfigManager {
         validateDouble("preHunt.hunterCircleRadius", 3.0);
         validateInt("preHunt.formationSearchRadius", 20);
 
+        validateInt("warmup.duration", 10);
+
         validateBoolean("tracking.enabled", true);
         validateInt("tracking.updateTicks", 5);
         validateBoolean("tracking.showDistance", true);
@@ -353,6 +355,10 @@ public class ConfigManager {
 
     public int getFormationSearchRadius() {
         return config.getInt("preHunt.formationSearchRadius", 20);
+    }
+
+    public int getWarmupDuration() {
+        return config.getInt("warmup.duration", 10);
     }
 
     public boolean isTrackingEnabled() {

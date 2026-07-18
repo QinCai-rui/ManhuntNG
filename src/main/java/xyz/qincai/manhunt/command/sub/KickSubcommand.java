@@ -36,8 +36,7 @@ public class KickSubcommand implements Subcommand {
         plugin.getPlayerManager().removePlayerFromGame(target.getUniqueId());
 
         if (plugin.getGameManager().isGameActive()) {
-            org.bukkit.World mainWorld = org.bukkit.Bukkit.getWorlds().get(0);
-            target.teleport(mainWorld.getSpawnLocation());
+            plugin.getWorldManager().teleportToLobby(target);
             plugin.getUiManager().sendToAll(cfg(plugin).getMessage("admin.kick-broadcast", "{player}", target.getName()));
         }
 

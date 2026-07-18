@@ -46,6 +46,7 @@ public class PlayerLifecycleListener implements Listener {
         if (!plugin.getGameManager().isGameActive()) {
             plugin.getPlayerManager().setRole(player.getUniqueId(), PlayerRole.SPECTATOR);
             match.addSpectator(player.getUniqueId());
+            plugin.getWorldManager().teleportToLobby(player);
             return;
         }
 

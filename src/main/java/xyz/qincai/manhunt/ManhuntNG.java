@@ -13,7 +13,6 @@ import xyz.qincai.manhunt.listener.CombatListener;
 import xyz.qincai.manhunt.listener.GameListenerState;
 import xyz.qincai.manhunt.listener.GamePhaseListener;
 import xyz.qincai.manhunt.listener.PlayerLifecycleListener;
-import xyz.qincai.manhunt.listener.PortalListener;
 import xyz.qincai.manhunt.listener.WorldInteractionListener;
 import xyz.qincai.manhunt.loot.LootListener;
 import xyz.qincai.manhunt.loot.LootManager;
@@ -75,7 +74,6 @@ public class ManhuntNG extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new CombatListener(this, gameListenerState), this);
         getServer().getPluginManager().registerEvents(new WorldInteractionListener(this, gameListenerState), this);
         getServer().getPluginManager().registerEvents(new GamePhaseListener(this, gameListenerState), this);
-        getServer().getPluginManager().registerEvents(new PortalListener(this), this);
         getServer().getPluginManager().registerEvents(new AdvancementListener(this), this);
         getServer().getPluginManager().registerEvents(chatManager, this);
 

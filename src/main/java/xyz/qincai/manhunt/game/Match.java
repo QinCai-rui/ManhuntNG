@@ -34,7 +34,6 @@ public class Match {
     private int pauseTimeoutRemaining = -1; // remaining pause-timeout seconds, -1 = not set / disabled
     private boolean pauseTimeoutHuntersWin; // if true, hunters win when the pause timeout fires (runners left); else runners win (hunters left)
     private Long seed;
-    private String worldName;
 
     public GameState getState() {
         return state;
@@ -306,17 +305,5 @@ public class Match {
 
     public void setSeed(Long seed) {
         this.seed = seed;
-    }
-
-    public String getWorldName() {
-        return worldName;
-    }
-
-    public void setWorldName(String worldName) {
-        this.worldName = worldName;
-    }
-
-    public boolean isUsingExistingWorld() {
-        return worldName != null && !worldName.isEmpty();
     }
 }

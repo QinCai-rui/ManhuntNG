@@ -205,6 +205,7 @@ public class LootListener implements Listener {
         return match.getState() == GameState.RUNNING ||
                match.getState() == GameState.PRE_HUNT ||
                match.getState() == GameState.HEADSTART ||
+               match.getState() == GameState.WARMUP ||
                match.getState() == GameState.PAUSED;
     }
 

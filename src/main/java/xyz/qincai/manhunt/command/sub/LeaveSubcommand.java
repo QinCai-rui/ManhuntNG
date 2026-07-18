@@ -26,8 +26,7 @@ public class LeaveSubcommand implements Subcommand {
         plugin.getPlayerManager().removePlayerFromGame(player.getUniqueId());
 
         if (plugin.getGameManager().isGameActive()) {
-            org.bukkit.World mainWorld = org.bukkit.Bukkit.getWorlds().get(0);
-            player.teleport(mainWorld.getSpawnLocation());
+            plugin.getWorldManager().teleportToLobby(player);
             plugin.getUiManager().sendToAll(cfg(plugin).getMessage("leave.broadcast", "{player}", player.getName()));
         }
 

@@ -1,5 +1,5 @@
 # ManhuntNG Configuration
-config-version: 4
+config-version: 5
 
 runner:
   respawnLimit: 0
@@ -25,6 +25,9 @@ preHunt:
   countdown: 5
   hunterCircleRadius: 3.0
   formationSearchRadius: 30
+
+warmup:
+  duration: 10
 
 chat:
   # Log chat messages to the server console (when chat is intercepted during a game)
