@@ -146,10 +146,24 @@ public class WorldManager {
     private void deleteWorldFolder(String worldName) {
         World world = Bukkit.getWorld(worldName);
         if (world != null) {
-            for (Player player : world.getPlayers()) {
-                player.teleport(Bukkit.getWorlds().get(0).getSpawnLocation());
+            // Teleport players to the configured lobby world before unloading
+            World lobby = getLobbyWorld();
+            if (lobby == null) {
+                lobby = createLobbyWorld();
             }
-            Bukkit.unloadWorld(world, false);
+            if (lobby != null) {
+                org.bukkit.Location lobbySpawn = lobby.getSpawnLocation();
+                for (Player player : world.getPlayers()) {
+                    player.teleport(lobbySpawn);
+                }
+            }
+
+            // Attempt to unload the world and return early if it fails
+            boolean unloaded = Bukkit.unloadWorld(world, false);
+            if (!unloaded) {
+                plugin.getLogger().warning("Failed to unload world: " + worldName);
+                return;
+            }
         }
         File worldFolder = new File(Bukkit.getWorldContainer(), worldName);
         if (worldFolder.exists()) {

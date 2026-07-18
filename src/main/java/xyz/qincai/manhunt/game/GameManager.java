@@ -85,13 +85,20 @@ public class GameManager {
         plugin.getUiManager().broadcastMessage(cfg().getMessage("game.generating-worlds"));
 
         Bukkit.getScheduler().runTask(plugin, () -> {
+            // Guard against state change (e.g., stopGame() was called while queued)
+            if (match.getState() != GameState.GENERATING) return;
+
             plugin.getWorldManager().teleportToLobby(match);
             plugin.getWorldManager().deleteAndGenerateWorlds(match);
+
+            // Re-check state after world generation
+            if (match.getState() != GameState.GENERATING) return;
 
             World gameWorld = match.getGameWorld();
             if (gameWorld == null) {
                 plugin.getUiManager().broadcastMessage(cfg().getMessage("game.world-failed"));
                 match.setState(GameState.WAITING);
+                forceStart = false;
                 return;
             }
 
@@ -110,13 +117,20 @@ public class GameManager {
         plugin.getUiManager().broadcastMessage(cfg().getMessage("game.generating-worlds"));
 
         Bukkit.getScheduler().runTask(plugin, () -> {
+            // Guard against state change (e.g., stopGame() was called while queued)
+            if (match.getState() != GameState.GENERATING) return;
+
             plugin.getWorldManager().teleportToLobby(match);
             plugin.getWorldManager().deleteAndGenerateWorlds(match);
+
+            // Re-check state after world generation
+            if (match.getState() != GameState.GENERATING) return;
 
             World gameWorld = match.getGameWorld();
             if (gameWorld == null) {
                 plugin.getUiManager().broadcastMessage(cfg().getMessage("game.world-failed"));
                 match.setState(GameState.WAITING);
+                forceStart = false;
                 return;
             }
 
@@ -227,7 +241,7 @@ public class GameManager {
                 return;
             }
 
-            int current = counter.get();
+            int current = counter.getAndDecrement();
             if (current <= 0) {
                 Bukkit.getScheduler().cancelTask(warmupTaskId);
                 warmupTaskId = -1;
@@ -251,8 +265,6 @@ public class GameManager {
                             cfg().getMessage("warmup.countdown-subtitle"), 1250);
                 }
             }
-
-            counter.decrementAndGet();
         }, 20L, 20L).getTaskId();
     }
 
@@ -262,12 +274,15 @@ public class GameManager {
         setAllPlayersSurvival();
         healAllPlayers();
 
+        // Capture and clear forceStart flag before branching on start mode
+        boolean wasForceStart = forceStart;
+        forceStart = false;
+
         if (match.getStartMode() == StartMode.HEADSTART) {
             match.setState(GameState.HEADSTART);
             applyHeadstartFreezeState();
             startHeadstartTimer(cfg().getHeadstartDuration());
-        } else if (forceStart) {
-            forceStart = false;
+        } else if (wasForceStart) {
             match.setState(GameState.RUNNING);
             match.setStartTime(System.currentTimeMillis());
 
@@ -485,6 +500,7 @@ public class GameManager {
             headstartTaskId = -1;
         }
         headstartCounter = null;
+        forceStart = false;
         stopPauseTimeout();
 
         plugin.getTrackerManager().stopTracking();

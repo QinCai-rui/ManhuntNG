@@ -207,6 +207,11 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
         helpEntry(sender, config, "help.g");
         helpEntry(sender, config, "help.t");
 
+        // Show world command to players with manhunt.play permission
+        if (sender.hasPermission("manhunt.play")) {
+            helpEntry(sender, config, "help.world");
+        }
+
         // Admin commands section (requires `manhunt.admin` perm)
         if (sender.hasPermission("manhunt.admin")) {
             sender.sendMessage(Component.empty());
@@ -222,7 +227,6 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             helpEntry(sender, config, "help.kick");
             helpEntry(sender, config, "help.owner");
             helpEntry(sender, config, "help.seed");
-            helpEntry(sender, config, "help.world");
             helpEntry(sender, config, "help.mode");
             helpEntry(sender, config, "help.forcestart");
             helpEntry(sender, config, "help.shuffle");
