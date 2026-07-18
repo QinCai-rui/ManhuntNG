@@ -18,6 +18,12 @@ import xyz.qincai.manhunt.player.PlayerRole;
 
 import java.util.UUID;
 
+/*
+ * Handles player join, quit, respawn, and world-change events
+ * Restores reconnecting players to their saved location (just in case other plugins cancel vanilla),
+ * gives hunters a compass on mid-game join, auto-pauses when
+ * an entire team disconnects, and restores inventory on respawn
+ */
 public class PlayerLifecycleListener implements Listener {
     private final ManhuntNG plugin;
     private final GameListenerState state;
@@ -27,6 +33,11 @@ public class PlayerLifecycleListener implements Listener {
         this.state = state;
     }
 
+    /*
+     * Handles player joining the server.
+     * If game is inactive -> they become spectator.
+     * If hunter joins during RUNNING -> give compass after short delay.
+     */
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
@@ -38,6 +49,7 @@ public class PlayerLifecycleListener implements Listener {
             return;
         }
 
+        // Reconnecting participant: teleport back to where they left the game
         Location savedLocation = state.removeSavedLocation(player.getUniqueId());
         if (savedLocation != null && savedLocation.getWorld() != null) {
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
@@ -47,6 +59,7 @@ public class PlayerLifecycleListener implements Listener {
             }, 5L);
         }
 
+        // Hunters joining mid-game -> get compass
         if (plugin.getPlayerManager().isHunter(player.getUniqueId())) {
             if (match.getState() == GameState.RUNNING) {
                 Bukkit.getScheduler().runTaskLater(plugin, () -> {
@@ -57,9 +70,11 @@ public class PlayerLifecycleListener implements Listener {
             }
         }
 
+        // Re-apply the role nametag (covers mid-game rejoins)
         plugin.getNameTagManager().applyTag(player, plugin.getPlayerManager().getRole(player.getUniqueId()));
     }
 
+    // Updates runner last-known location when switching worlds.
     @EventHandler
     public void onPlayerChangedWorld(PlayerChangedWorldEvent event) {
         Player player = event.getPlayer();
@@ -71,6 +86,11 @@ public class PlayerLifecycleListener implements Listener {
         }
     }
 
+    /*
+     * Saves location of any participant leaving an active game so they can be
+     * teleported back when they reconnect. 
+     * If every runner or every hunter disconnects, the game is auto-paused.
+     */
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
@@ -83,8 +103,12 @@ public class PlayerLifecycleListener implements Listener {
 
         if (match.getState() != GameState.RUNNING && match.getState() != GameState.HEADSTART) return;
 
+        // No team left -> nothing to pause for
         if (match.getRunnerUuids().isEmpty() || match.getHunterUuids().isEmpty()) return;
 
+        // Check if any runner/hunter (other than the one quitting) is still online.
+        // The quitting player is excluded because they are no longer part of the
+        // active game even if the server still reports them as present.
         boolean anyRunnerOnline = match.getRunnerUuids().stream()
                 .filter(id -> !id.equals(uuid))
                 .anyMatch(id -> {
@@ -99,6 +123,7 @@ public class PlayerLifecycleListener implements Listener {
                     return p != null && p.isOnline();
                 });
 
+        // Only pause when EVERY runner or EVERY hunter has disconnected
         if (!anyRunnerOnline) {
             plugin.getUiManager().sendToAll(plugin.getConfigManager().getMessage("pause.runners-disconnected"));
             plugin.getGameManager().pauseGame();
@@ -108,6 +133,11 @@ public class PlayerLifecycleListener implements Listener {
         }
     }
 
+    /*
+     * Handles respawn logic:
+     * - Hunter: restore saved armour/offhand, give compass (only during RUNNING), announce
+     * - Runner: reapply potion effects, broadcast lives remaining
+     */
     @EventHandler
     public void onPlayerRespawn(PlayerRespawnEvent event) {
         Player player = event.getPlayer();
@@ -128,6 +158,7 @@ public class PlayerLifecycleListener implements Listener {
                 if (armor != null) player.getInventory().setArmorContents(armor);
                 if (offhand != null) player.getInventory().setItemInOffHand(offhand);
 
+                // Only give compass during RUNNING
                 if (match.getState() == GameState.RUNNING) {
                     plugin.getTrackerManager().giveCompassToPlayer(player);
                 }
@@ -141,6 +172,7 @@ public class PlayerLifecycleListener implements Listener {
 
                 player.setGameMode(GameMode.SURVIVAL);
 
+                // Reapply runner potion effects
                 plugin.getPotionEffectManager().applyRunnerEffects(uuid);
 
                 int runnerLimit = plugin.getConfigManager().getRunnerRespawnLimit();

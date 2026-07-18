@@ -36,15 +36,22 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/*
+ * Main /manhunt command handler.
+*/
 public class ManhuntCommand implements CommandExecutor, TabCompleter {
     private final ManhuntNG plugin;
+
     private final Map<String, Subcommand> subcommands = new LinkedHashMap<>();
+
+    // !!!Debug command handled separately!!!
     private final ManhuntDebugCommand debugCommand;
 
     public ManhuntCommand(ManhuntNG plugin) {
         this.plugin = plugin;
         this.debugCommand = new ManhuntDebugCommand(plugin);
 
+        // Register all player-facing subcommands
         register(new JoinSubcommand());
         register(new LeaveSubcommand());
         register(new StartSubcommand());
@@ -69,6 +76,10 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
         subcommands.put(subcommand.getName(), subcommand);
     }
 
+    /*
+     * Routes the command to the appropriate subcommand.
+     * No args -> show help. "debug" -> to debugCommand.
+     */
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 0) {
@@ -78,6 +89,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
 
         String subName = args[0].toLowerCase();
 
+        // !!!Debug is handled by its own class!!!
         if (subName.equals("debug")) {
             String[] debugArgs = new String[args.length - 1];
             System.arraycopy(args, 1, debugArgs, 0, debugArgs.length);
@@ -90,6 +102,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
+        // Validate preconditions (permission, player required, etc)
         if (!sub.validatePreconditions(sender, plugin, args)) {
             return true;
         }
@@ -97,11 +110,16 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
         return sub.execute(sender, plugin, args);
     }
 
+    /*
+     * Tab-completes subcommand names at arg[0], then to the
+     * matching subcommand for more.
+     */
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 1) {
             List<String> completions = new ArrayList<>();
             for (Subcommand sub : subcommands.values()) {
+                // ONLY suggest subcommands the sender has permission for
                 if (sub.getPermission() == null || sender.hasPermission(sub.getPermission())) {
                     completions.add(sub.getName());
                 }
@@ -128,9 +146,14 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
         return new ArrayList<>();
     }
 
+    /*
+     * Builds and sends the help menu.
+     */
     private void sendHelp(CommandSender sender) {
         ConfigManager config = plugin.getConfigManager();
         GameState state = plugin.getGameManager().getMatch().getState();
+
+        // Translate the current game state into a display name
         String stateName = switch (state) {
             case WAITING -> config.getMessage("state.waiting");
             case COUNTDOWN -> config.getMessage("state.countdown");
@@ -141,12 +164,14 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             case FINISHED -> config.getMessage("state.finished");
         };
 
+        // title: "ManhuntNG — [State]"
         sender.sendMessage(Component.empty());
         sender.sendMessage(config.getMessageComponent("help.title")
                 .append(config.getMessageComponent("help.separator"))
                 .append(Component.text(stateName, getTextColor(state), TextDecoration.BOLD)));
         sender.sendMessage(config.getMessageComponent("help.divider"));
 
+        // Player commands section
         Component playerHeader = Component.text("  ", NamedTextColor.WHITE)
                 .append(config.getMessageComponent("help.section-player")
                         .decoration(TextDecoration.BOLD, true));
@@ -160,6 +185,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
         helpEntry(sender, config, "help.g");
         helpEntry(sender, config, "help.t");
 
+        // Admin commands section (requires `manhunt.admin` perm)
         if (sender.hasPermission("manhunt.admin")) {
             sender.sendMessage(Component.empty());
             sender.sendMessage(Component.text("  ", NamedTextColor.WHITE)
@@ -185,6 +211,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage(Component.empty());
     }
 
+    // Builds a single clickable help entry with hover showing permission.
     private void helpEntry(CommandSender sender, ConfigManager config, String prefix) {
         String command = config.getMessage(prefix + ".cmd");
         String description = config.getMessage(prefix + ".desc");
@@ -204,6 +231,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage(cmd.append(desc));
     }
 
+    // Maps a game state to a colour for the header (:167)
     private NamedTextColor getTextColor(GameState state) {
         return switch (state) {
             case WAITING -> NamedTextColor.GREEN;
@@ -216,6 +244,7 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
         };
     }
 
+    // Filters strings to those that start with the given partial prefix (case-insensitive)
     private List<String> filterPartial(String partial, List<String> options) {
         List<String> filtered = new ArrayList<>();
         for (String option : options) {

@@ -18,6 +18,14 @@ import xyz.qincai.manhunt.game.Match;
 
 import java.util.UUID;
 
+/*
+ * Handles PvP rules and death logic for runners and hunters.
+ * - PvP is blocked during PAUSED / HEADSTART / PRE_HUNT / COUNTDOWN.
+ * - Runner hitting hunter during PRE_HUNT starts the hunt.
+ * - Runner death: infection -> conversion, elimination, or respawn limits.
+ * - Hunter death: respawn limits, inventory/armour keep rules.
+ * - Ender Dragon death -> runner win.
+ */
 public class CombatListener implements Listener {
     private final ManhuntNG plugin;
     private final GameListenerState state;
@@ -27,6 +35,13 @@ public class CombatListener implements Listener {
         this.state = state;
     }
 
+    /*
+     * Handles PvP rules:
+     * - PAUSED -> cancel
+     * - HEADSTART -> cancel (prep phase)
+     * - PRE_HUNT -> runner hitting hunter starts hunt
+     * - RUNNING -> allow
+     */
     @EventHandler(priority = EventPriority.HIGH)
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         if (!(event.getDamager() instanceof Player damager)) return;
@@ -34,17 +49,20 @@ public class CombatListener implements Listener {
 
         Match match = plugin.getGameManager().getMatch();
 
+        // No combat during pause
         if (match.getState() == GameState.PAUSED) {
             event.setCancelled(true);
             state.sendPauseBlockedMessage(damager);
             return;
         }
 
+        // HEADSTART: no combat
         if (match.getState() == GameState.HEADSTART) {
             event.setCancelled(true);
             return;
         }
 
+        // PRE_HUNT: runner must hit hunter to start game
         if (match.getState() == GameState.PRE_HUNT) {
             event.setCancelled(true);
 
@@ -55,11 +73,17 @@ public class CombatListener implements Listener {
             return;
         }
 
+        // No combat outside RUNNING
         if (match.getState() != GameState.RUNNING) {
             event.setCancelled(true);
         }
     }
 
+    /*
+     * Handles player death logic for runner + hunters.
+     * - Runner death -> hunters win (or infection conversion)
+     * - Hunter death -> respawn logic, inventory rules, respawn limits
+     */
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
@@ -68,9 +92,12 @@ public class CombatListener implements Listener {
 
         if (match.getState() != GameState.RUNNING && match.getState() != GameState.HEADSTART) return;
 
+        // Remove tracking compasses so other players can't pick up
         state.destroyTrackingCompass(player, event);
 
+        // Runner death
         if (plugin.getPlayerManager().isRunner(uuid)) {
+            // Prefix the vanilla death message
             Component vanilla = event.deathMessage();
             if (vanilla != null) {
                 event.deathMessage(Component.text()
@@ -79,9 +106,12 @@ public class CombatListener implements Listener {
                         .build());
             }
 
+            // Infection mode: runner becomes a hunter (only during RUNNING)
             if (match.getGameMode() == xyz.qincai.manhunt.game.ManhuntGameMode.INFECTION) {
+                // Record death first, before conversion
                 plugin.getStatsManager().recordDeath(uuid);
 
+                // Only convert to hunter if match is RUNNING
                 if (match.getState() == GameState.RUNNING) {
                     if (plugin.getConfigManager().isRunnerKeepInventory()) {
                         event.setKeepInventory(true);
@@ -93,14 +123,17 @@ public class CombatListener implements Listener {
                     return;
                 }
 
+                // For HEADSTART or other states, handle as normal elimination
                 plugin.getPlayerManager().eliminateRunner(uuid);
                 plugin.getGameManager().huntersWin();
                 return;
             }
 
+            // Normal mode: check respawn limit before eliminating
             plugin.getStatsManager().recordDeath(uuid);
             plugin.getPlayerManager().addRunnerRespawn(uuid);
 
+            // Handle keepInventory for runners
             if (plugin.getConfigManager().isRunnerKeepInventory()) {
                 event.setKeepInventory(true);
                 event.getDrops().clear();
@@ -110,6 +143,7 @@ public class CombatListener implements Listener {
 
             int runnerLimit = plugin.getConfigManager().getRunnerRespawnLimit();
             if (runnerLimit >= 0 && plugin.getPlayerManager().getRunnerRespawnCount(uuid) > runnerLimit) {
+                // No lives left - eliminate
                 plugin.getPlayerManager().eliminateRunner(uuid);
                 plugin.getUiManager().sendToAll(plugin.getConfigManager().getMessage("death.runner-eliminated", "{player}", player.getName()));
                 if (match.getRunnerUuids().isEmpty()) {
@@ -118,6 +152,7 @@ public class CombatListener implements Listener {
                 return;
             }
 
+            // Lives remaining - broadcast lives message
             int livesLeft = runnerLimit < 0 ? -1 : runnerLimit - plugin.getPlayerManager().getRunnerRespawnCount(uuid) + 1;
             if (livesLeft >= 0) {
                 plugin.getUiManager().sendToAll(plugin.getConfigManager().getMessage("death.runner-lives",
@@ -126,6 +161,7 @@ public class CombatListener implements Listener {
             return;
         }
 
+        // Hunter death -> respawn logic
         if (plugin.getPlayerManager().isHunter(uuid)) {
             Component vanilla = event.deathMessage();
             if (vanilla != null) {
@@ -137,6 +173,7 @@ public class CombatListener implements Listener {
 
             plugin.getPlayerManager().addHunterRespawn(uuid);
 
+            // Check respawn limit
             int hunterLimit = plugin.getConfigManager().getHunterRespawnLimit();
             if (hunterLimit >= 0 && plugin.getPlayerManager().getHunterRespawnCount(uuid) > hunterLimit) {
                 plugin.getPlayerManager().eliminateHunter(uuid);
@@ -147,12 +184,14 @@ public class CombatListener implements Listener {
                 return;
             }
 
+            // Inventory rules
             if (plugin.getConfigManager().isHunterKeepInventory()) {
                 event.setKeepInventory(true);
                 event.getDrops().clear();
             } else {
                 event.setKeepInventory(false);
 
+                // Keep armour/offhand if enabled
                 if (plugin.getConfigManager().isHunterKeepArmor()) {
                     ItemStack[] armor = player.getInventory().getArmorContents();
                     state.saveArmor(uuid, armor);
@@ -175,6 +214,7 @@ public class CombatListener implements Listener {
         }
     }
 
+    // Ender Dragon death -> runner wins
     @EventHandler
     public void onEnderDragonDeath(EntityDeathEvent event) {
         if (!(event.getEntity() instanceof EnderDragon)) return;

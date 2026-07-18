@@ -16,6 +16,13 @@ import xyz.qincai.manhunt.game.Match;
 
 import java.util.UUID;
 
+/*
+ * Enforces restrictions on movement and world mechanics.
+ * - PAUSED: freezes all participants, blocks furnaces/crafting/mob targeting
+ * - HEADSTART: hunters frozen, runners free
+ * - PRE_HUNT / COUNTDOWN: both teams frozen
+ * - RUNNING: allows movement, tracks runner world changes for compass
+ */
 public class GamePhaseListener implements Listener {
     private final ManhuntNG plugin;
     private final GameListenerState state;
@@ -25,12 +32,21 @@ public class GamePhaseListener implements Listener {
         this.state = state;
     }
 
+    /*
+     * Movement restrictions:
+     * - PAUSED -> freeze
+     * - HEADSTART -> hunters freeze, runner free
+     * - PRE_HUNT -> freeze
+     * - COUNTDOWN -> freeze
+     * - RUNNING -> allow, but track runner world changes
+     */
     @EventHandler
     public void onPlayerMove(PlayerMoveEvent event) {
         Player player = event.getPlayer();
         UUID uuid = player.getUniqueId();
         Match match = plugin.getGameManager().getMatch();
 
+        // Freeze movement during PAUSED
         if (match.getState() == GameState.PAUSED) {
             if (event.getTo() == null) return;
             if (plugin.getPlayerManager().isRunner(uuid) || plugin.getPlayerManager().isHunter(uuid)) {
@@ -39,6 +55,7 @@ public class GamePhaseListener implements Listener {
             return;
         }
 
+        // HEADSTART: hunters are frozen, runner can move freely
         if (match.getState() == GameState.HEADSTART) {
             if (event.getTo() == null) return;
             if (plugin.getPlayerManager().isHunter(uuid)) {
@@ -47,6 +64,7 @@ public class GamePhaseListener implements Listener {
             return;
         }
 
+        // Freeze movement during PRE_HUNT
         if (match.getState() == GameState.PRE_HUNT) {
             if (event.getTo() == null) return;
             if (plugin.getPlayerManager().isRunner(uuid) || plugin.getPlayerManager().isHunter(uuid)) {
@@ -59,6 +77,7 @@ public class GamePhaseListener implements Listener {
             return;
         }
 
+        // Freeze movement during COUNTDOWN
         if (match.getState() == GameState.COUNTDOWN) {
             if (event.getTo() == null) return;
             if (plugin.getPlayerManager().isRunner(uuid) || plugin.getPlayerManager().isHunter(uuid)) {
@@ -67,6 +86,7 @@ public class GamePhaseListener implements Listener {
             return;
         }
 
+        // Track runner world changes during RUNNING
         if (match.getState() == GameState.RUNNING && plugin.getPlayerManager().isRunner(uuid)) {
             World fromWorld = event.getFrom().getWorld();
             World toWorld = event.getTo().getWorld();
@@ -76,6 +96,7 @@ public class GamePhaseListener implements Listener {
         }
     }
 
+    // Prevent furnace smelting during pause.
     @EventHandler
     public void onFurnaceSmelt(FurnaceSmeltEvent event) {
         if (!plugin.getGameManager().isGamePaused()) return;
@@ -91,6 +112,7 @@ public class GamePhaseListener implements Listener {
         }
     }
 
+    // Prevent furnace burning during pause.
     @EventHandler
     public void onFurnaceBurn(FurnaceBurnEvent event) {
         if (!plugin.getGameManager().isGamePaused()) return;
@@ -106,6 +128,7 @@ public class GamePhaseListener implements Listener {
         }
     }
 
+    // Prevent crafting during pause.
     @EventHandler
     public void onCraftItem(CraftItemEvent event) {
         if (!(event.getWhoClicked() instanceof Player player)) return;
@@ -118,6 +141,7 @@ public class GamePhaseListener implements Listener {
         state.sendPauseBlockedMessage(player);
     }
 
+    // Prevent mobs from targeting players during pause.
     @EventHandler
     public void onEntityTarget(EntityTargetEvent event) {
         if (!plugin.getGameManager().isGamePaused()) return;
