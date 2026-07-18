@@ -1,8 +1,8 @@
 package xyz.qincai.manhunt.listener;
 
 import org.bukkit.Location;
-import org.bukkit.TeleportCause;
 import org.bukkit.World;
+import org.bukkit.event.player.TeleportCause;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
