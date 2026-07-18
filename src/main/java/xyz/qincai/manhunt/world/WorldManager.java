@@ -13,9 +13,9 @@ import java.util.UUID;
 
 public class WorldManager {
     private static final String LOBBY_WORLD_NAME = "manhunt_lobby";
-    private static final String OVERWORLD_NAME = "world";
-    private static final String NETHER_NAME = "world_nether";
-    private static final String END_NAME = "world_the_end";
+    private static final String OVERWORLD_NAME = "manhunt_game";
+    private static final String NETHER_NAME = "manhunt_game_nether";
+    private static final String END_NAME = "manhunt_game_the_end";
     private final ManhuntNG plugin;
 
     public WorldManager(ManhuntNG plugin) {
@@ -101,6 +101,11 @@ public class WorldManager {
 
     public void deleteAndGenerateWorlds(Match match) {
         Long seed = match.getSeed();
+        if (seed == null) {
+            seed = new java.util.Random().nextLong();
+            match.setSeed(seed);
+        }
+        plugin.getLogger().info("Generating game worlds with seed: " + seed);
 
         deleteWorldFolder(OVERWORLD_NAME);
         deleteWorldFolder(NETHER_NAME);
@@ -137,9 +142,7 @@ public class WorldManager {
         WorldCreator creator = new WorldCreator(name);
         creator.environment(environment);
         creator.generateStructures(true);
-        if (seed != null) {
-            creator.seed(seed);
-        }
+        creator.seed(seed);
         return creator.createWorld();
     }
 
