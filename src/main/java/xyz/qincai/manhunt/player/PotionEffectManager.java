@@ -72,7 +72,7 @@ public class PotionEffectManager {
             Player runner = Bukkit.getPlayer(runnerUuid);
             if (runner != null) {
                 runner.getActivePotionEffects().stream()
-                        .map(PotionEffect::getType)
+                        .map(effect -> effect.getType())
                         .forEach(runner::removePotionEffect);
             }
         }
@@ -82,7 +82,7 @@ public class PotionEffectManager {
             Player hunter = Bukkit.getPlayer(uuid);
             if (hunter != null) {
                 hunter.getActivePotionEffects().stream()
-                        .map(PotionEffect::getType)
+                        .map(effect -> effect.getType())
                         .forEach(hunter::removePotionEffect);
             }
         }

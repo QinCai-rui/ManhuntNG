@@ -66,7 +66,7 @@ public class PlayerManager {
     }
 
     public void addHunterRespawn(UUID uuid) {
-        hunterRespawns.merge(uuid, 1, Integer::sum);
+        hunterRespawns.merge(uuid, 1, (a, b) -> a + b);
     }
 
     public int getHunterRespawnCount(UUID uuid) {
@@ -78,7 +78,7 @@ public class PlayerManager {
     }
 
     public void addRunnerRespawn(UUID uuid) {
-        runnerRespawns.merge(uuid, 1, Integer::sum);
+        runnerRespawns.merge(uuid, 1, (a, b) -> a + b);
     }
 
     public int getRunnerRespawnCount(UUID uuid) {
