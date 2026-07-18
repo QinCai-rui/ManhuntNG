@@ -8,6 +8,7 @@ import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.EnderCrystal;
 import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.Player;
@@ -15,7 +16,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.scoreboard.Criteria;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
-import org.bukkit.scoreboard.Score;
 import org.bukkit.scoreboard.Scoreboard;
 import xyz.qincai.manhunt.ManhuntNG;
 import xyz.qincai.manhunt.config.ConfigManager;
@@ -68,7 +68,8 @@ public class UIManager {
             World endWorld = match.getEndWorld();
             EnderDragon dragon = endWorld != null ? endWorld.getEntitiesByClass(EnderDragon.class)
                     .stream().findFirst().orElse(null) : null;
-            boolean dragonDamaged = dragon != null && dragon.getHealth() < dragon.getMaxHealth();
+            boolean dragonDamaged = dragon != null
+                    && dragon.getHealth() < dragon.getAttribute(Attribute.MAX_HEALTH).getValue();
             boolean allCrystalsDestroyed = endWorld != null && endWorld.getEntitiesByClass(EnderCrystal.class).isEmpty();
             if (dragonDamaged || allCrystalsDestroyed) {
                 currentPhase = GamePhase.FINALE;

@@ -7,8 +7,6 @@ import xyz.qincai.manhunt.command.Subcommand;
 import xyz.qincai.manhunt.game.Match;
 import xyz.qincai.manhunt.player.PlayerRole;
 
-import java.util.List;
-
 public class JoinSubcommand implements Subcommand {
     @Override public String getName() { return "join"; }
     @Override public String getPermission() { return "manhunt.play"; }

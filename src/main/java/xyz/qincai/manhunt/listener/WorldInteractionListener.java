@@ -13,7 +13,6 @@ import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import xyz.qincai.manhunt.ManhuntNG;
-import xyz.qincai.manhunt.game.Match;
 
 /*
  * Prevents restricted world interactions during frozen game phases.
@@ -85,11 +84,9 @@ public class WorldInteractionListener implements Listener {
             return;
         }
 
-        if ((event.getAction() == InventoryAction.HOTBAR_SWAP
-                || event.getAction() == InventoryAction.HOTBAR_MOVE_AND_READD
-                || event.getAction() == InventoryAction.SWAP_OFFHAND)
-                && clickedTopInventory) {
-            ItemStack hotbarItem = event.getAction() == InventoryAction.SWAP_OFFHAND
+        if (event.getAction() == InventoryAction.HOTBAR_SWAP && clickedTopInventory) {
+            // getHotbarButton() returns -1 for off-hand swap
+            ItemStack hotbarItem = event.getHotbarButton() == -1
                     ? player.getInventory().getItemInOffHand()
                     : player.getInventory().getItem(event.getHotbarButton());
 

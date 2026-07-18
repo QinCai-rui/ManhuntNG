@@ -1,7 +1,6 @@
 package xyz.qincai.manhunt.loot;
 
 import org.bukkit.Material;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
@@ -10,7 +9,6 @@ import xyz.qincai.manhunt.ManhuntNG;
 import xyz.qincai.manhunt.player.PlayerRole;
 
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
