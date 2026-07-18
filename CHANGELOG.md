@@ -10,24 +10,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Extracted 18 `/manhunt` subcommands into individual `Subcommand` files
+  [`87470ef`](https://github.com/QinCai-rui/ManhuntNG/commit/87470ef)
 - Split `GameListener` into five individual listeners: `PlayerLifecycleListener`,
   `CombatListener`, `WorldInteractionListener`, `GamePhaseListener`,
-  `AdvancementListener`
+  `AdvancementListener` [`af0fbc5`](https://github.com/QinCai-rui/ManhuntNG/commit/af0fbc5)
 - Migrated deprecated APIs: (bukkit) `AsyncPlayerChatEvent` -> (paper-api) `AsyncChatEvent`,
   `PotionEffectType.getByName()` -> registry lookup, `Enchantment.getByName()` ->
   registry lookup with legacy alias fallback
+  [`c05ca73`](https://github.com/QinCai-rui/ManhuntNG/commit/c05ca73)
 - Removed unused code from `StatisticsManager` and `PotionEffectManager`
+  [`c05ca73`](https://github.com/QinCai-rui/ManhuntNG/commit/c05ca73)
 
 ### Added
 
 - `Subcommand` interface, `recordKill()` to `StatisticsManager`, projectile
   damage resolution in `CombatListener`, permission checks for `/manhunt debug`
+  [`c26ed64`](https://github.com/QinCai-rui/ManhuntNG/commit/c26ed64)
 
 ### Fixed
 
 - Projectile-based (e.g. arrows, tridents, snowballs) PvP now correctly credits the shooter
+  [`c26ed64`](https://github.com/QinCai-rui/ManhuntNG/commit/c26ed64)
 - `ForceStartSubcommand` only sends success message on actual start
+  [`c26ed64`](https://github.com/QinCai-rui/ManhuntNG/commit/c26ed64)
 - `LootConfig` logs warnings for unknown enchantments instead of silent errors
+  [`c26ed64`](https://github.com/QinCai-rui/ManhuntNG/commit/c26ed64)
 
 ## [1.7.0] - 2026-07-18
 
