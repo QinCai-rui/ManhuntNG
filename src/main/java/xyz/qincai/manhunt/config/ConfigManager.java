@@ -502,6 +502,10 @@ public class ConfigManager {
     }
 
     private static PotionEffectType potionEffectTypeFromString(String name) {
-        return Registry.POTION_EFFECT_TYPE.get(NamespacedKey.fromString(name.toLowerCase()));
+        NamespacedKey key = NamespacedKey.fromString(name.toLowerCase());
+        if (key == null) {
+            return null;
+        }
+        return Registry.POTION_EFFECT_TYPE.get(key);
     }
 }

@@ -16,8 +16,10 @@ public class ForceStartSubcommand implements Subcommand {
     @Override
     public boolean execute(CommandSender sender, ManhuntNG plugin, String[] args) {
         UUID ownerUuid = sender instanceof Player player ? player.getUniqueId() : null;
-        plugin.getGameManager().startGameForce(ownerUuid);
-        sender.sendMessage(cfg(plugin).getMessageComponent("admin.force-started"));
+        boolean success = plugin.getGameManager().startGameForce(ownerUuid);
+        if (success) {
+            sender.sendMessage(cfg(plugin).getMessageComponent("admin.force-started"));
+        }
         return true;
     }
 }

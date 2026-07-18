@@ -263,10 +263,36 @@ public class LootConfig {
             if (name.isEmpty()) continue;
 
             try {
-                Enchantment ench = RegistryAccess.registryAccess()
-                        .getRegistry(RegistryKey.ENCHANTMENT)
-                        .get(NamespacedKey.fromString(name.toLowerCase().replace(" ", "_")));
-                if (ench == null) continue;
+                String enchantName = name.toLowerCase().replace(" ", "_");
+
+                // Handle legacy Bukkit aliases by migrating to modern keys
+                Enchantment ench = null;
+                NamespacedKey key = NamespacedKey.fromString(enchantName);
+                if (key != null) {
+                    ench = RegistryAccess.registryAccess()
+                            .getRegistry(RegistryKey.ENCHANTMENT)
+                            .get(key);
+                }
+
+                // If not found, try common legacy aliases
+                if (ench == null) {
+                    String modernKey = migrateLegacyEnchantment(enchantName);
+                    if (modernKey != null) {
+                        key = NamespacedKey.fromString(modernKey);
+                        if (key != null) {
+                            ench = RegistryAccess.registryAccess()
+                                    .getRegistry(RegistryKey.ENCHANTMENT)
+                                    .get(key);
+                        }
+                    }
+                }
+
+                if (ench == null) {
+                    java.util.logging.Logger.getLogger("ManhuntNG").warning(
+                            "Unknown enchantment '" + name + "' in loot config. Skipping.");
+                    continue;
+                }
+
                 int minLevel = getInt(enchantObj, "min-level", getInt(enchantObj, "level", 1));
                 int maxLevel = getInt(enchantObj, "max-level", minLevel);
 
@@ -276,7 +302,8 @@ public class LootConfig {
 
                 enchants.add(new EnchantmentEntry(ench, minLevel, maxLevel));
             } catch (Exception e) {
-                // skip invalid enchantment
+                java.util.logging.Logger.getLogger("ManhuntNG").warning(
+                        "Failed to parse enchantment '" + name + "' in loot config: " + e.getMessage());
             }
         }
         return enchants;
@@ -316,6 +343,34 @@ public class LootConfig {
         } catch (Exception e) {
             return def;
         }
+    }
+
+    /**
+     * Migrates legacy Bukkit enchantment names to modern registry keys.
+     * Returns null if no known mapping exists.
+     */
+    private static String migrateLegacyEnchantment(String legacyName) {
+        return switch (legacyName.toUpperCase()) {
+            case "DAMAGE_ALL" -> "minecraft:sharpness";
+            case "DAMAGE_UNDEAD" -> "minecraft:smite";
+            case "DAMAGE_ARTHROPODS" -> "minecraft:bane_of_arthropods";
+            case "DIG_SPEED" -> "minecraft:efficiency";
+            case "DURABILITY" -> "minecraft:unbreaking";
+            case "ARROW_DAMAGE" -> "minecraft:power";
+            case "ARROW_KNOCKBACK" -> "minecraft:punch";
+            case "ARROW_FIRE" -> "minecraft:flame";
+            case "ARROW_INFINITE" -> "minecraft:infinity";
+            case "LUCK" -> "minecraft:luck_of_the_sea";
+            case "LURE" -> "minecraft:lure";
+            case "OXYGEN" -> "minecraft:respiration";
+            case "PROTECTION_ENVIRONMENTAL" -> "minecraft:protection";
+            case "PROTECTION_FIRE" -> "minecraft:fire_protection";
+            case "PROTECTION_FALL" -> "minecraft:feather_falling";
+            case "PROTECTION_EXPLOSIONS" -> "minecraft:blast_protection";
+            case "PROTECTION_PROJECTILE" -> "minecraft:projectile_protection";
+            case "WATER_WORKER" -> "minecraft:aqua_affinity";
+            default -> null;
+        };
     }
 
     // ---- Data classes ----

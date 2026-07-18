@@ -54,13 +54,6 @@ public class ShuffleSubcommand implements Subcommand {
         participantSet.addAll(match.getHunterUuids());
         participantSet.addAll(match.getSpectatorUuids());
 
-        for (UUID uuid : participantSet) {
-            match.getRunnerUuids().remove(uuid);
-            match.getHunterUuids().remove(uuid);
-            match.addSpectator(uuid);
-            plugin.getPlayerManager().setRole(uuid, PlayerRole.SPECTATOR);
-        }
-
         List<UUID> onlineParticipants = new ArrayList<>();
         for (UUID uuid : participantSet) {
             if (Bukkit.getPlayer(uuid) != null) {
@@ -72,6 +65,13 @@ public class ShuffleSubcommand implements Subcommand {
             sender.sendMessage(cfg(plugin).getMessageComponent("error.not-enough-players",
                     "{needed}", String.valueOf(runnerCount + 1)));
             return true;
+        }
+
+        for (UUID uuid : participantSet) {
+            match.getRunnerUuids().remove(uuid);
+            match.getHunterUuids().remove(uuid);
+            match.addSpectator(uuid);
+            plugin.getPlayerManager().setRole(uuid, PlayerRole.SPECTATOR);
         }
 
         Collections.shuffle(onlineParticipants, new Random());

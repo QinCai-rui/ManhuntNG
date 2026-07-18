@@ -76,6 +76,10 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
         subcommands.put(subcommand.getName(), subcommand);
     }
 
+    private ConfigManager cfg(ManhuntNG plugin) {
+        return plugin.getConfigManager();
+    }
+
     /*
      * Routes the command to the appropriate subcommand.
      * No args -> show help. "debug" -> to debugCommand.
@@ -91,6 +95,10 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
 
         // !!!Debug is handled by its own class!!!
         if (subName.equals("debug")) {
+            if (!sender.hasPermission("manhunt.admin")) {
+                sender.sendMessage(cfg(plugin).getMessageComponent("error.no-permission"));
+                return true;
+            }
             String[] debugArgs = new String[args.length - 1];
             System.arraycopy(args, 1, debugArgs, 0, debugArgs.length);
             return debugCommand.onCommand(sender, null, null, debugArgs);
@@ -124,12 +132,17 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
                     completions.add(sub.getName());
                 }
             }
-            completions.add("debug");
+            if (sender.hasPermission("manhunt.admin")) {
+                completions.add("debug");
+            }
             return filterPartial(args[0], completions);
         }
 
         String subName = args[0].toLowerCase();
         if (subName.equals("debug")) {
+            if (!sender.hasPermission("manhunt.admin")) {
+                return new ArrayList<>();
+            }
             if (args.length == 2) {
                 List<String> completions = new ArrayList<>();
                 completions.add("lastknown");
@@ -140,6 +153,13 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
 
         Subcommand sub = subcommands.get(subName);
         if (sub != null) {
+            // Check permission and admin requirements before providing completions
+            if (sub.getPermission() != null && !sender.hasPermission(sub.getPermission())) {
+                return new ArrayList<>();
+            }
+            if (sub.requireAdmin() && !sender.hasPermission("manhunt.admin")) {
+                return new ArrayList<>();
+            }
             return filterPartial(args.length > 1 ? args[args.length - 1] : "", sub.tabComplete(sender, plugin, args));
         }
 

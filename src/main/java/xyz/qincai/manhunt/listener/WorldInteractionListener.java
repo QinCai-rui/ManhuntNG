@@ -63,6 +63,9 @@ public class WorldInteractionListener implements Listener {
     public void onInventoryClick(InventoryClickEvent event) {
         Player player = (Player) event.getWhoClicked();
 
+        // Cancel inventory interactions during restricted phases
+        state.cancelRestrictedAction(event, player);
+
         if (!plugin.getPlayerManager().isHunter(player.getUniqueId())) {
             return;
         }
@@ -107,6 +110,9 @@ public class WorldInteractionListener implements Listener {
     @EventHandler
     public void onInventoryDrag(InventoryDragEvent event) {
         Player player = (Player) event.getWhoClicked();
+
+        // Cancel inventory interactions during restricted phases
+        state.cancelRestrictedAction(event, player);
 
         if (!plugin.getPlayerManager().isHunter(player.getUniqueId())) {
             return;

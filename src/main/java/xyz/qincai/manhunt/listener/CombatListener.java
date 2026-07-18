@@ -44,7 +44,16 @@ public class CombatListener implements Listener {
      */
     @EventHandler(priority = EventPriority.HIGH)
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
-        if (!(event.getDamager() instanceof Player damager)) return;
+        // Resolve the actual damager (handle projectiles)
+        Player damager = null;
+        if (event.getDamager() instanceof Player player) {
+            damager = player;
+        } else if (event.getDamager() instanceof org.bukkit.entity.Projectile projectile) {
+            if (projectile.getShooter() instanceof Player shooter) {
+                damager = shooter;
+            }
+        }
+        if (damager == null) return;
         if (!(event.getEntity() instanceof Player victim)) return;
 
         Match match = plugin.getGameManager().getMatch();
@@ -95,6 +104,14 @@ public class CombatListener implements Listener {
         // Remove tracking compasses so other players can't pick up
         state.destroyTrackingCompass(player, event);
 
+        // Record kill/death statistics uniformly for all deaths
+        Player killer = player.getKiller();
+        if (killer != null) {
+            plugin.getStatsManager().recordKill(killer.getUniqueId(), uuid);
+        } else {
+            plugin.getStatsManager().recordDeath(uuid);
+        }
+
         // Runner death
         if (plugin.getPlayerManager().isRunner(uuid)) {
             // Prefix the vanilla death message
@@ -108,9 +125,6 @@ public class CombatListener implements Listener {
 
             // Infection mode: runner becomes a hunter (only during RUNNING)
             if (match.getGameMode() == xyz.qincai.manhunt.game.ManhuntGameMode.INFECTION) {
-                // Record death first, before conversion
-                plugin.getStatsManager().recordDeath(uuid);
-
                 // Only convert to hunter if match is RUNNING
                 if (match.getState() == GameState.RUNNING) {
                     if (plugin.getConfigManager().isRunnerKeepInventory()) {
@@ -130,7 +144,6 @@ public class CombatListener implements Listener {
             }
 
             // Normal mode: check respawn limit before eliminating
-            plugin.getStatsManager().recordDeath(uuid);
             plugin.getPlayerManager().addRunnerRespawn(uuid);
 
             // Handle keepInventory for runners

@@ -98,14 +98,16 @@ public class GameManager {
     /*
      * force-start bypasses runner/hunter checks.
      * Used by admins or debugging only. skips PRE_HUNT phase
+     * Returns true if the game state was changed, false otherwise.
      */
-    public void startGameForce(UUID ownerUuid) {
-        if (match.getState() != GameState.WAITING) return;
+    public boolean startGameForce(UUID ownerUuid) {
+        if (match.getState() != GameState.WAITING) return false;
 
         match.setOwnerUuid(ownerUuid);
         forceStart = true; // Marks that countdown should skip PRE_HUNT phase
         match.setState(GameState.COUNTDOWN);
         startCountdown();
+        return true;
     }
 
     /*

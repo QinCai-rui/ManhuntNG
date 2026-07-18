@@ -91,20 +91,29 @@ public class PlayerManager {
 
     public void applyRoleToPlayer(Player player, PlayerRole role) {
         Match match = plugin.getGameManager().getMatch();
+        UUID uuid = player.getUniqueId();
+
         switch (role) {
             case RUNNER -> {
-                match.addRunner(player.getUniqueId());
-                match.removeSpectator(player.getUniqueId());
-                setRole(player.getUniqueId(), PlayerRole.RUNNER);
+                // Remove from incompatible roles before adding
+                match.removeHunter(uuid);
+                match.removeSpectator(uuid);
+                match.addRunner(uuid);
+                setRole(uuid, PlayerRole.RUNNER);
             }
             case HUNTER -> {
-                match.addHunter(player.getUniqueId());
-                match.removeSpectator(player.getUniqueId());
-                setRole(player.getUniqueId(), PlayerRole.HUNTER);
+                // Remove from incompatible roles before adding
+                match.removeRunner(uuid);
+                match.removeSpectator(uuid);
+                match.addHunter(uuid);
+                setRole(uuid, PlayerRole.HUNTER);
             }
             case SPECTATOR -> {
-                match.addSpectator(player.getUniqueId());
-                setRole(player.getUniqueId(), PlayerRole.SPECTATOR);
+                // Remove from all active roles before adding to spectator
+                match.removeRunner(uuid);
+                match.removeHunter(uuid);
+                match.addSpectator(uuid);
+                setRole(uuid, PlayerRole.SPECTATOR);
             }
         }
     }
