@@ -6,7 +6,6 @@ target/
 *.iml
 *.iws
 *.ipr
-.vscode/
 *.class
 *.jar
 *.war
